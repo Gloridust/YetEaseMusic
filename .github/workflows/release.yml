@@ -178,6 +178,14 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+      - name: 安装 NDK（下载偶尔损坏，失败重试）
+        run: |
+          ndk=$(grep -m1 -oE 'ndkVersion = "[^"]+"' "$(dirname "$(dirname "$(which flutter)")")/packages/flutter_tools/gradle/src/main/kotlin/FlutterExtension.kt" | grep -oE '[0-9.]+' || echo 28.2.13676358)
+          echo "NDK $ndk"
+          for i in 1 2 3; do
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$ndk" > /dev/null && break
+            echo "第 $i 次安装失败，重试"; sleep 15
+          done
       - name: 构建 APK
         working-directory: app
         run: |
@@ -197,7 +205,8 @@ jobs:
           path: dist/*
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    # 某个平台失败时其余平台照常发布（失败的平台修好后可重新运行，--clobber 补传）
+    if: ${{ !cancelled() && startsWith(github.ref, 'refs/tags/v') }}
     needs: [version, linux, windows, macos, android]
     runs-on: ubuntu-latest
     steps:
