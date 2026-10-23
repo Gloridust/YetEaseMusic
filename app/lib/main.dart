@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'android_media.dart';
 import 'debug_tour.dart';
 import 'desktop_lyrics.dart';
 import 'src/rust/api/playback.dart' as pb;
@@ -59,6 +60,7 @@ Future<void> main(List<String> args) async {
   }
 
   await AppState.I.start();
+  if (Platform.isAndroid) await initAndroidMedia();
   if (isDesktop) {
     // 媒体控件里点击「打开播放器」时把窗口带到前台
     AppState.I.raiseRequests.addListener(() async {

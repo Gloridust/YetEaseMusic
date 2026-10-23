@@ -64,7 +64,10 @@ class _LyricsApp extends StatelessWidget {
       // 必须包一层 Material，否则文字没有默认样式（会显示黄色下划线和等宽字体）
       home: RepaintBoundary(
         key: _shotKey,
-        child: Material(type: MaterialType.transparency, child: _LyricsWindow(port: port)),
+        child: Material(
+          type: MaterialType.transparency,
+          child: _LyricsWindow(port: port),
+        ),
       ),
     );
   }
