@@ -5,7 +5,9 @@ import '../../src/rust/api/types.dart';
 import '../../state.dart';
 import '../../theme.dart';
 import '../song_list.dart';
+import '../song_actions.dart';
 import '../widgets.dart';
+import 'album_page.dart';
 
 /// 歌单详情；`daily` 为 true 时展示每日推荐
 class PlaylistPage extends StatefulWidget {
@@ -174,6 +176,20 @@ class _Header extends StatelessWidget {
                                       AppState.I.playSongs(list, 0);
                                     },
                             ),
+                            const SizedBox(width: 10),
+                            PillButton(
+                              label: '下载全部',
+                              icon: Icons.download_outlined,
+                              onTap: d.tracks.isEmpty ? null : () => downloadSongs(d.tracks),
+                            ),
+                            // 别人的歌单才显示收藏（自己创建的、每日推荐不显示）
+                            if (s.id > 0 && s.creatorId != AppState.I.account.value?.userId) ...[
+                              const SizedBox(width: 10),
+                              SubscribeButton(
+                                initial: Future.value(s.subscribed),
+                                onChange: (on) => lib.setPlaylistSubscribed(id: s.id, enable: on),
+                              ),
+                            ],
                             const Spacer(),
                             _FilterField(onChanged: onFilter),
                           ],

@@ -472,6 +472,7 @@ pub struct ArtistCard {
     pub album_count: i64,
     pub song_count: i64,
     pub alias: Vec<String>,
+    pub followed: bool,
 }
 
 impl From<&api::ArtistInfo> for ArtistCard {
@@ -484,6 +485,7 @@ impl From<&api::ArtistInfo> for ArtistCard {
             album_count: a.album_size as i64,
             song_count: a.music_size as i64,
             alias: a.alias.clone(),
+            followed: a.followed,
         }
     }
 }

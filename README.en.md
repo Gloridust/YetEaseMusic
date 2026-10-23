@@ -11,8 +11,9 @@ Rust native core × Flutter-rendered UI · Built for Linux first, with Windows t
 [中文](README.md) · [Architecture](doc/architecture.md) · [Build from source](doc/building.md)
 
 ![Linux](https://img.shields.io/badge/Linux-available-2ea44f?logo=linux&logoColor=white)
-![Windows](https://img.shields.io/badge/Windows-in%20progress-f0ad4e?logo=windows&logoColor=white)
-![Android](https://img.shields.io/badge/Android%20%2F%20car-in%20progress-f0ad4e?logo=android&logoColor=white)
+![Windows](https://img.shields.io/badge/Windows-available-2ea44f?logo=windows&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS-available-2ea44f?logo=apple&logoColor=white)
+![Android](https://img.shields.io/badge/Android%20%2F%20car-beta-f0ad4e?logo=android&logoColor=white)
 ![CLI](https://img.shields.io/badge/CLI-available-2ea44f?logo=gnometerminal&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
@@ -91,23 +92,23 @@ Protocol, playback, queue and cache live in a shared Rust core; the UI layer onl
 
 | | Status |
 |---|---|
-| QR-code login, account playlists | ✅ |
-| Recommended playlists, daily picks | ✅ |
-| Playlist details, in-playlist search, shuffle | ✅ |
-| Song search with infinite scrolling | ✅ |
-| Like / unlike | ✅ |
+| QR-code login; playlists, likes, daily picks and play history synced with your phone | ✅ |
+| Discover / playlist square / charts, podcasts, followed users | ✅ |
+| Playlist, album and artist pages; click any artist or album name to jump there | ✅ |
+| Search songs / playlists / albums / artists with infinite scrolling | ✅ |
+| Like, heartbeat mode, create playlists, add songs to playlists | ✅ |
 | Play queue, play next, four play modes | ✅ |
-| Stream-while-downloading with auto cache, Standard to Hi-Res quality | ✅ |
-| Synced lyrics with translations, click to seek | ✅ |
-| Light / dark theme, UI scaling, space to play / pause | ✅ |
-| Overseas mode (keeps playback working abroad or behind a global proxy) | ✅ |
-| CLI: login, search, playlists, daily picks, playback | ✅ |
-| System media controls (Linux MPRIS / Windows SMTC) | 🚧 |
-| Album, artist and chart pages | 🚧 |
-| Recently played, downloads, local music | 🚧 |
-| Desktop lyrics, word-by-word lyrics | 📝 |
-| Windows installer, Android / head-unit app | 🚧 |
-| Terminal UI (TUI) | 📝 |
+| Stream-while-downloading with a size-capped cache, Standard to Hi-Res quality | ✅ |
+| Word-by-word (karaoke) lyrics, translations, click to seek, similar songs | ✅ |
+| Desktop lyrics (transparent overlay, word-by-word fill, lockable) | ✅ |
+| Song comments (hot + latest) | ✅ |
+| Downloads with embedded tags and cover art, local music library | ✅ |
+| System media controls: Linux MPRIS (media keys, GNOME panel), Windows SMTC, macOS Now Playing | ✅ |
+| Light / dark theme, UI scaling, overseas mode | ✅ |
+| Log export (credentials redacted) for bug reports | ✅ |
+| CLI and terminal UI (`yetease tui`) | ✅ |
+| Android background playback, notification controls and steering-wheel keys | 🚧 |
+| Follow playlists / artists / albums | 📝 |
 
 ✅ done · 🚧 in progress · 📝 planned
 
@@ -115,20 +116,31 @@ Protocol, playback, queue and cache live in a shared Rust core; the UI layer onl
 
 | Platform | Status | Notes |
 |---|---|---|
-| Linux (x86_64) | ✅ available | Primary target, developed on Ubuntu 26.04 + GNOME Wayland |
-| CLI | ✅ available | No GUI needed; works on servers and over SSH |
-| Windows / Windows tablets | 🚧 | Core is cross-platform; UI tuning and packaging underway |
-| Android / head units | 🚧 | Same, focusing on wide screens and steering-wheel keys |
-| macOS | 📝 | Technically feasible, not a focus yet |
+| Linux (x86_64) | ✅ available | Primary target; `.deb` and a generic tarball for Ubuntu 22.04 / Debian 12 / Fedora 35 and later |
+| CLI / terminal UI | ✅ available | No GUI needed; works on servers and over SSH |
+| Windows 10 / 11 (incl. tablets) | ✅ available | Installer and portable zip, built by CI |
+| macOS (Intel / Apple silicon) | ✅ available | Universal dmg built by CI; unsigned, so right-click → Open the first time |
+| Android / head units | 🧪 beta | Foreground playback works; background playback and steering-wheel keys in progress |
 
 ## Getting started
 
-YetEase is in early development and has no release packages yet. Build it from source following **[doc/building.md](doc/building.md)**.
+Grab the package for your platform from **[Releases](https://github.com/Gloridust/YetEaseMusic/releases/latest)**:
 
-Once built, just launch the desktop app. The CLI looks roughly like this:
+| Platform | File |
+|---|---|
+| Ubuntu / Debian | `yetease-music_<version>_amd64.deb` – double-click, or `sudo apt install ./yetease-music_*.deb` |
+| Other Linux | `yetease-music-<version>-linux-x86_64.tar.gz` – extract and run `./install.sh` |
+| Windows | `yetease-music-<version>-windows-x64-setup.exe` (a portable zip is also provided) |
+| macOS | `yetease-music-<version>-macos-universal.dmg` |
+| Android | `yetease-music-<version>-android-universal.apk` (pick this if unsure about your CPU) |
+
+To build it yourself, see **[doc/building.md](doc/building.md)**.
+
+The CLI (bundled in the .deb, also available separately):
 
 ```bash
 yetease login                     # QR-code login
+yetease tui                       # full-screen terminal UI
 yetease search yesterday          # search songs
 yetease play yesterday once more  # search and play the first hit
 yetease daily --play              # play today's picks
@@ -141,6 +153,12 @@ NetEase rejects overseas IPs for licensing reasons. Turn on *Settings → Networ
 
 **Can I play greyed-out (unlicensed) songs?**
 No. YetEase only uses audio served by NetEase itself and bundles no third-party sources.
+
+**Desktop lyrics won't stay on top under GNOME?**
+GNOME on Wayland doesn't let apps keep their own windows on top. Press Alt+Space on the lyrics window and choose "Always on Top". X11, Windows and macOS keep it on top automatically.
+
+**How do I report a bug?**
+*Settings → Feedback → Export logs*, then attach the file to an [issue](https://github.com/Gloridust/YetEaseMusic/issues/new). Login credentials are stripped from exported logs.
 
 **What about VIP songs?**
 Log in with a VIP account to play them according to its entitlements; otherwise only previews are available.

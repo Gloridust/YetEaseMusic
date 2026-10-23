@@ -578,6 +578,64 @@ impl Client {
         Ok(field(&v, &["songs"]).unwrap_or_default())
     }
 
+    // ---------- 收藏 ----------
+
+    /// `album_detail_dynamic`：当前账号是否收藏了该专辑
+    pub async fn album_subscribed(&self, id: u64) -> Result<bool> {
+        let v = self
+            .request(
+                "/api/album/detail/dynamic",
+                json!({ "id": id }),
+                Crypto::Weapi,
+            )
+            .await?;
+        Ok(v["isSub"].as_bool().unwrap_or_default())
+    }
+
+    /// `album_sub`：收藏 / 取消收藏专辑
+    pub async fn set_album_subscribed(&self, id: u64, on: bool) -> Result<()> {
+        let path = if on {
+            "/api/album/sub"
+        } else {
+            "/api/album/unsub"
+        };
+        self.request(path, json!({ "id": id }), Crypto::Weapi)
+            .await?;
+        Ok(())
+    }
+
+    /// `artist_sub`：关注 / 取消关注歌手
+    pub async fn set_artist_followed(&self, id: u64, on: bool) -> Result<()> {
+        let path = if on {
+            "/api/artist/sub"
+        } else {
+            "/api/artist/unsub"
+        };
+        self.request(
+            path,
+            json!({ "artistId": id, "artistIds": format!("[{id}]") }),
+            Crypto::Weapi,
+        )
+        .await?;
+        Ok(())
+    }
+
+    /// `playlist_subscribe`：收藏 / 取消收藏歌单。
+    /// 收藏时网易云要求易盾反作弊 token（只能由其网页 JS SDK 生成），这里只带静态校验值，可能被拒。
+    pub async fn set_playlist_subscribed(&self, id: u64, on: bool) -> Result<()> {
+        const CHECK_TOKEN: &str = "9ca17ae2e6ffcda170e2e6ee8af14fbabdb988f225b3868eb2c15a879b9a83d274a790ac8ff54a97b889d5d42af0feaec3b92af58cff99c470a7eafd88f75e839a9ea7c14e909da883e83fb692a3abdb6b92adee9e";
+        let (path, data) = if on {
+            (
+                "/api/playlist/subscribe",
+                json!({ "id": id, "checkToken": CHECK_TOKEN }),
+            )
+        } else {
+            ("/api/playlist/unsubscribe", json!({ "id": id }))
+        };
+        self.request(path, data, Crypto::Eapi).await?;
+        Ok(())
+    }
+
     // ---------- 多类型搜索 ----------
 
     pub async fn search_playlists(

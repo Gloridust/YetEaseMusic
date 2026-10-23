@@ -5,6 +5,7 @@ import '../../src/rust/api/library.dart' as lib;
 import '../../src/rust/api/types.dart';
 import '../../state.dart';
 import '../../theme.dart';
+import '../login_dialog.dart';
 import '../nav.dart';
 import '../song_actions.dart';
 import '../song_list.dart';
@@ -107,6 +108,13 @@ class _AlbumPageState extends State<AlbumPage> {
                                   label: '下载',
                                   icon: Icons.download_outlined,
                                   onTap: d.songs.isEmpty ? null : () => downloadSongs(d.songs),
+                                ),
+                                const SizedBox(width: 10),
+                                SubscribeButton(
+                                  initial: AppState.I.account.value == null
+                                      ? Future.value(false)
+                                      : lib.albumSubscribed(id: a.id),
+                                  onChange: (on) => lib.setAlbumSubscribed(id: a.id, enable: on),
                                 ),
                               ],
                             ),
@@ -235,11 +243,21 @@ class _ArtistPageState extends State<ArtistPage> {
                                 ),
                               ],
                               const SizedBox(height: 14),
-                              PillButton(
-                                label: '播放热门歌曲',
-                                icon: Icons.play_arrow_rounded,
-                                primary: true,
-                                onTap: d.hotSongs.isEmpty ? null : () => AppState.I.playSongs(d.hotSongs, 0),
+                              Row(
+                                children: [
+                                  PillButton(
+                                    label: '播放热门歌曲',
+                                    icon: Icons.play_arrow_rounded,
+                                    primary: true,
+                                    onTap: d.hotSongs.isEmpty ? null : () => AppState.I.playSongs(d.hotSongs, 0),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  SubscribeButton(
+                                    initial: Future.value(a.followed),
+                                    labels: const ('关注', '已关注'),
+                                    onChange: (on) => lib.setArtistFollowed(id: a.id, enable: on),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -423,6 +441,66 @@ class _ArtistLinksState extends State<ArtistLinks> {
       TextSpan(style: base, children: spans),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
+    );
+  }
+}
+
+/// 收藏 / 关注按钮：乐观更新，失败时回滚并提示
+class SubscribeButton extends StatefulWidget {
+  const SubscribeButton({super.key, required this.initial, required this.onChange, this.labels = const ('收藏', '已收藏')});
+
+  final Future<bool> initial;
+  final Future<void> Function(bool on) onChange;
+  final (String, String) labels;
+
+  @override
+  State<SubscribeButton> createState() => _SubscribeButtonState();
+}
+
+class _SubscribeButtonState extends State<SubscribeButton> {
+  bool? _on;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.initial
+        .then((v) {
+          if (mounted) setState(() => _on = v);
+        })
+        .catchError((_) {
+          if (mounted) setState(() => _on = false);
+        });
+  }
+
+  Future<void> _toggle() async {
+    if (AppState.I.account.value == null) {
+      await showLoginDialog(context);
+      return;
+    }
+    final before = _on ?? false;
+    setState(() {
+      _on = !before;
+      _busy = true;
+    });
+    try {
+      await widget.onChange(!before);
+      AppState.I.notify(!before ? '已${widget.labels.$1}' : '已取消${widget.labels.$1}');
+    } catch (e) {
+      if (mounted) setState(() => _on = before);
+      AppState.I.notify('${widget.labels.$1}失败：$e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final on = _on ?? false;
+    return PillButton(
+      label: on ? widget.labels.$2 : widget.labels.$1,
+      icon: on ? Icons.check_rounded : Icons.add_rounded,
+      onTap: _on == null || _busy ? null : _toggle,
     );
   }
 }

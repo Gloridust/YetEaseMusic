@@ -301,6 +301,9 @@ pub struct ArtistInfo {
     pub music_size: u64,
     #[serde(default, deserialize_with = "nn")]
     pub alias: Vec<String>,
+    /// 当前账号是否已关注
+    #[serde(default, deserialize_with = "nn")]
+    pub followed: bool,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]

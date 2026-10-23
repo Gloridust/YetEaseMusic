@@ -521,3 +521,33 @@ pub async fn search_artists(
     })
     .await
 }
+
+// ---------- 收藏 ----------
+
+pub async fn album_subscribed(id: i64) -> anyhow::Result<bool> {
+    run(async move { Ok(core()?.api().album_subscribed(id as u64).await?) }).await
+}
+
+pub async fn set_album_subscribed(id: i64, enable: bool) -> anyhow::Result<()> {
+    run(async move {
+        Ok(core()?
+            .api()
+            .set_album_subscribed(id as u64, enable)
+            .await?)
+    })
+    .await
+}
+
+pub async fn set_artist_followed(id: i64, enable: bool) -> anyhow::Result<()> {
+    run(async move { Ok(core()?.api().set_artist_followed(id as u64, enable).await?) }).await
+}
+
+pub async fn set_playlist_subscribed(id: i64, enable: bool) -> anyhow::Result<()> {
+    run(async move {
+        Ok(core()?
+            .api()
+            .set_playlist_subscribed(id as u64, enable)
+            .await?)
+    })
+    .await
+}

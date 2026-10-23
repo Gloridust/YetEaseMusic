@@ -163,6 +163,7 @@ class ArtistCard {
   final PlatformInt64 albumCount;
   final PlatformInt64 songCount;
   final List<String> alias;
+  final bool followed;
 
   const ArtistCard({
     required this.id,
@@ -172,6 +173,7 @@ class ArtistCard {
     required this.albumCount,
     required this.songCount,
     required this.alias,
+    required this.followed,
   });
 
   @override
@@ -182,7 +184,8 @@ class ArtistCard {
       brief.hashCode ^
       albumCount.hashCode ^
       songCount.hashCode ^
-      alias.hashCode;
+      alias.hashCode ^
+      followed.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -195,7 +198,8 @@ class ArtistCard {
           brief == other.brief &&
           albumCount == other.albumCount &&
           songCount == other.songCount &&
-          alias == other.alias;
+          alias == other.alias &&
+          followed == other.followed;
 }
 
 class ArtistItem {

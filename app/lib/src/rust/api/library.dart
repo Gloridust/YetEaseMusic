@@ -216,3 +216,30 @@ Future<(List<ArtistCard>, PlatformInt64)> searchArtists({
   keywords: keywords,
   offset: offset,
 );
+
+Future<bool> albumSubscribed({required PlatformInt64 id}) =>
+    RustLib.instance.api.crateApiLibraryAlbumSubscribed(id: id);
+
+Future<void> setAlbumSubscribed({
+  required PlatformInt64 id,
+  required bool enable,
+}) => RustLib.instance.api.crateApiLibrarySetAlbumSubscribed(
+  id: id,
+  enable: enable,
+);
+
+Future<void> setArtistFollowed({
+  required PlatformInt64 id,
+  required bool enable,
+}) => RustLib.instance.api.crateApiLibrarySetArtistFollowed(
+  id: id,
+  enable: enable,
+);
+
+Future<void> setPlaylistSubscribed({
+  required PlatformInt64 id,
+  required bool enable,
+}) => RustLib.instance.api.crateApiLibrarySetPlaylistSubscribed(
+  id: id,
+  enable: enable,
+);
