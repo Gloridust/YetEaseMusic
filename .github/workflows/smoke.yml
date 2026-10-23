@@ -1,0 +1,121 @@
+# 冒烟测试：在真实的 Windows / macOS 机器和 Android 模拟器上安装并运行已发布的包。
+# 桌面端用 YETEASE_TOUR 跑一遍截图巡览（含真实播放），截图与日志作为产物上传。
+name: Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 要测试的 Release 标签
+        default: v0.2.0
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  TAG: ${{ inputs.tag || 'v0.2.0' }}
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: 下载并解压免安装版
+        shell: pwsh
+        run: |
+          gh release download $env:TAG -R $env:GITHUB_REPOSITORY -p "*windows-x64-portable.zip" -D dl
+          Expand-Archive (Get-ChildItem dl\*.zip).FullName -DestinationPath app
+      - name: 命令行版
+        shell: pwsh
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          .\app\yetease.exe --version
+          .\app\yetease.exe search 晴天 -l 3
+      - name: 运行桌面版截图巡览
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force shots | Out-Null
+          $env:YETEASE_TOUR = "$PWD\shots"
+          $env:YETEASE_TOUR_SONG = "Yesterday Once More Carpenters"
+          $p = Start-Process .\app\yetease-music.exe -PassThru
+          Start-Sleep 150
+          if ($p.HasExited) { Write-Host "进程已退出，代码 $($p.ExitCode)" } else { Write-Host "进程仍在运行"; Stop-Process $p }
+          Get-ChildItem shots
+          if ((Get-ChildItem shots\*.png).Count -lt 5) { throw "截图数量不足，巡览没有跑完" }
+      - name: 收集日志
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force logs | Out-Null
+          Get-ChildItem -Recurse $env:APPDATA -Filter "yetease*.log" -ErrorAction SilentlyContinue | Copy-Item -Destination logs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-windows
+          path: |
+            shots
+            logs
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: 下载并安装 dmg
+        run: |
+          gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p "*macos-universal.dmg" -p "yetease-cli-*macos*" -D dl
+          hdiutil attach dl/*.dmg -mountpoint /Volumes/yetease -nobrowse
+          cp -R "/Volumes/yetease/YetEase Music.app" "$HOME/Applications/" 2>/dev/null || { mkdir -p "$HOME/Applications"; cp -R "/Volumes/yetease/YetEase Music.app" "$HOME/Applications/"; }
+          xattr -cr "$HOME/Applications/YetEase Music.app"
+          tar -xzf dl/yetease-cli-*.tar.gz -C dl
+      - name: 命令行版
+        run: |
+          dl/yetease-cli-*/yetease --version
+          dl/yetease-cli-*/yetease search 晴天 -l 3
+      - name: 运行桌面版截图巡览
+        run: |
+          mkdir -p shots
+          exe="$HOME/Applications/YetEase Music.app/Contents/MacOS/YetEase Music"
+          YETEASE_TOUR="$PWD/shots" YETEASE_TOUR_SONG="Yesterday Once More Carpenters" "$exe" > app.log 2>&1 &
+          pid=$!
+          sleep 150
+          if kill -0 $pid 2>/dev/null; then echo "进程仍在运行"; kill $pid; else echo "进程已退出"; fi
+          ls -la shots
+          test "$(ls shots/*.png | wc -l)" -ge 5
+      - name: 收集日志
+        if: always()
+        run: |
+          mkdir -p logs
+          cp app.log logs/ 2>/dev/null || true
+          find "$HOME/Library/Application Support" -name "yetease*.log" -exec cp {} logs/ \; 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-macos
+          path: |
+            shots
+            logs
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 下载 APK
+        run: gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p "*android-x86_64.apk" -D dl
+      - name: 启用 KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: 在模拟器中安装并启动
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: bash .github/scripts/android-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-android
+          path: smoke
