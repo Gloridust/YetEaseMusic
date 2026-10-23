@@ -1,0 +1,35 @@
+# Rust
+/target
+**/*.rs.bk
+
+# Flutter / Dart（app/.gitignore 里还有更细的规则）
+**/.dart_tool/
+**/build/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+app/linux/flutter/ephemeral/
+app/windows/flutter/ephemeral/
+app/macos/Flutter/ephemeral/
+app/android/local.properties
+app/android/key.properties
+**/*.jks
+**/*.keystore
+
+# 运行时产物：下载中的缓存、会话与截图巡览输出
+*.part
+session.json
+/shots/
+
+# 编辑器与系统
+.idea/
+.vscode/
+*.iml
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# 本地环境与密钥
+.env
+.env.*
+!.env.example

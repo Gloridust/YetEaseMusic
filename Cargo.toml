@@ -1,0 +1,12 @@
+[workspace]
+resolver = "3"
+members = ["crates/ncm-api", "crates/ncm-core", "crates/ncm-player", "crates/ncm-cli", "app/rust"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/Gloridust/YetEaseMusic"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

@@ -1,0 +1,16 @@
+[package]
+name = "ncm-player"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+cpal = "0.18.2"
+crossbeam-channel = "0.5.17"
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls-no-provider", "blocking", "http2", "system-proxy"] }
+rtrb = "0.4.0"
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
+symphonia = { version = "0.6.1", features = ["mp3", "flac", "aac", "isomp4", "wav", "vorbis", "ogg", "pcm"] }
+thiserror = "2.0.21"
+tracing = "0.1.44"
