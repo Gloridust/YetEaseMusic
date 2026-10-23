@@ -1,0 +1,69 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:window_manager/window_manager.dart';
+
+import 'debug_tour.dart';
+import 'src/rust/api/playback.dart' as pb;
+import 'src/rust/frb_generated.dart';
+import 'state.dart';
+import 'theme.dart';
+import 'ui/shell.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await RustLib.init();
+  await pb.bootstrap();
+
+  if (isDesktop) {
+    await windowManager.ensureInitialized();
+    await windowManager.waitUntilReadyToShow(
+      const WindowOptions(
+        size: Size(1280, 840),
+        minimumSize: Size(420, 560),
+        center: true,
+        title: 'YetEase Music',
+        titleBarStyle: TitleBarStyle.hidden,
+      ),
+      () async {
+        await windowManager.show();
+        await windowManager.focus();
+      },
+    );
+  }
+
+  await AppState.I.start();
+  runApp(const YetEaseApp());
+  maybeRunTour();
+}
+
+class YetEaseApp extends StatelessWidget {
+  const YetEaseApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder(
+      valueListenable: AppState.I.themeMode,
+      builder: (context, mode, _) => MaterialApp(
+        title: 'YetEase Music',
+        debugShowCheckedModeBanner: false,
+        theme: buildTheme(Brightness.light),
+        darkTheme: buildTheme(Brightness.dark),
+        themeMode: mode,
+        shortcuts: {
+          ...WidgetsApp.defaultShortcuts,
+          const SingleActivator(LogicalKeyboardKey.space): const _ToggleIntent(),
+        },
+        actions: {
+          ...WidgetsApp.defaultActions,
+          _ToggleIntent: CallbackAction<_ToggleIntent>(onInvoke: (_) => pb.toggle()),
+        },
+        home: RepaintBoundary(key: tourBoundary, child: const Shell()),
+      ),
+    );
+  }
+}
+
+/// 空格键播放/暂停（输入框聚焦时由输入框自己处理空格）
+class _ToggleIntent extends Intent {
+  const _ToggleIntent();
+}

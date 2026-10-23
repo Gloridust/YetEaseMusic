@@ -11,7 +11,10 @@ fn nn<'de, D: Deserializer<'de>, T: Default + Deserialize<'de>>(d: D) -> Result<
 fn num<'de, D: Deserializer<'de>>(d: D) -> Result<u64, D::Error> {
     let v = serde_json::Value::deserialize(d)?;
     Ok(match v {
-        serde_json::Value::Number(n) => n.as_u64().or_else(|| n.as_f64().map(|f| f.max(0.0) as u64)).unwrap_or(0),
+        serde_json::Value::Number(n) => n
+            .as_u64()
+            .or_else(|| n.as_f64().map(|f| f.max(0.0) as u64))
+            .unwrap_or(0),
         serde_json::Value::String(s) => s.parse::<f64>().map(|f| f.max(0.0) as u64).unwrap_or(0),
         _ => 0,
     })
@@ -155,9 +158,15 @@ pub enum QrStatus {
     Expired,
     Waiting,
     /// 已扫码，待手机确认
-    Scanned { nickname: String, avatar_url: Option<String> },
+    Scanned {
+        nickname: String,
+        avatar_url: Option<String>,
+    },
     Authorized,
-    Other { code: i64, message: String },
+    Other {
+        code: i64,
+        message: String,
+    },
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]

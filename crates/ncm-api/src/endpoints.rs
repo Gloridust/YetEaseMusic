@@ -31,10 +31,19 @@ fn opt_str(v: &Value, path: &[&str]) -> String {
 impl Client {
     /// 匿名注册，拿到游客 `MUSIC_A`（未登录时部分接口需要）。`register_anonimous`
     pub async fn register_anonymous(&self) -> Result<()> {
-        let device_id = self.session().cookies.get("deviceId").cloned().unwrap_or_default();
+        let device_id = self
+            .session()
+            .cookies
+            .get("deviceId")
+            .cloned()
+            .unwrap_or_default();
         let username = crate::crypto::encode_device_id(&device_id);
-        self.request("/api/register/anonimous", json!({ "username": username }), Crypto::Weapi)
-            .await?;
+        self.request(
+            "/api/register/anonimous",
+            json!({ "username": username }),
+            Crypto::Weapi,
+        )
+        .await?;
         Ok(())
     }
 
@@ -43,7 +52,11 @@ impl Client {
     /// `login_qr_key`：返回 unikey。二维码内容为 [`qr_login_url`]。
     pub async fn qr_key(&self) -> Result<String> {
         let v = self
-            .request("/api/login/qrcode/unikey", json!({ "type": 3 }), Crypto::Eapi)
+            .request(
+                "/api/login/qrcode/unikey",
+                json!({ "type": 3 }),
+                Crypto::Eapi,
+            )
             .await?;
         field(&v, &["unikey"])
     }
@@ -66,7 +79,10 @@ impl Client {
                 avatar_url: Some(opt_str(&v, &["avatarUrl"])).filter(|s| !s.is_empty()),
             },
             803 => QrStatus::Authorized,
-            _ => QrStatus::Other { code, message: opt_str(&v, &["message"]) },
+            _ => QrStatus::Other {
+                code,
+                message: opt_str(&v, &["message"]),
+            },
         })
     }
 
@@ -79,10 +95,16 @@ impl Client {
             return Ok(None);
         };
         Ok(Some(Account {
-            user_id: profile.get("userId").and_then(Value::as_u64).unwrap_or_default(),
+            user_id: profile
+                .get("userId")
+                .and_then(Value::as_u64)
+                .unwrap_or_default(),
             nickname: opt_str(profile, &["nickname"]),
             avatar_url: Some(opt_str(profile, &["avatarUrl"])).filter(|s| !s.is_empty()),
-            vip_type: profile.get("vipType").and_then(Value::as_i64).unwrap_or_default() as i32,
+            vip_type: profile
+                .get("vipType")
+                .and_then(Value::as_i64)
+                .unwrap_or_default() as i32,
         }))
     }
 
@@ -96,7 +118,12 @@ impl Client {
     // ---------- 发现 ----------
 
     /// `cloudsearch`：单曲搜索。返回 (歌曲, 总数)。
-    pub async fn search_songs(&self, keywords: &str, limit: u32, offset: u32) -> Result<(Vec<Song>, u64)> {
+    pub async fn search_songs(
+        &self,
+        keywords: &str,
+        limit: u32,
+        offset: u32,
+    ) -> Result<(Vec<Song>, u64)> {
         let v = self
             .request(
                 "/api/cloudsearch/pc",
@@ -124,7 +151,11 @@ impl Client {
     /// `recommend_songs`：每日推荐（需登录）。
     pub async fn daily_songs(&self) -> Result<Vec<Song>> {
         let v = self
-            .request("/api/v3/discovery/recommend/songs", json!({}), Crypto::Weapi)
+            .request(
+                "/api/v3/discovery/recommend/songs",
+                json!({}),
+                Crypto::Weapi,
+            )
             .await?;
         field(&v, &["data", "dailySongs"])
     }
@@ -132,7 +163,12 @@ impl Client {
     // ---------- 歌单 ----------
 
     /// `user_playlist`：用户创建与收藏的歌单。
-    pub async fn user_playlists(&self, uid: u64, limit: u32, offset: u32) -> Result<Vec<PlaylistSummary>> {
+    pub async fn user_playlists(
+        &self,
+        uid: u64,
+        limit: u32,
+        offset: u32,
+    ) -> Result<Vec<PlaylistSummary>> {
         let v = self
             .request(
                 "/api/user/playlist",
@@ -146,7 +182,11 @@ impl Client {
     /// `playlist_detail` + `song_detail`：歌单信息与完整曲目。
     pub async fn playlist_detail(&self, id: u64) -> Result<PlaylistDetail> {
         let v = self
-            .request("/api/v6/playlist/detail", json!({ "id": id, "n": 100000, "s": 8 }), Crypto::Eapi)
+            .request(
+                "/api/v6/playlist/detail",
+                json!({ "id": id, "n": 100000, "s": 8 }),
+                Crypto::Eapi,
+            )
             .await?;
         let pl = &v["playlist"];
         let summary: PlaylistSummary = serde_json::from_value(pl.clone())?;
@@ -173,7 +213,10 @@ impl Client {
         let mut out = Vec::with_capacity(ids.len());
         for chunk in ids.chunks(500) {
             let c = serde_json::to_string(
-                &chunk.iter().map(|id| json!({ "id": id })).collect::<Vec<_>>(),
+                &chunk
+                    .iter()
+                    .map(|id| json!({ "id": id }))
+                    .collect::<Vec<_>>(),
             )?;
             let v = self
                 .request("/api/v3/song/detail", json!({ "c": c }), Crypto::Weapi)
@@ -214,7 +257,8 @@ impl Client {
             )
             .await?;
         let mut list: Vec<SongUrl> = field(&v, &["data"])?;
-        list.pop().ok_or_else(|| Error::Decode("empty song url list".into()))
+        list.pop()
+            .ok_or_else(|| Error::Decode("empty song url list".into()))
     }
 
     /// `lyric`：歌词、翻译、罗马音。

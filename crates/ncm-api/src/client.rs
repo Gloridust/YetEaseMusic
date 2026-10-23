@@ -73,8 +73,10 @@ impl Session {
         c.entry("os".into()).or_insert_with(|| "pc".into());
         c.entry("osver".into())
             .or_insert_with(|| "Microsoft-Windows-10-Professional-build-19045-64bit".into());
-        c.entry("appver".into()).or_insert_with(|| "3.1.17.204416".into());
-        c.entry("channel".into()).or_insert_with(|| "netease".into());
+        c.entry("appver".into())
+            .or_insert_with(|| "3.1.17.204416".into());
+        c.entry("channel".into())
+            .or_insert_with(|| "netease".into());
     }
 
     fn header_cookie(&self) -> String {
@@ -119,8 +121,12 @@ impl Session {
     }
 
     fn apply_set_cookie(&mut self, raw: &str) {
-        let Some(first) = raw.split(';').next() else { return };
-        let Some((k, v)) = first.split_once('=') else { return };
+        let Some(first) = raw.split(';').next() else {
+            return;
+        };
+        let Some((k, v)) = first.split_once('=') else {
+            return;
+        };
         let (k, v) = (k.trim(), v.trim());
         let expired = raw.split(';').any(|attr| {
             let attr = attr.trim().to_ascii_lowercase();
@@ -181,7 +187,11 @@ impl Client {
         let mut data = match data {
             Value::Object(m) => m,
             Value::Null => Map::new(),
-            other => return Err(Error::Other(format!("request data must be an object: {other}"))),
+            other => {
+                return Err(Error::Other(format!(
+                    "request data must be an object: {other}"
+                )));
+            }
         };
         let (url, form, cookie, ua, referer) = {
             let s = self.session.read().unwrap();
@@ -189,7 +199,9 @@ impl Client {
                 Crypto::Weapi => {
                     data.insert("csrf_token".into(), s.get("__csrf").into());
                     let text = Value::Object(data).to_string();
-                    let form = crypto::weapi(&text).map(|(k, v)| (k.to_owned(), v)).to_vec();
+                    let form = crypto::weapi(&text)
+                        .map(|(k, v)| (k.to_owned(), v))
+                        .to_vec();
                     (
                         format!("{DOMAIN}/weapi/{}", &uri[5..]),
                         form,
@@ -205,7 +217,9 @@ impl Client {
                         "params": Value::Object(data),
                     })
                     .to_string();
-                    let form = crypto::linuxapi(&text).map(|(k, v)| (k.to_owned(), v)).to_vec();
+                    let form = crypto::linuxapi(&text)
+                        .map(|(k, v)| (k.to_owned(), v))
+                        .to_vec();
                     (
                         format!("{DOMAIN}/api/linux/forward"),
                         form,
@@ -216,11 +230,14 @@ impl Client {
                 }
                 Crypto::Eapi => {
                     let header = s.eapi_header();
-                    let cookie = join_cookie(header.iter().map(|(k, v)| (k, v.as_str().unwrap_or(""))));
+                    let cookie =
+                        join_cookie(header.iter().map(|(k, v)| (k, v.as_str().unwrap_or(""))));
                     data.insert("header".into(), Value::Object(header));
                     data.entry("e_r").or_insert(false.into());
                     let text = Value::Object(data).to_string();
-                    let form = crypto::eapi(uri, &text).map(|(k, v)| (k.to_owned(), v)).to_vec();
+                    let form = crypto::eapi(uri, &text)
+                        .map(|(k, v)| (k.to_owned(), v))
+                        .to_vec();
                     (
                         format!("{EAPI_DOMAIN}/eapi/{}", &uri[5..]),
                         form,
@@ -231,7 +248,8 @@ impl Client {
                 }
                 Crypto::Api => {
                     let header = s.eapi_header();
-                    let cookie = join_cookie(header.iter().map(|(k, v)| (k, v.as_str().unwrap_or(""))));
+                    let cookie =
+                        join_cookie(header.iter().map(|(k, v)| (k, v.as_str().unwrap_or(""))));
                     let form = data
                         .into_iter()
                         .map(|(k, v)| {
@@ -242,7 +260,13 @@ impl Client {
                             (k, v)
                         })
                         .collect();
-                    (format!("{API_DOMAIN}{uri}"), form, cookie, UA_API_IPHONE, None)
+                    (
+                        format!("{API_DOMAIN}{uri}"),
+                        form,
+                        cookie,
+                        UA_API_IPHONE,
+                        None,
+                    )
                 }
             }
         };
@@ -275,7 +299,12 @@ impl Client {
             // 部分接口在 e_r=true 时返回 eapi 加密体
             crypto::eapi_decrypt_response(&bytes)
                 .and_then(|b| serde_json::from_slice(&b).ok())
-                .ok_or_else(|| Error::Decode(format!("HTTP {status}, {} bytes non-JSON body", bytes.len())))
+                .ok_or_else(|| {
+                    Error::Decode(format!(
+                        "HTTP {status}, {} bytes non-JSON body",
+                        bytes.len()
+                    ))
+                })
         })?;
         let code = body
             .get("code")

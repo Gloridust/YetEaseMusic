@@ -69,7 +69,13 @@ impl Queue {
         let cur = self.current?;
         let pos = self.order.iter().position(|&x| x == cur)?;
         let next = if forward {
-            if pos + 1 < n { Some(pos + 1) } else if wrap { Some(0) } else { None }
+            if pos + 1 < n {
+                Some(pos + 1)
+            } else if wrap {
+                Some(0)
+            } else {
+                None
+            }
         } else if pos > 0 {
             Some(pos - 1)
         } else if wrap {
@@ -104,7 +110,12 @@ mod tests {
     use super::*;
 
     fn songs(n: u64) -> Vec<Song> {
-        (1..=n).map(|id| Song { id, ..Default::default() }).collect()
+        (1..=n)
+            .map(|id| Song {
+                id,
+                ..Default::default()
+            })
+            .collect()
     }
 
     #[test]

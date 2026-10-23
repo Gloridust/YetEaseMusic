@@ -62,7 +62,11 @@ pub fn merge(lrc: &str, translation: &str) -> Vec<LyricLine> {
                 .iter()
                 .find(|(t, s)| *t == time_ms && !s.is_empty())
                 .map(|(_, s)| s.clone());
-            LyricLine { time_ms, text, translation }
+            LyricLine {
+                time_ms,
+                text,
+                translation,
+            }
         })
         .collect()
 }

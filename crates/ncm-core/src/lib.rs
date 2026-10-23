@@ -59,7 +59,11 @@ const CN_PREFIXES: &[&str] = &[
 
 pub fn random_cn_ip() -> String {
     let p = CN_PREFIXES[rand::random_range(0..CN_PREFIXES.len())];
-    format!("{p}.{}.{}", rand::random_range(1..=254), rand::random_range(1..=254))
+    format!(
+        "{p}.{}.{}",
+        rand::random_range(1..=254),
+        rand::random_range(1..=254)
+    )
 }
 
 #[derive(Debug, Clone)]
@@ -72,7 +76,10 @@ impl Paths {
     pub fn platform_default() -> Result<Self> {
         let d = directories::ProjectDirs::from("io.github", "Gloridust", "YetEaseMusic")
             .ok_or_else(|| Error::Other("cannot resolve home directory".into()))?;
-        Ok(Self { data_dir: d.data_dir().to_owned(), cache_dir: d.cache_dir().to_owned() })
+        Ok(Self {
+            data_dir: d.data_dir().to_owned(),
+            cache_dir: d.cache_dir().to_owned(),
+        })
     }
 
     fn session_file(&self) -> PathBuf {
@@ -285,7 +292,10 @@ impl Core {
         };
         self.emit(CoreEvent::TrackChanged(Some(song.clone())));
         if let Err(msg) = self.start(&song).await {
-            self.emit(CoreEvent::Notice(format!("《{}》无法播放：{msg}", song.name)));
+            self.emit(CoreEvent::Notice(format!(
+                "《{}》无法播放：{msg}",
+                song.name
+            )));
             let (skip, len) = {
                 let mut f = self.failures.lock().unwrap();
                 *f += 1;
@@ -301,17 +311,35 @@ impl Core {
 
     async fn start(&self, song: &Song) -> std::result::Result<(), String> {
         let quality = self.settings.lock().unwrap().quality;
-        let url = self.api.song_url(song.id, quality).await.map_err(|e| e.to_string())?;
+        let url = self
+            .api
+            .song_url(song.id, quality)
+            .await
+            .map_err(|e| e.to_string())?;
         let Some(link) = url.url.filter(|u| !u.is_empty()) else {
-            return Err(if song.fee == 1 { "需要会员".into() } else { "暂无版权".into() });
+            return Err(if song.fee == 1 {
+                "需要会员".into()
+            } else {
+                "暂无版权".into()
+            });
         };
         if url.free_trial.as_ref().is_some_and(|v| !v.is_null()) {
             self.emit(CoreEvent::Notice(format!("《{}》为试听片段", song.name)));
         }
         let ext = url.format.as_deref().unwrap_or("mp3").to_ascii_lowercase();
         let level = url.level.as_deref().unwrap_or(quality.level());
-        let cache_path = self.paths.cache_dir.join("audio").join(format!("{}-{level}.{ext}", song.id));
-        self.player.load(Source::Url { url: link, cache_path }, true);
+        let cache_path = self
+            .paths
+            .cache_dir
+            .join("audio")
+            .join(format!("{}-{level}.{ext}", song.id));
+        self.player.load(
+            Source::Url {
+                url: link,
+                cache_path,
+            },
+            true,
+        );
         Ok(())
     }
 

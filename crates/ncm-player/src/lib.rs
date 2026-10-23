@@ -38,7 +38,10 @@ pub enum Error {
 #[derive(Debug, Clone)]
 pub enum Source {
     /// 网络地址；`cache_path` 下载完成后即为离线缓存
-    Url { url: String, cache_path: PathBuf },
+    Url {
+        url: String,
+        cache_path: PathBuf,
+    },
     File(PathBuf),
 }
 
@@ -54,15 +57,27 @@ pub enum PlaybackState {
 pub enum PlayerEvent {
     State(PlaybackState),
     /// 新曲目解码就绪
-    Loaded { duration_ms: u64, sample_rate: u32, channels: u16 },
-    Position { position_ms: u64, duration_ms: u64, buffered: f32 },
+    Loaded {
+        duration_ms: u64,
+        sample_rate: u32,
+        channels: u16,
+    },
+    Position {
+        position_ms: u64,
+        duration_ms: u64,
+        buffered: f32,
+    },
     /// 当前曲目自然播完
     Ended,
     Error(String),
 }
 
 enum Cmd {
-    Load { source: Source, autoplay: bool, start_ms: u64 },
+    Load {
+        source: Source,
+        autoplay: bool,
+        start_ms: u64,
+    },
     Play,
     Pause,
     Stop,
@@ -105,7 +120,11 @@ impl Player {
 
     /// 从 `start_ms` 开始播放（恢复上次进度用）
     pub fn load_at(&self, source: Source, autoplay: bool, start_ms: u64) {
-        let _ = self.tx.send(Cmd::Load { source, autoplay, start_ms });
+        let _ = self.tx.send(Cmd::Load {
+            source,
+            autoplay,
+            start_ms,
+        });
     }
 
     pub fn play(&self) {
@@ -134,7 +153,9 @@ impl Player {
     /// 0.0 ~ 1.0，内部按平方曲线映射，听感更线性
     pub fn set_volume(&self, v: f32) {
         let v = v.clamp(0.0, 1.0);
-        self.shared.volume.store((v * v).to_bits(), Ordering::Relaxed);
+        self.shared
+            .volume
+            .store((v * v).to_bits(), Ordering::Relaxed);
     }
 
     pub fn volume(&self) -> f32 {
@@ -142,7 +163,11 @@ impl Player {
     }
 
     pub fn state(&self) -> PlaybackState {
-        self.status.state.lock().unwrap().unwrap_or(PlaybackState::Stopped)
+        self.status
+            .state
+            .lock()
+            .unwrap()
+            .unwrap_or(PlaybackState::Stopped)
     }
 
     pub fn position_ms(&self) -> u64 {
@@ -158,7 +183,11 @@ fn position_ms(shared: &Shared, status: &Status) -> u64 {
     let rate = status.rate.load(Ordering::Relaxed) as u64;
     let frames = shared.played_frames.load(Ordering::Relaxed);
     let base = status.base_ms.load(Ordering::Relaxed);
-    if rate == 0 { base } else { base + frames * 1000 / rate }
+    if rate == 0 {
+        base
+    } else {
+        base + frames * 1000 / rate
+    }
 }
 
 /// 下载用的共享 HTTP 客户端
@@ -204,7 +233,12 @@ struct Engine {
 }
 
 impl Engine {
-    fn new(rx: Receiver<Cmd>, ev: Sender<PlayerEvent>, shared: Arc<Shared>, status: Arc<Status>) -> Self {
+    fn new(
+        rx: Receiver<Cmd>,
+        ev: Sender<PlayerEvent>,
+        shared: Arc<Shared>,
+        status: Arc<Status>,
+    ) -> Self {
         Self {
             rx,
             ev,
@@ -227,7 +261,9 @@ impl Engine {
         if self.state != s {
             self.state = s;
             *self.status.state.lock().unwrap() = Some(s);
-            self.shared.paused.store(s != PlaybackState::Playing, Ordering::Relaxed);
+            self.shared
+                .paused
+                .store(s != PlaybackState::Playing, Ordering::Relaxed);
             self.emit(PlayerEvent::State(s));
         }
     }
@@ -260,25 +296,39 @@ impl Engine {
 
     fn handle(&mut self, cmd: Cmd) {
         match cmd {
-            Cmd::Load { source, autoplay, start_ms } => {
+            Cmd::Load {
+                source,
+                autoplay,
+                start_ms,
+            } => {
                 self.track = None;
                 self.flush_output();
                 self.set_state(PlaybackState::Loading);
                 self.status.base_ms.store(0, Ordering::Relaxed);
                 match open_track(source) {
                     Ok(t) => {
-                        self.status.duration_ms.store(t.duration_ms, Ordering::Relaxed);
+                        self.status
+                            .duration_ms
+                            .store(t.duration_ms, Ordering::Relaxed);
                         let (rate, ch, dur) = (t.sample_rate, t.channels, t.duration_ms);
                         self.track = Some(t);
                         if let Err(e) = self.ensure_output(rate, ch) {
                             self.fail(e.to_string());
                             return;
                         }
-                        self.emit(PlayerEvent::Loaded { duration_ms: dur, sample_rate: rate, channels: ch });
+                        self.emit(PlayerEvent::Loaded {
+                            duration_ms: dur,
+                            sample_rate: rate,
+                            channels: ch,
+                        });
                         if start_ms > 0 {
                             self.seek(start_ms);
                         }
-                        self.set_state(if autoplay { PlaybackState::Playing } else { PlaybackState::Paused });
+                        self.set_state(if autoplay {
+                            PlaybackState::Playing
+                        } else {
+                            PlaybackState::Paused
+                        });
                         self.tick(true);
                     }
                     Err(e) => self.fail(e.to_string()),
@@ -337,7 +387,9 @@ impl Engine {
         let req = self.shared.flush_req.fetch_add(1, Ordering::AcqRel) + 1;
         if self.output.is_some() && !self.shared.paused.load(Ordering::Relaxed) {
             let t0 = Instant::now();
-            while self.shared.flush_ack.load(Ordering::Acquire) < req && t0.elapsed() < Duration::from_millis(200) {
+            while self.shared.flush_ack.load(Ordering::Acquire) < req
+                && t0.elapsed() < Duration::from_millis(200)
+            {
                 std::thread::sleep(Duration::from_millis(1));
             }
         }
@@ -349,7 +401,10 @@ impl Engine {
         let ms = ms.min(t.duration_ms.saturating_sub(500));
         let res = t.reader.seek(
             SeekMode::Accurate,
-            SeekTo::Time { time: Time::from_millis_u64(ms), track_id: Some(t.track_id) },
+            SeekTo::Time {
+                time: Time::from_millis_u64(ms),
+                track_id: Some(t.track_id),
+            },
         );
         match res {
             Ok(seeked) => {
@@ -372,7 +427,11 @@ impl Engine {
                 .and_then(|t| t._download.as_ref())
                 .map(|d| {
                     let (got, total) = d.progress();
-                    if total == 0 { 0.0 } else { got as f32 / total as f32 }
+                    if total == 0 {
+                        0.0
+                    } else {
+                        got as f32 / total as f32
+                    }
                 })
                 .unwrap_or(1.0);
             self.emit(PlayerEvent::Position {
@@ -425,7 +484,9 @@ fn next_samples(t: &mut Track, buf: &mut Vec<f32>) -> Result<bool, String> {
         let packet = match t.reader.next_packet() {
             Ok(Some(p)) => p,
             Ok(None) => return Ok(false),
-            Err(SymError::IoError(e)) if e.kind() == std::io::ErrorKind::UnexpectedEof => return Ok(false),
+            Err(SymError::IoError(e)) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
+                return Ok(false);
+            }
             Err(SymError::ResetRequired) => return Ok(false),
             Err(e) => return Err(e.to_string()),
         };
@@ -460,28 +521,36 @@ fn next_samples(t: &mut Track, buf: &mut Vec<f32>) -> Result<bool, String> {
 }
 
 fn open_track(source: Source) -> Result<Track, Error> {
-    let (ms, download, ext): (Box<dyn MediaSource>, Option<DownloadHandle>, Option<String>) = match source {
-        Source::File(p) => {
-            let ext = p.extension().map(|e| e.to_string_lossy().into_owned());
-            (Box::new(std::fs::File::open(p)?), None, ext)
-        }
-        Source::Url { url, cache_path } => {
-            let ext = cache_path.extension().map(|e| e.to_string_lossy().into_owned());
-            if cache_path.is_file() {
-                (Box::new(std::fs::File::open(&cache_path)?), None, ext)
-            } else {
-                let (s, h) = StreamingSource::open(&url, &cache_path)?;
-                (Box::new(s), Some(h), ext)
+    let (ms, download, ext): (Box<dyn MediaSource>, Option<DownloadHandle>, Option<String>) =
+        match source {
+            Source::File(p) => {
+                let ext = p.extension().map(|e| e.to_string_lossy().into_owned());
+                (Box::new(std::fs::File::open(p)?), None, ext)
             }
-        }
-    };
+            Source::Url { url, cache_path } => {
+                let ext = cache_path
+                    .extension()
+                    .map(|e| e.to_string_lossy().into_owned());
+                if cache_path.is_file() {
+                    (Box::new(std::fs::File::open(&cache_path)?), None, ext)
+                } else {
+                    let (s, h) = StreamingSource::open(&url, &cache_path)?;
+                    (Box::new(s), Some(h), ext)
+                }
+            }
+        };
     let mut hint = Hint::new();
     if let Some(ext) = &ext {
         hint.with_extension(ext);
     }
     let mss = MediaSourceStream::new(ms, Default::default());
     let reader = symphonia::default::get_probe()
-        .probe(&hint, mss, FormatOptions::default(), MetadataOptions::default())
+        .probe(
+            &hint,
+            mss,
+            FormatOptions::default(),
+            MetadataOptions::default(),
+        )
         .map_err(|e| Error::Decode(format!("probe: {e}")))?;
     let track = reader
         .default_track(TrackType::Audio)
@@ -492,7 +561,9 @@ fn open_track(source: Source) -> Result<Track, Error> {
     let decoder = symphonia::default::get_codecs()
         .make_audio_decoder(params, &AudioDecoderOptions::default())
         .map_err(|e| Error::Decode(format!("decoder: {e}")))?;
-    let sample_rate = params.sample_rate.ok_or_else(|| Error::Decode("unknown sample rate".into()))?;
+    let sample_rate = params
+        .sample_rate
+        .ok_or_else(|| Error::Decode("unknown sample rate".into()))?;
     let channels = params
         .channels
         .as_ref()
@@ -504,7 +575,10 @@ fn open_track(source: Source) -> Result<Track, Error> {
             .calc_time(Timestamp::from(d.get() as i64))
             .map(|t| t.as_millis() as u64)
             .unwrap_or(0),
-        _ => track.num_frames.map(|n| n * 1000 / sample_rate as u64).unwrap_or(0),
+        _ => track
+            .num_frames
+            .map(|n| n * 1000 / sample_rate as u64)
+            .unwrap_or(0),
     };
     Ok(Track {
         track_id: track.id,

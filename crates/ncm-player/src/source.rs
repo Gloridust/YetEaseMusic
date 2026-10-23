@@ -62,7 +62,11 @@ impl StreamingSource {
             fs::create_dir_all(dir)?;
         }
         let part = part_path(cache_path);
-        let writer = OpenOptions::new().create(true).write(true).truncate(true).open(&part)?;
+        let writer = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(true)
+            .open(&part)?;
         let reader = File::open(&part)?;
         let progress = Arc::new(Progress::default());
 
@@ -91,7 +95,11 @@ impl StreamingSource {
             })?;
 
         Ok((
-            Self { progress: progress.clone(), file: reader, pos: 0 },
+            Self {
+                progress: progress.clone(),
+                file: reader,
+                pos: 0,
+            },
             DownloadHandle(progress),
         ))
     }
@@ -130,7 +138,10 @@ fn download(url: &str, mut out: File, p: &Progress) -> io::Result<()> {
     let got = p.downloaded.load(Ordering::Relaxed);
     let total = p.total.load(Ordering::Relaxed);
     if total != 0 && got != total {
-        return Err(io::Error::new(io::ErrorKind::UnexpectedEof, format!("got {got} of {total} bytes")));
+        return Err(io::Error::new(
+            io::ErrorKind::UnexpectedEof,
+            format!("got {got} of {total} bytes"),
+        ));
     }
     p.total.store(got, Ordering::Relaxed);
     Ok(())
@@ -180,7 +191,10 @@ impl Seek for StreamingSource {
             }
         };
         if new < 0 {
-            return Err(io::Error::new(io::ErrorKind::InvalidInput, "seek before start"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "seek before start",
+            ));
         }
         self.pos = new as u64;
         Ok(self.pos)

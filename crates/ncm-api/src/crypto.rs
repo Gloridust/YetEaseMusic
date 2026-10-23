@@ -30,7 +30,9 @@ fn aes_ecb(data: &[u8], key: &[u8; 16]) -> Vec<u8> {
 }
 
 fn aes_ecb_decrypt(data: &[u8], key: &[u8; 16]) -> Option<Vec<u8>> {
-    EcbDec::new(key.into()).decrypt_padded_vec::<Pkcs7>(data).ok()
+    EcbDec::new(key.into())
+        .decrypt_padded_vec::<Pkcs7>(data)
+        .ok()
 }
 
 /// 无填充 RSA：把字节串当作大端整数做 m^e mod n，结果补零到 256 个十六进制字符。
@@ -64,14 +66,20 @@ fn weapi_with_key(text: &str, secret: [u8; 16]) -> [(&'static str, String); 2] {
 
 /// linuxapi：AES-ECB，十六进制大写。返回表单字段 `eparams`。
 pub fn linuxapi(text: &str) -> [(&'static str, String); 1] {
-    [("eparams", hex::encode_upper(aes_ecb(text.as_bytes(), LINUXAPI_KEY)))]
+    [(
+        "eparams",
+        hex::encode_upper(aes_ecb(text.as_bytes(), LINUXAPI_KEY)),
+    )]
 }
 
 /// eapi：`url` 是 `/api/...` 形式的路径。返回表单字段 `params`。
 pub fn eapi(url: &str, text: &str) -> [(&'static str, String); 1] {
     let digest = hex::encode(Md5::digest(format!("nobody{url}use{text}md5forencrypt")));
     let data = format!("{url}-36cd479b6b5-{text}-36cd479b6b5-{digest}");
-    [("params", hex::encode_upper(aes_ecb(data.as_bytes(), EAPI_KEY)))]
+    [(
+        "params",
+        hex::encode_upper(aes_ecb(data.as_bytes(), EAPI_KEY)),
+    )]
 }
 
 /// 解密 eapi 加密的响应体（请求带 `e_r=true` 时服务端会加密返回）。

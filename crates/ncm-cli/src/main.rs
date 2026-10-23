@@ -75,7 +75,10 @@ async fn main() -> Result<()> {
             println!("已退出登录");
         }
         Cmd::Whoami => match api.account().await? {
-            Some(a) => println!("{}（uid {}，vipType {}）", a.nickname, a.user_id, a.vip_type),
+            Some(a) => println!(
+                "{}（uid {}，vipType {}）",
+                a.nickname, a.user_id, a.vip_type
+            ),
             None => println!("未登录"),
         },
         Cmd::Search { keywords, limit } => {
@@ -83,7 +86,11 @@ async fn main() -> Result<()> {
             println!("共 {total} 条");
             print_songs(&songs);
         }
-        Cmd::Play { query, quality, volume } => {
+        Cmd::Play {
+            query,
+            quality,
+            volume,
+        } => {
             if let Some(q) = quality {
                 let q = parse_quality(&q)?;
                 core.update_settings(|s| s.quality = q);
@@ -203,7 +210,10 @@ async fn login(core: &Core) -> Result<()> {
 async fn play(core: &std::sync::Arc<Core>, songs: Vec<Song>, index: usize) -> Result<()> {
     let mut rx = core.subscribe();
     core.play_list(songs, index).await;
-    let mut title = core.current_song().map(|s| format!("{} - {}", s.name, s.artist_names())).unwrap_or_default();
+    let mut title = core
+        .current_song()
+        .map(|s| format!("{} - {}", s.name, s.artist_names()))
+        .unwrap_or_default();
     loop {
         tokio::select! {
             _ = tokio::signal::ctrl_c() => {

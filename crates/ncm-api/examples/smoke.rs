@@ -5,7 +5,10 @@ use ncm_api::{Client, Quality, Session};
 async fn main() -> ncm_api::Result<()> {
     let c = Client::new(Session::default())?;
     match c.register_anonymous().await {
-        Ok(()) => println!("anonymous: MUSIC_A={}", c.session().cookies.contains_key("MUSIC_A")),
+        Ok(()) => println!(
+            "anonymous: MUSIC_A={}",
+            c.session().cookies.contains_key("MUSIC_A")
+        ),
         Err(e) => println!("anonymous register failed: {e}"),
     }
     let (songs, total) = c.search_songs("晴天 周杰伦", 5, 0).await?;
@@ -24,12 +27,24 @@ async fn main() -> ncm_api::Result<()> {
     // 一首免费歌：Free Loop
     for id in [1_330_348_068u64, songs.first().map(|s| s.id).unwrap_or(0)] {
         match c.song_url(id, Quality::Lossless).await {
-            Ok(u) => println!("url {id}: {:?} br={} type={:?} trial={}", u.url.as_deref().map(|s| &s[..s.len().min(60)]), u.br, u.format, u.free_trial.as_ref().is_some_and(|v| !v.is_null())),
+            Ok(u) => println!(
+                "url {id}: {:?} br={} type={:?} trial={}",
+                u.url.as_deref().map(|s| &s[..s.len().min(60)]),
+                u.br,
+                u.format,
+                u.free_trial.as_ref().is_some_and(|v| !v.is_null())
+            ),
             Err(e) => println!("url {id} error: {e}"),
         }
     }
-    let l = c.lyrics(songs.first().map(|s| s.id).unwrap_or(186016)).await?;
-    println!("lyric lines={} tlyric={}", l.lrc.lines().count(), !l.translation.is_empty());
+    let l = c
+        .lyrics(songs.first().map(|s| s.id).unwrap_or(186016))
+        .await?;
+    println!(
+        "lyric lines={} tlyric={}",
+        l.lrc.lines().count(),
+        !l.translation.is_empty()
+    );
     let key = c.qr_key().await?;
     println!("qr key ok: {}", ncm_api::qr_login_url(&key));
     println!("qr status: {:?}", c.qr_check(&key).await?);

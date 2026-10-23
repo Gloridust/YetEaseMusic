@@ -89,7 +89,12 @@ impl Output {
             )
             .map_err(|e| Error::Output(e.to_string()))?;
         stream.play().map_err(|e| Error::Output(e.to_string()))?;
-        Ok(Self { sample_rate, channels, producer, _stream: stream })
+        Ok(Self {
+            sample_rate,
+            channels,
+            producer,
+            _stream: stream,
+        })
     }
 
     /// 尽可能多地写入，返回写入的样本数（总是整帧）。

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/ncm-api", "crates/ncm-core", "crates/ncm-player", "crates/ncm-cli"]
+members = ["crates/ncm-api", "crates/ncm-core", "crates/ncm-player", "crates/ncm-cli", "app/rust"]
 
 [workspace.package]
 edition = "2024"
