@@ -149,7 +149,7 @@ class AppState {
       }
       final results = await Future.wait([lib.userPlaylists(userId: a.userId), lib.likedSongIds(userId: a.userId)]);
       myPlaylists.value = results[0] as List<PlaylistItem>;
-      likedIds.value = (results[1] as List<int>).toSet();
+      likedIds.value = (results[1] as Int64List).inner.toSet();
     } catch (e) {
       debugPrint('refreshAccount: $e');
     }
