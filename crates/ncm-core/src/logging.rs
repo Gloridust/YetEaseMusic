@@ -45,6 +45,13 @@ pub fn init(data_dir: &Path) {
         .with_ansi(false)
         .with_writer(writer)
         .try_init();
+    // 后台线程（播放引擎等）的 panic 默认只打到标准错误，安卓上看不到；同时写进日志
+    let default_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let thread = std::thread::current();
+        tracing::error!(thread = thread.name().unwrap_or("?"), "panic: {info}");
+        default_hook(info);
+    }));
     tracing::info!(
         version = env!("CARGO_PKG_VERSION"),
         os = std::env::consts::OS,

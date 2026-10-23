@@ -376,7 +376,13 @@ impl Engine {
             .is_some_and(|o| o.sample_rate == rate && o.channels == channels);
         if !reuse {
             self.output = None;
-            self.output = Some(Output::open(rate, channels, self.shared.clone())?);
+            // 音频后端内部 panic（如安卓上缺 JNI 上下文）不能带走整个引擎线程，转成普通错误
+            let shared = self.shared.clone();
+            let opened = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                Output::open(rate, channels, shared)
+            }))
+            .unwrap_or_else(|_| Err(Error::Output("audio backend panicked".into())));
+            self.output = Some(opened?);
         }
         self.status.rate.store(rate, Ordering::Relaxed);
         self.shared.played_frames.store(0, Ordering::Relaxed);
