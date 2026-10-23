@@ -107,10 +107,13 @@ Protocol, playback, queue and cache live in a shared Rust core; the UI layer onl
 | Light / dark theme, UI scaling, overseas mode | ✅ |
 | Log export (credentials redacted) for bug reports | ✅ |
 | CLI and terminal UI (`yetease tui`) | ✅ |
-| Android background playback, notification controls and steering-wheel keys | 🚧 |
-| Follow playlists / artists / albums | 📝 |
+| Save albums, follow artists, save playlists¹ | ✅ |
+| Android background playback, notification / lock-screen controls, Bluetooth and steering-wheel keys² | ✅ |
 
-✅ done · 🚧 in progress · 📝 planned
+✅ done
+
+¹ Saving a playlist requires NetEase's anti-bot check, which a native client may fail; you'll be told to do it in the mobile app if so. Unsaving always works.
+² Built on the Android media session, but not yet tested much on real head units – feedback welcome.
 
 ## Platforms
 
@@ -120,7 +123,7 @@ Protocol, playback, queue and cache live in a shared Rust core; the UI layer onl
 | CLI / terminal UI | ✅ available | No GUI needed; works on servers and over SSH |
 | Windows 10 / 11 (incl. tablets) | ✅ available | Installer and portable zip, built by CI |
 | macOS (Intel / Apple silicon) | ✅ available | Universal dmg built by CI; unsigned, so right-click → Open the first time |
-| Android / head units | 🧪 beta | Foreground playback works; background playback and steering-wheel keys in progress |
+| Android / head units | 🧪 beta | Background playback and media keys supported; real head-unit testing in progress |
 
 ## Getting started
 

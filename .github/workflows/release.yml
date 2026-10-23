@@ -13,6 +13,11 @@ on:
 permissions:
   contents: write
 
+# 同一个 PR 推了新提交时取消旧的构建；标签发布不取消
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   FLUTTER_VERSION: "3.47.7"
   CARGO_TERM_COLOR: always
