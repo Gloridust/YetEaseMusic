@@ -37,6 +37,10 @@ pub struct Settings {
     /// 出口在海外时伪装国内 IP，绕开地区版权限制
     pub use_cn_ip: bool,
     pub cn_ip: String,
+    /// 界面整体缩放（1.0 为默认尺寸）
+    pub ui_scale: f32,
+    /// "system" / "light" / "dark"
+    pub theme: String,
 }
 
 impl Default for Settings {
@@ -47,6 +51,8 @@ impl Default for Settings {
             play_mode: PlayMode::Sequential,
             use_cn_ip: true,
             cn_ip: random_cn_ip(),
+            ui_scale: 1.0,
+            theme: "system".into(),
         }
     }
 }

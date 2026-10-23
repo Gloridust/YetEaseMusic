@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> {
       builder: (context, list) => CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(32, 8, 32, 0),
+            padding: const EdgeInsets.fromLTRB(28, 4, 28, 0),
             sliver: SliverToBoxAdapter(
               child: ValueListenableBuilder(
                 valueListenable: AppState.I.account,
@@ -35,16 +35,16 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SliverPadding(
-            padding: EdgeInsets.fromLTRB(32, 24, 32, 16),
+            padding: EdgeInsets.fromLTRB(28, 20, 28, 14),
             sliver: SliverToBoxAdapter(child: _SectionTitle('推荐歌单')),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+            padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 220,
-                mainAxisSpacing: 24,
-                crossAxisSpacing: 24,
+                maxCrossAxisExtent: 190,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
                 childAspectRatio: 0.74,
               ),
               delegate: SliverChildBuilderDelegate(
@@ -65,7 +65,7 @@ class _SectionTitle extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) => Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700));
+  Widget build(BuildContext context) => Text(text, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700));
 }
 
 /// 每日推荐入口
@@ -81,7 +81,7 @@ class _DailyCard extends StatelessWidget {
         scale: h ? 1.005 : 1,
         duration: const Duration(milliseconds: 160),
         child: Container(
-          height: 140,
+          height: 112,
           padding: const EdgeInsets.symmetric(horizontal: 28),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(Tokens.radiusL),
@@ -94,8 +94,8 @@ class _DailyCard extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 84,
-                height: 84,
+                width: 68,
+                height: 68,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.18),
@@ -103,7 +103,7 @@ class _DailyCard extends StatelessWidget {
                 ),
                 child: Text(
                   '$day',
-                  style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.w700),
+                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(width: 24),
@@ -114,14 +114,14 @@ class _DailyCard extends StatelessWidget {
                   children: [
                     Text(
                       '每日推荐',
-                      style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700),
+                      style: TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w700),
                     ),
                     SizedBox(height: 6),
-                    Text('根据你的音乐口味生成，每天 6:00 更新', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    Text('根据你的音乐口味生成，每天 6:00 更新', style: TextStyle(color: Colors.white70, fontSize: 13)),
                   ],
                 ),
               ),
-              const Icon(Icons.play_circle_fill_rounded, color: Colors.white, size: 48),
+              const Icon(Icons.play_circle_fill_rounded, color: Colors.white, size: 42),
             ],
           ),
         ),
@@ -184,14 +184,14 @@ class PlaylistCard extends StatelessWidget {
                         await AppState.I.playSongs(d.tracks, 0);
                       },
                       builder: (_, _) => Container(
-                        width: 40,
-                        height: 40,
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.92),
                           shape: BoxShape.circle,
                           boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
                         ),
-                        child: const Icon(Icons.play_arrow_rounded, color: Tokens.accent, size: 26),
+                        child: const Icon(Icons.play_arrow_rounded, color: Tokens.accent, size: 24),
                       ),
                     ),
                   ),
@@ -204,7 +204,7 @@ class PlaylistCard extends StatelessWidget {
             item.name,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 14, height: 1.4, color: p.textPrimary),
+            style: TextStyle(fontSize: 13, height: 1.4, color: p.textPrimary),
           ),
         ],
       ),

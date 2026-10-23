@@ -1,7 +1,9 @@
 [package]
 name = "ncm-core"
 version = "0.1.0"
-edition = "2024"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 directories = "6.0.0"

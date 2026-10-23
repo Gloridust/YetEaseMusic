@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1650233078;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1029901602;
 
 // Section: executor
 
@@ -900,6 +900,43 @@ fn wire__crate__api__playback__seek_impl(
         },
     )
 }
+fn wire__crate__api__playback__set_appearance_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "set_appearance",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_ui_scale = <f32>::sse_decode(&mut deserializer);
+            let api_theme = <crate::api::types::ThemePref>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::playback::set_appearance(api_ui_scale, api_theme)?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__playback__set_cn_ip_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1198,12 +1235,16 @@ impl SseDecode for crate::api::types::AppSettings {
         let mut var_mode = <crate::api::types::PlayOrder>::sse_decode(deserializer);
         let mut var_useCnIp = <bool>::sse_decode(deserializer);
         let mut var_cnIp = <String>::sse_decode(deserializer);
+        let mut var_uiScale = <f32>::sse_decode(deserializer);
+        let mut var_theme = <crate::api::types::ThemePref>::sse_decode(deserializer);
         return crate::api::types::AppSettings {
             quality: var_quality,
             volume: var_volume,
             mode: var_mode,
             use_cn_ip: var_useCnIp,
             cn_ip: var_cnIp,
+            ui_scale: var_uiScale,
+            theme: var_theme,
         };
     }
 }
@@ -1564,6 +1605,19 @@ impl SseDecode for crate::api::types::SongItem {
     }
 }
 
+impl SseDecode for crate::api::types::ThemePref {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::api::types::ThemePref::System,
+            1 => crate::api::types::ThemePref::Light,
+            2 => crate::api::types::ThemePref::Dark,
+            _ => unreachable!("Invalid variant for ThemePref: {}", inner),
+        };
+    }
+}
+
 impl SseDecode for u8 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1655,13 +1709,14 @@ fn pde_ffi_dispatcher_primary_impl(
         22 => wire__crate__api__playback__resume_impl(port, ptr, rust_vec_len, data_len),
         23 => wire__crate__api__library__search_songs_impl(port, ptr, rust_vec_len, data_len),
         24 => wire__crate__api__playback__seek_impl(port, ptr, rust_vec_len, data_len),
-        25 => wire__crate__api__playback__set_cn_ip_impl(port, ptr, rust_vec_len, data_len),
-        26 => wire__crate__api__playback__set_mode_impl(port, ptr, rust_vec_len, data_len),
-        27 => wire__crate__api__playback__set_quality_impl(port, ptr, rust_vec_len, data_len),
-        28 => wire__crate__api__playback__set_volume_impl(port, ptr, rust_vec_len, data_len),
-        29 => wire__crate__api__playback__snapshot_impl(port, ptr, rust_vec_len, data_len),
-        30 => wire__crate__api__playback__toggle_impl(port, ptr, rust_vec_len, data_len),
-        31 => wire__crate__api__library__user_playlists_impl(port, ptr, rust_vec_len, data_len),
+        25 => wire__crate__api__playback__set_appearance_impl(port, ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__playback__set_cn_ip_impl(port, ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__playback__set_mode_impl(port, ptr, rust_vec_len, data_len),
+        28 => wire__crate__api__playback__set_quality_impl(port, ptr, rust_vec_len, data_len),
+        29 => wire__crate__api__playback__set_volume_impl(port, ptr, rust_vec_len, data_len),
+        30 => wire__crate__api__playback__snapshot_impl(port, ptr, rust_vec_len, data_len),
+        31 => wire__crate__api__playback__toggle_impl(port, ptr, rust_vec_len, data_len),
+        32 => wire__crate__api__library__user_playlists_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1713,6 +1768,8 @@ impl flutter_rust_bridge::IntoDart for crate::api::types::AppSettings {
             self.mode.into_into_dart().into_dart(),
             self.use_cn_ip.into_into_dart().into_dart(),
             self.cn_ip.into_into_dart().into_dart(),
+            self.ui_scale.into_into_dart().into_dart(),
+            self.theme.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1966,6 +2023,25 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::types::SongItem>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::types::ThemePref {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::System => 0.into_dart(),
+            Self::Light => 1.into_dart(),
+            Self::Dark => 2.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::types::ThemePref {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::types::ThemePref>
+    for crate::api::types::ThemePref
+{
+    fn into_into_dart(self) -> crate::api::types::ThemePref {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::types::UiEvent {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -2048,6 +2124,8 @@ impl SseEncode for crate::api::types::AppSettings {
         <crate::api::types::PlayOrder>::sse_encode(self.mode, serializer);
         <bool>::sse_encode(self.use_cn_ip, serializer);
         <String>::sse_encode(self.cn_ip, serializer);
+        <f32>::sse_encode(self.ui_scale, serializer);
+        <crate::api::types::ThemePref>::sse_encode(self.theme, serializer);
     }
 }
 
@@ -2349,6 +2427,23 @@ impl SseEncode for crate::api::types::SongItem {
         <Option<String>>::sse_encode(self.cover_url, serializer);
         <i64>::sse_encode(self.duration_ms, serializer);
         <bool>::sse_encode(self.vip, serializer);
+    }
+}
+
+impl SseEncode for crate::api::types::ThemePref {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::api::types::ThemePref::System => 0,
+                crate::api::types::ThemePref::Light => 1,
+                crate::api::types::ThemePref::Dark => 2,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 

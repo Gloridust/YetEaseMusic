@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
@@ -8,11 +10,14 @@ import 'src/rust/frb_generated.dart';
 import 'state.dart';
 import 'theme.dart';
 import 'ui/shell.dart';
+import 'ui/ui_scaled.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
-  await pb.bootstrap();
+  // 开发用：YETEASE_DATA_DIR 指向独立目录即可得到一个全新的未登录环境
+  final dataDir = Platform.environment['YETEASE_DATA_DIR'];
+  await pb.bootstrap(dataDir: dataDir, cacheDir: dataDir == null ? null : '$dataDir/cache');
 
   if (isDesktop) {
     await windowManager.ensureInitialized();
@@ -41,14 +46,15 @@ class YetEaseApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: AppState.I.themeMode,
-      builder: (context, mode, _) => MaterialApp(
+    final app = AppState.I;
+    return ListenableBuilder(
+      listenable: Listenable.merge([app.themeMode, app.uiScale]),
+      builder: (context, _) => MaterialApp(
         title: 'YetEase Music',
         debugShowCheckedModeBanner: false,
         theme: buildTheme(Brightness.light),
         darkTheme: buildTheme(Brightness.dark),
-        themeMode: mode,
+        themeMode: app.themeMode.value,
         shortcuts: {
           ...WidgetsApp.defaultShortcuts,
           const SingleActivator(LogicalKeyboardKey.space): const _ToggleIntent(),
@@ -57,7 +63,12 @@ class YetEaseApp extends StatelessWidget {
           ...WidgetsApp.defaultActions,
           _ToggleIntent: CallbackAction<_ToggleIntent>(onInvoke: (_) => pb.toggle()),
         },
-        home: RepaintBoundary(key: tourBoundary, child: const Shell()),
+        // 缩放包在 Navigator 外层，弹窗、抽屉、提示条也一起缩放
+        builder: (context, child) => RepaintBoundary(
+          key: tourBoundary,
+          child: UiScaled(scale: app.uiScale.value, child: child!),
+        ),
+        home: const Shell(),
       ),
     );
   }

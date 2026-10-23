@@ -7,7 +7,7 @@ import '../state.dart';
 import '../theme.dart';
 import 'widgets.dart';
 
-const _rowHeight = 64.0;
+const _rowHeight = 54.0;
 
 /// 列表表头：# / 标题 / 专辑 / 喜欢 / 时长
 class SongListHeader extends StatelessWidget {
@@ -18,7 +18,7 @@ class SongListHeader extends StatelessWidget {
     final p = context.palette;
     final style = TextStyle(color: p.textTertiary, fontSize: 13);
     return Container(
-      height: 40,
+      height: 36,
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: p.divider)),
       ),
@@ -52,11 +52,11 @@ class _Columns extends StatelessWidget {
         final wide = c.maxWidth > 640;
         return Row(
           children: [
-            SizedBox(width: 52, child: index),
+            SizedBox(width: 46, child: index),
             Expanded(flex: 5, child: title),
             if (wide) ...[const SizedBox(width: 16), Expanded(flex: 3, child: album)],
-            SizedBox(width: 64, child: like),
-            SizedBox(width: 64, child: duration),
+            SizedBox(width: 56, child: like),
+            SizedBox(width: 56, child: duration),
           ],
         );
       },
@@ -144,19 +144,19 @@ class SongRow extends StatelessWidget {
                   child: playing
                       ? const _PlayingBars()
                       : h
-                      ? IconBtn(Icons.play_arrow_rounded, onTap: _play, size: 22, box: 30)
+                      ? IconBtn(Icons.play_arrow_rounded, onTap: _play, size: 20, box: 28)
                       : Text(
                           (index + 1).toString().padLeft(2, '0'),
                           style: TextStyle(
                             color: p.textTertiary,
-                            fontSize: 14,
+                            fontSize: 13,
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
                 ),
                 title: Row(
                   children: [
-                    Cover(url: song.coverUrl, size: 44, radius: Tokens.radiusS),
+                    Cover(url: song.coverUrl, size: 38, radius: Tokens.radiusS),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -168,12 +168,12 @@ class SongRow extends StatelessWidget {
                               children: [
                                 TextSpan(
                                   text: song.name,
-                                  style: TextStyle(color: titleColor, fontSize: 15),
+                                  style: TextStyle(color: titleColor, fontSize: 14),
                                 ),
                                 if (song.subtitle != null)
                                   TextSpan(
                                     text: '  ${song.subtitle}',
-                                    style: TextStyle(color: p.textTertiary, fontSize: 14),
+                                    style: TextStyle(color: p.textTertiary, fontSize: 13),
                                   ),
                               ],
                             ),
@@ -189,7 +189,7 @@ class SongRow extends StatelessWidget {
                                   song.artists.map((a) => a.name).join(' / '),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: playing ? Tokens.accent : p.textSecondary, fontSize: 13),
+                                  style: TextStyle(color: playing ? Tokens.accent : p.textSecondary, fontSize: 12),
                                 ),
                               ),
                             ],
@@ -203,10 +203,10 @@ class SongRow extends StatelessWidget {
                   song.albumName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: p.textSecondary, fontSize: 14),
+                  style: TextStyle(color: p.textSecondary, fontSize: 13),
                 ),
                 like: Center(child: LikeButton(song: song)),
-                duration: Text(formatMs(song.durationMs), style: TextStyle(color: p.textTertiary, fontSize: 14)),
+                duration: Text(formatMs(song.durationMs), style: TextStyle(color: p.textTertiary, fontSize: 13)),
               ),
             ),
           ),

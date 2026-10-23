@@ -9,7 +9,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'types.freezed.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These functions are ignored because they are not marked as `pub`: `as_str`, `parse`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 class AccountInfo {
   final PlatformInt64 userId;
@@ -48,6 +49,8 @@ class AppSettings {
   final PlayOrder mode;
   final bool useCnIp;
   final String cnIp;
+  final double uiScale;
+  final ThemePref theme;
 
   const AppSettings({
     required this.quality,
@@ -55,6 +58,8 @@ class AppSettings {
     required this.mode,
     required this.useCnIp,
     required this.cnIp,
+    required this.uiScale,
+    required this.theme,
   });
 
   @override
@@ -63,7 +68,9 @@ class AppSettings {
       volume.hashCode ^
       mode.hashCode ^
       useCnIp.hashCode ^
-      cnIp.hashCode;
+      cnIp.hashCode ^
+      uiScale.hashCode ^
+      theme.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -74,7 +81,9 @@ class AppSettings {
           volume == other.volume &&
           mode == other.mode &&
           useCnIp == other.useCnIp &&
-          cnIp == other.cnIp;
+          cnIp == other.cnIp &&
+          uiScale == other.uiScale &&
+          theme == other.theme;
 }
 
 class ArtistItem {
@@ -310,6 +319,8 @@ class SongItem {
           durationMs == other.durationMs &&
           vip == other.vip;
 }
+
+enum ThemePref { system, light, dark }
 
 @freezed
 sealed class UiEvent with _$UiEvent {

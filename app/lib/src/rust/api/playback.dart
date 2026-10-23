@@ -62,5 +62,14 @@ Future<void> setQuality({required AudioQuality quality}) =>
 Future<void> setCnIp({required bool enabled, String? ip}) =>
     RustLib.instance.api.crateApiPlaybackSetCnIp(enabled: enabled, ip: ip);
 
+/// 外观偏好：界面缩放（0.7 ~ 1.5）与主题
+Future<void> setAppearance({
+  required double uiScale,
+  required ThemePref theme,
+}) => RustLib.instance.api.crateApiPlaybackSetAppearance(
+  uiScale: uiScale,
+  theme: theme,
+);
+
 Future<List<LyricItem>> lyrics({required PlatformInt64 songId}) =>
     RustLib.instance.api.crateApiPlaybackLyrics(songId: songId);

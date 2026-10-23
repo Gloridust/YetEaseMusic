@@ -130,15 +130,15 @@ class Sidebar extends StatelessWidget {
                 children: [
                   const SizedBox(width: 24),
                   Container(
-                    width: 34,
-                    height: 34,
+                    width: 30,
+                    height: 30,
                     decoration: const BoxDecoration(color: Tokens.accent, shape: BoxShape.circle),
-                    child: const Icon(Icons.graphic_eq_rounded, color: Colors.white, size: 20),
+                    child: const Icon(Icons.graphic_eq_rounded, color: Colors.white, size: 18),
                   ),
                   const SizedBox(width: 10),
                   const Text(
                     'YetEase',
-                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700, letterSpacing: 0.3),
+                    style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, letterSpacing: 0.3),
                   ),
                 ],
               ),
@@ -255,7 +255,7 @@ class _NavItem extends StatelessWidget {
             },
             builder: (_, h) => AnimatedContainer(
               duration: const Duration(milliseconds: 140),
-              height: 46,
+              height: 40,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 color: sel ? Tokens.accent : (h ? p.hover : Colors.transparent),
@@ -263,12 +263,12 @@ class _NavItem extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(icon, size: 21, color: sel ? Colors.white : p.textSecondary),
+                  Icon(icon, size: 19, color: sel ? Colors.white : p.textSecondary),
                   const SizedBox(width: 12),
                   Text(
                     label,
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 14,
                       color: sel ? Colors.white : p.textPrimary,
                       fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
                     ),
@@ -302,7 +302,7 @@ class _PlaylistItem extends StatelessWidget {
             Nav.root(route, PlaylistPage(id: item.id));
           },
           builder: (_, h) => Container(
-            height: 44,
+            height: 38,
             margin: const EdgeInsets.symmetric(vertical: 1),
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
@@ -311,14 +311,14 @@ class _PlaylistItem extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Cover(url: item.coverUrl, size: 30, radius: Tokens.radiusS),
+                Cover(url: item.coverUrl, size: 26, radius: Tokens.radiusS),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     item.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 14, color: sel ? Tokens.accent : p.textPrimary),
+                    style: TextStyle(fontSize: 13, color: sel ? Tokens.accent : p.textPrimary),
                   ),
                 ),
               ],
@@ -379,6 +379,7 @@ class _TopBarState extends State<TopBar> {
   Widget build(BuildContext context) {
     final p = context.palette;
     final app = AppState.I;
+    final narrow = MediaQuery.sizeOf(context).width < 600;
     return _DragArea(
       child: SizedBox(
         height: Tokens.topBarHeight + 8,
@@ -392,38 +393,41 @@ class _TopBarState extends State<TopBar> {
                   _OutlinedIcon(icon: Icons.chevron_left_rounded, onTap: can ? Nav.back : null),
             ),
             const SizedBox(width: 12),
-            Flexible(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 360),
-                child: SizedBox(
-                  height: 40,
-                  child: TextField(
-                    controller: _search,
-                    focusNode: _focus,
-                    onSubmitted: _submit,
-                    textInputAction: TextInputAction.search,
-                    style: const TextStyle(fontSize: 14),
-                    decoration: InputDecoration(
-                      hintText: '搜索音乐、歌手、歌单',
-                      hintStyle: TextStyle(color: p.textTertiary, fontSize: 14),
-                      prefixIcon: Icon(Icons.search_rounded, size: 20, color: p.textTertiary),
-                      filled: true,
-                      fillColor: p.surface,
-                      contentPadding: EdgeInsets.zero,
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(Tokens.radiusM),
-                        borderSide: BorderSide(color: p.divider),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(Tokens.radiusM),
-                        borderSide: BorderSide(color: Tokens.accent.withValues(alpha: 0.5)),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: SizedBox(
+                    height: 34,
+                    child: TextField(
+                      controller: _search,
+                      focusNode: _focus,
+                      onSubmitted: _submit,
+                      textInputAction: TextInputAction.search,
+                      style: const TextStyle(fontSize: 13),
+                      decoration: InputDecoration(
+                        hintText: '搜索音乐、歌手、歌单',
+                        hintStyle: TextStyle(color: p.textTertiary, fontSize: 13),
+                        prefixIcon: Icon(Icons.search_rounded, size: 18, color: p.textTertiary),
+                        filled: true,
+                        fillColor: p.surface,
+                        contentPadding: EdgeInsets.zero,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(Tokens.radiusM),
+                          borderSide: BorderSide(color: p.divider),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(Tokens.radiusM),
+                          borderSide: BorderSide(color: Tokens.accent.withValues(alpha: 0.5)),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-            const Spacer(),
+            const SizedBox(width: 16),
             ValueListenableBuilder(
               valueListenable: app.account,
               builder: (context, acc, _) => Hover(
@@ -431,21 +435,23 @@ class _TopBarState extends State<TopBar> {
                 builder: (_, h) => Row(
                   children: [
                     acc?.avatarUrl != null
-                        ? ClipOval(child: Cover(url: acc!.avatarUrl, size: 32, radius: 16))
+                        ? ClipOval(child: Cover(url: acc!.avatarUrl, size: 28, radius: 14))
                         : CircleAvatar(
-                            radius: 16,
+                            radius: 14,
                             backgroundColor: p.hover,
                             child: Icon(Icons.person_rounded, size: 20, color: p.textTertiary),
                           ),
-                    const SizedBox(width: 8),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 140),
-                      child: Text(
-                        acc?.nickname ?? '未登录',
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 14, color: h ? p.textPrimary : p.textSecondary),
+                    if (!narrow) ...[
+                      const SizedBox(width: 8),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 140),
+                        child: Text(
+                          acc?.nickname ?? '未登录',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 13, color: h ? p.textPrimary : p.textSecondary),
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -476,8 +482,8 @@ class _OutlinedIcon extends StatelessWidget {
     return Hover(
       onTap: onTap,
       builder: (_, h) => Container(
-        width: 40,
-        height: 40,
+        width: 34,
+        height: 34,
         decoration: BoxDecoration(
           color: h && onTap != null ? p.hover : p.surface,
           border: Border.all(color: p.divider),

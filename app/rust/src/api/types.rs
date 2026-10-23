@@ -212,6 +212,33 @@ pub struct AppSettings {
     pub mode: PlayOrder,
     pub use_cn_ip: bool,
     pub cn_ip: String,
+    pub ui_scale: f32,
+    pub theme: ThemePref,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ThemePref {
+    System,
+    Light,
+    Dark,
+}
+
+impl ThemePref {
+    pub(crate) fn parse(s: &str) -> Self {
+        match s {
+            "light" => Self::Light,
+            "dark" => Self::Dark,
+            _ => Self::System,
+        }
+    }
+
+    pub(crate) fn as_str(self) -> &'static str {
+        match self {
+            Self::System => "system",
+            Self::Light => "light",
+            Self::Dark => "dark",
+        }
+    }
 }
 
 /// 播放器全量快照（UI 启动或重连时用）

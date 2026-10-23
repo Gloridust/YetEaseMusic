@@ -122,7 +122,7 @@ class _SongInfo extends StatelessWidget {
           song.name,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w700, height: 1.25),
+          style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w700, height: 1.25),
         ),
         if (song.subtitle != null) ...[
           const SizedBox(height: 4),
@@ -521,7 +521,7 @@ class _LyricsViewState extends State<LyricsView> {
           curve: Curves.easeOut,
           style: TextStyle(
             color: active ? Colors.white : Colors.white.withValues(alpha: 0.38),
-            fontSize: active ? 26 : 21,
+            fontSize: active ? 24 : 19,
             fontWeight: active ? FontWeight.w700 : FontWeight.w500,
             height: 1.35,
             fontFamilyFallback: Theme.of(context).textTheme.bodyMedium?.fontFamilyFallback,

@@ -70,7 +70,7 @@ class _SearchPageState extends State<SearchPage> {
       child: CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(32, 12, 32, 16),
+            padding: const EdgeInsets.fromLTRB(28, 8, 28, 12),
             sliver: SliverToBoxAdapter(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -80,11 +80,11 @@ class _SearchPageState extends State<SearchPage> {
                       children: [
                         const TextSpan(
                           text: '搜索 ',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                         ),
                         TextSpan(
                           text: widget.keywords,
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Tokens.accent),
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Tokens.accent),
                         ),
                       ],
                     ),
@@ -106,11 +106,11 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ),
           const SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: 32),
+            padding: EdgeInsets.symmetric(horizontal: 28),
             sliver: SliverToBoxAdapter(child: SongListHeader()),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(32, 6, 32, 0),
+            padding: const EdgeInsets.fromLTRB(28, 4, 28, 0),
             sliver: SliverSongList(songs: _songs),
           ),
           SliverToBoxAdapter(

@@ -16,7 +16,7 @@ class SettingsPage extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(32, 12, 32, 40),
       children: [
-        const Text('设置', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700)),
+        const Text('设置', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
         const SizedBox(height: 24),
         _Section(
           title: '账号',
@@ -92,17 +92,44 @@ class SettingsPage extends StatelessWidget {
         ),
         _Section(
           title: '外观',
-          child: ValueListenableBuilder(
-            valueListenable: app.themeMode,
-            builder: (context, m, _) => Wrap(
-              spacing: 10,
+          child: ListenableBuilder(
+            listenable: Listenable.merge([app.themeMode, app.uiScale]),
+            builder: (context, _) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (final (mode, label) in [
-                  (ThemeMode.system, '跟随系统'),
-                  (ThemeMode.light, '浅色'),
-                  (ThemeMode.dark, '深色'),
-                ])
-                  _Choice(label: label, selected: m == mode, onTap: () => app.themeMode.value = mode),
+                const _Hint('主题'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    for (final (mode, label) in [
+                      (ThemeMode.system, '跟随系统'),
+                      (ThemeMode.light, '浅色'),
+                      (ThemeMode.dark, '深色'),
+                    ])
+                      _Choice(
+                        label: label,
+                        selected: app.themeMode.value == mode,
+                        onTap: () => app.setAppearance(theme: mode),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                const _Hint('界面缩放（在系统缩放的基础上再调整）'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    for (final v in const [0.8, 0.9, 1.0, 1.1, 1.25])
+                      _Choice(
+                        label: '${(v * 100).round()}%',
+                        selected: (app.uiScale.value - v).abs() < 0.01,
+                        onTap: () => app.setAppearance(scale: v),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -139,8 +166,8 @@ class _Section extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 140,
-            child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            width: 120,
+            child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
           ),
           Expanded(child: child),
         ],

@@ -1,7 +1,9 @@
 [package]
 name = "ncm-cli"
 version = "0.1.0"
-edition = "2024"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 anyhow = "1.0.104"
@@ -10,3 +12,7 @@ ncm-core = { version = "0.1.0", path = "../ncm-core" }
 qrcode = { version = "0.14.1", default-features = false }
 tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "time", "signal"] }
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+
+[[bin]]
+name = "yetease"
+path = "src/main.rs"

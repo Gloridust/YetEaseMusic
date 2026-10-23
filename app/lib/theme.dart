@@ -9,9 +9,9 @@ class Tokens {
   static const radiusM = 10.0;
   static const radiusL = 14.0;
 
-  static const sidebarWidth = 228.0;
-  static const playerBarHeight = 76.0;
-  static const topBarHeight = 64.0;
+  static const sidebarWidth = 200.0;
+  static const playerBarHeight = 68.0;
+  static const topBarHeight = 52.0;
 }
 
 /// 随明暗主题变化的颜色

@@ -63,7 +63,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
         return CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(32, 12, 32, 20),
+              padding: const EdgeInsets.fromLTRB(28, 8, 28, 16),
               sliver: SliverToBoxAdapter(
                 child: _Header(d: d, onFilter: (v) => setState(() => _filter = v)),
               ),
@@ -72,11 +72,11 @@ class _PlaylistPageState extends State<PlaylistPage> {
               SliverFillRemaining(hasScrollBody: false, child: EmptyState(text: q.isEmpty ? '空空如也' : '没有匹配的歌曲'))
             else ...[
               const SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: 32),
+                padding: EdgeInsets.symmetric(horizontal: 28),
                 sliver: SliverToBoxAdapter(child: SongListHeader()),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(32, 6, 32, 32),
+                padding: const EdgeInsets.fromLTRB(28, 4, 28, 28),
                 sliver: SliverSongList(songs: tracks),
               ),
             ],
@@ -100,7 +100,7 @@ class _Header extends StatelessWidget {
     final liked = s.specialType == 5;
     return LayoutBuilder(
       builder: (context, c) {
-        final coverSize = c.maxWidth > 700 ? 200.0 : 140.0;
+        final coverSize = c.maxWidth > 700 ? 176.0 : 128.0;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -134,7 +134,7 @@ class _Header extends StatelessWidget {
                           s.name,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, height: 1.25),
+                          style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, height: 1.25),
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -143,7 +143,7 @@ class _Header extends StatelessWidget {
                             if (s.trackCount > 0) '${d.tracks.length} 首',
                             if (s.playCount > 0) '播放 ${formatCount(s.playCount)}',
                           ].join('  ·  '),
-                          style: TextStyle(color: p.textSecondary, fontSize: 14),
+                          style: TextStyle(color: p.textSecondary, fontSize: 13),
                         ),
                         if (d.description != null && d.description!.trim().isNotEmpty) ...[
                           const SizedBox(height: 8),
@@ -201,13 +201,13 @@ class _FilterField extends StatelessWidget {
     final p = context.palette;
     return SizedBox(
       width: 180,
-      height: 36,
+      height: 32,
       child: TextField(
         onChanged: onChanged,
-        style: const TextStyle(fontSize: 14),
+        style: const TextStyle(fontSize: 13),
         decoration: InputDecoration(
           hintText: '搜索歌单内歌曲',
-          hintStyle: TextStyle(color: p.textTertiary, fontSize: 14),
+          hintStyle: TextStyle(color: p.textTertiary, fontSize: 13),
           prefixIcon: Icon(Icons.search_rounded, size: 18, color: p.textTertiary),
           filled: true,
           fillColor: p.field,

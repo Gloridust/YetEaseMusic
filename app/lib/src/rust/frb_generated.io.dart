@@ -128,6 +128,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SongItem dco_decode_song_item(dynamic raw);
 
   @protected
+  ThemePref dco_decode_theme_pref(dynamic raw);
+
+  @protected
   int dco_decode_u_8(dynamic raw);
 
   @protected
@@ -249,6 +252,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SongItem sse_decode_song_item(SseDeserializer deserializer);
+
+  @protected
+  ThemePref sse_decode_theme_pref(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -405,6 +411,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_song_item(SongItem self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_theme_pref(ThemePref self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_8(int self, SseSerializer serializer);

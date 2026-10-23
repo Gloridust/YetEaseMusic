@@ -28,6 +28,9 @@ class _LoginDialogState extends State<_LoginDialog> {
   Timer? _timer;
   bool _checking = false;
 
+  /// 二维码已失效（过期 / 失败 / 生成失败），需要用户点击刷新
+  bool _dead = false;
+
   @override
   void initState() {
     super.initState();
@@ -45,6 +48,7 @@ class _LoginDialogState extends State<_LoginDialog> {
     setState(() {
       _qr = null;
       _avatar = null;
+      _dead = false;
       _status = '正在生成二维码…';
     });
     try {
@@ -57,7 +61,12 @@ class _LoginDialogState extends State<_LoginDialog> {
       });
       _timer = Timer.periodic(const Duration(seconds: 2), (_) => _check());
     } catch (e) {
-      if (mounted) setState(() => _status = '生成失败：$e');
+      if (mounted) {
+        setState(() {
+          _status = '生成失败：$e';
+          _dead = true;
+        });
+      }
     }
   }
 
@@ -83,10 +92,16 @@ class _LoginDialogState extends State<_LoginDialog> {
           AppState.I.notify('欢迎回来，${AppState.I.account.value?.nickname ?? ''}');
         case QrState_Expired():
           _timer?.cancel();
-          setState(() => _status = '二维码已过期');
+          setState(() {
+            _status = '二维码已过期，请刷新后重新扫码';
+            _dead = true;
+          });
         case QrState_Failed(:final message):
           _timer?.cancel();
-          setState(() => _status = '登录失败：$message');
+          setState(() {
+            _status = '登录失败：$message';
+            _dead = true;
+          });
       }
     } catch (e) {
       debugPrint('qr check: $e');
@@ -98,7 +113,6 @@ class _LoginDialogState extends State<_LoginDialog> {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final expired = _status.contains('过期') || _status.contains('失败');
     return Dialog(
       backgroundColor: p.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Tokens.radiusL)),
@@ -117,27 +131,22 @@ class _LoginDialogState extends State<_LoginDialog> {
               const SizedBox(height: 24),
               SizedBox.square(
                 dimension: 200,
-                child: _avatar != null
-                    ? Center(
-                        child: ClipOval(child: Cover(url: _avatar, size: 120, radius: 60)),
-                      )
-                    : _qr == null
-                    ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5, color: Tokens.accent))
-                    : Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Opacity(
-                            opacity: expired ? 0.15 : 1,
-                            child: QrImageView(
-                              data: _qr!,
-                              size: 200,
-                              padding: EdgeInsets.zero,
-                              backgroundColor: Colors.white,
-                            ),
-                          ),
-                          if (expired) PillButton(label: '刷新二维码', primary: true, onTap: _create),
-                        ],
-                      ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Opacity(
+                      opacity: _dead ? 0.15 : 1,
+                      child: _avatar != null
+                          ? ClipOval(child: Cover(url: _avatar, size: 120, radius: 60))
+                          : _qr == null
+                          ? (_dead
+                                ? const SizedBox.shrink()
+                                : const CircularProgressIndicator(strokeWidth: 2.5, color: Tokens.accent))
+                          : QrImageView(data: _qr!, size: 200, padding: EdgeInsets.zero, backgroundColor: Colors.white),
+                    ),
+                    if (_dead) PillButton(label: '刷新二维码', icon: Icons.refresh_rounded, primary: true, onTap: _create),
+                  ],
+                ),
               ),
               const SizedBox(height: 20),
               Text(

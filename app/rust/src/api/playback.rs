@@ -187,6 +187,8 @@ pub fn get_settings() -> anyhow::Result<AppSettings> {
         mode: s.play_mode.into(),
         use_cn_ip: s.use_cn_ip,
         cn_ip: s.cn_ip,
+        ui_scale: s.ui_scale,
+        theme: ThemePref::parse(&s.theme),
     })
 }
 
@@ -201,6 +203,15 @@ pub fn set_cn_ip(enabled: bool, ip: Option<String>) -> anyhow::Result<()> {
         if let Some(ip) = ip.filter(|i| !i.trim().is_empty()) {
             s.cn_ip = ip.trim().to_owned();
         }
+    });
+    Ok(())
+}
+
+/// 外观偏好：界面缩放（0.7 ~ 1.5）与主题
+pub fn set_appearance(ui_scale: f32, theme: ThemePref) -> anyhow::Result<()> {
+    core()?.update_settings(|s| {
+        s.ui_scale = ui_scale.clamp(0.7, 1.5);
+        s.theme = theme.as_str().into();
     });
     Ok(())
 }

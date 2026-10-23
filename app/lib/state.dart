@@ -32,7 +32,8 @@ class AppState {
 
   // 界面
   final nowPlayingOpen = ValueNotifier(false);
-  final themeMode = ValueNotifier(ThemeMode.light);
+  final themeMode = ValueNotifier(ThemeMode.system);
+  final uiScale = ValueNotifier(1.0);
   final _notices = StreamController<String>.broadcast();
   Stream<String> get notices => _notices.stream;
 
@@ -41,7 +42,7 @@ class AppState {
   Future<void> start() async {
     pb.events().listen(_onEvent);
     await _syncSnapshot();
-    settings.value = await pb.getSettings();
+    _applySettings(await pb.getSettings());
     await refreshAccount();
   }
 
@@ -63,16 +64,38 @@ class AppState {
       case UiEvent_QueueChanged():
         _syncSnapshot();
       case UiEvent_SettingsChanged():
-        pb.getSettings().then((s) {
-          settings.value = s;
-          mode.value = s.mode;
-          volume.value = s.volume;
-        });
+        pb.getSettings().then(_applySettings);
       case UiEvent_Notice(:final field0):
         notify(field0);
       case UiEvent_Error(:final field0):
         notify('播放出错：$field0');
     }
+  }
+
+  void _applySettings(AppSettings s) {
+    settings.value = s;
+    mode.value = s.mode;
+    volume.value = s.volume;
+    uiScale.value = s.uiScale;
+    themeMode.value = switch (s.theme) {
+      ThemePref.light => ThemeMode.light,
+      ThemePref.dark => ThemeMode.dark,
+      ThemePref.system => ThemeMode.system,
+    };
+  }
+
+  /// 修改外观偏好（立即生效并持久化）
+  void setAppearance({double? scale, ThemeMode? theme}) {
+    if (scale != null) uiScale.value = scale;
+    if (theme != null) themeMode.value = theme;
+    pb.setAppearance(
+      uiScale: uiScale.value,
+      theme: switch (themeMode.value) {
+        ThemeMode.light => ThemePref.light,
+        ThemeMode.dark => ThemePref.dark,
+        ThemeMode.system => ThemePref.system,
+      },
+    );
   }
 
   Future<void> _syncSnapshot() async {

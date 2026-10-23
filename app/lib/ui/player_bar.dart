@@ -49,13 +49,13 @@ class PlayerBar extends StatelessWidget {
                                   builder: (_, h) => Stack(
                                     alignment: Alignment.center,
                                     children: [
-                                      Cover(url: song.coverUrl, size: 52, radius: Tokens.radiusM),
+                                      Cover(url: song.coverUrl, size: 46, radius: Tokens.radiusM),
                                       AnimatedOpacity(
                                         opacity: h ? 1 : 0,
                                         duration: const Duration(milliseconds: 120),
                                         child: Container(
-                                          width: 52,
-                                          height: 52,
+                                          width: 46,
+                                          height: 46,
                                           decoration: BoxDecoration(
                                             color: Colors.black38,
                                             borderRadius: BorderRadius.circular(Tokens.radiusM),
@@ -63,7 +63,7 @@ class PlayerBar extends StatelessWidget {
                                           child: const Icon(
                                             Icons.keyboard_arrow_up_rounded,
                                             color: Colors.white,
-                                            size: 30,
+                                            size: 26,
                                           ),
                                         ),
                                       ),
@@ -80,20 +80,20 @@ class PlayerBar extends StatelessWidget {
                                       song.name,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 16, color: fg, fontWeight: FontWeight.w500),
+                                      style: TextStyle(fontSize: 14.5, color: fg, fontWeight: FontWeight.w500),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       song.artists.map((a) => a.name).join(' / '),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 13, color: fg2),
+                                      style: TextStyle(fontSize: 12, color: fg2),
                                     ),
                                   ],
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              LikeButton(song: song, size: 22, color: fg2),
+                              LikeButton(song: song, size: 20, color: fg2),
                             ],
                           );
                         },
@@ -113,8 +113,8 @@ class PlayerBar extends StatelessWidget {
                         ],
                         IconBtn(
                           Icons.skip_previous_rounded,
-                          size: 30,
-                          box: 44,
+                          size: 26,
+                          box: 38,
                           color: fg,
                           tooltip: '上一首',
                           onTap: pb.previous,
@@ -122,7 +122,7 @@ class PlayerBar extends StatelessWidget {
                         const SizedBox(width: 14),
                         _PlayButton(dark: dark),
                         const SizedBox(width: 14),
-                        IconBtn(Icons.skip_next_rounded, size: 30, box: 44, color: fg, tooltip: '下一首', onTap: pb.next),
+                        IconBtn(Icons.skip_next_rounded, size: 26, box: 38, color: fg, tooltip: '下一首', onTap: pb.next),
                         if (!narrow) ...[
                           const SizedBox(width: 12),
                           IconBtn(Icons.queue_music_rounded, color: fg2, tooltip: '播放列表', onTap: onQueue),
@@ -131,7 +131,7 @@ class PlayerBar extends StatelessWidget {
                     ),
                     // 右：音质 / 时间 / 音量
                     Expanded(
-                      flex: 3,
+                      flex: narrow ? 1 : 3,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -204,8 +204,8 @@ class _PlayButton extends StatelessWidget {
         onTap: pb.toggle,
         builder: (_, h) => AnimatedContainer(
           duration: const Duration(milliseconds: 140),
-          width: 50,
-          height: 50,
+          width: 42,
+          height: 42,
           decoration: BoxDecoration(
             color: dark
                 ? Colors.white.withValues(alpha: h ? 0.22 : 0.14)
@@ -220,7 +220,7 @@ class _PlayButton extends StatelessWidget {
               : Icon(
                   st == PlayerState.playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
                   color: Colors.white,
-                  size: 30,
+                  size: 26,
                 ),
         ),
       ),

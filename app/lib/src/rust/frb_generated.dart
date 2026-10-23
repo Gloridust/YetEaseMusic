@@ -71,7 +71,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1650233078;
+  int get rustContentHash => 1029901602;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -148,6 +148,11 @@ abstract class RustLibApi extends BaseApi {
   });
 
   Future<void> crateApiPlaybackSeek({required PlatformInt64 positionMs});
+
+  Future<void> crateApiPlaybackSetAppearance({
+    required double uiScale,
+    required ThemePref theme,
+  });
 
   Future<void> crateApiPlaybackSetCnIp({required bool enabled, String? ip});
 
@@ -865,6 +870,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "seek", argNames: ["positionMs"]);
 
   @override
+  Future<void> crateApiPlaybackSetAppearance({
+    required double uiScale,
+    required ThemePref theme,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(uiScale, serializer);
+          sse_encode_theme_pref(theme, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 25,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiPlaybackSetAppearanceConstMeta,
+        argValues: [uiScale, theme],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlaybackSetAppearanceConstMeta =>
+      const TaskConstMeta(
+        debugName: "set_appearance",
+        argNames: ["uiScale", "theme"],
+      );
+
+  @override
   Future<void> crateApiPlaybackSetCnIp({required bool enabled, String? ip}) {
     return handler.executeNormal(
       NormalTask(
@@ -875,7 +915,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 25,
+            funcId: 26,
             port: port_,
           );
         },
@@ -903,7 +943,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 26,
+            funcId: 27,
             port: port_,
           );
         },
@@ -931,7 +971,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 27,
+            funcId: 28,
             port: port_,
           );
         },
@@ -959,7 +999,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 28,
+            funcId: 29,
             port: port_,
           );
         },
@@ -986,7 +1026,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 29,
+            funcId: 30,
             port: port_,
           );
         },
@@ -1013,7 +1053,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 30,
+            funcId: 31,
             port: port_,
           );
         },
@@ -1043,7 +1083,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 31,
+            funcId: 32,
             port: port_,
           );
         },
@@ -1097,14 +1137,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   AppSettings dco_decode_app_settings(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return AppSettings(
       quality: dco_decode_audio_quality(arr[0]),
       volume: dco_decode_f_32(arr[1]),
       mode: dco_decode_play_order(arr[2]),
       useCnIp: dco_decode_bool(arr[3]),
       cnIp: dco_decode_String(arr[4]),
+      uiScale: dco_decode_f_32(arr[5]),
+      theme: dco_decode_theme_pref(arr[6]),
     );
   }
 
@@ -1367,6 +1409,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ThemePref dco_decode_theme_pref(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ThemePref.values[raw as int];
+  }
+
+  @protected
   int dco_decode_u_8(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -1452,12 +1500,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_mode = sse_decode_play_order(deserializer);
     var var_useCnIp = sse_decode_bool(deserializer);
     var var_cnIp = sse_decode_String(deserializer);
+    var var_uiScale = sse_decode_f_32(deserializer);
+    var var_theme = sse_decode_theme_pref(deserializer);
     return AppSettings(
       quality: var_quality,
       volume: var_volume,
       mode: var_mode,
       useCnIp: var_useCnIp,
       cnIp: var_cnIp,
+      uiScale: var_uiScale,
+      theme: var_theme,
     );
   }
 
@@ -1793,6 +1845,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ThemePref sse_decode_theme_pref(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return ThemePref.values[inner];
+  }
+
+  @protected
   int sse_decode_u_8(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8();
@@ -1888,6 +1947,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_play_order(self.mode, serializer);
     sse_encode_bool(self.useCnIp, serializer);
     sse_encode_String(self.cnIp, serializer);
+    sse_encode_f_32(self.uiScale, serializer);
+    sse_encode_theme_pref(self.theme, serializer);
   }
 
   @protected
@@ -2181,6 +2242,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.coverUrl, serializer);
     sse_encode_i_64(self.durationMs, serializer);
     sse_encode_bool(self.vip, serializer);
+  }
+
+  @protected
+  void sse_encode_theme_pref(ThemePref self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected

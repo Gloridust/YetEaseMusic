@@ -80,7 +80,7 @@ class _HoverState extends State<Hover> {
 }
 
 class IconBtn extends StatelessWidget {
-  const IconBtn(this.icon, {super.key, this.onTap, this.size = 22, this.color, this.tooltip, this.box = 36});
+  const IconBtn(this.icon, {super.key, this.onTap, this.size = 20, this.color, this.tooltip, this.box = 32});
 
   final IconData icon;
   final VoidCallback? onTap;
@@ -127,7 +127,7 @@ class PillButton extends StatelessWidget {
         final fg = primary ? Colors.white : p.textPrimary;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 120),
-          height: 40,
+          height: 34,
           padding: const EdgeInsets.symmetric(horizontal: 18),
           decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(Tokens.radiusM)),
           child: Row(
@@ -136,7 +136,7 @@ class PillButton extends StatelessWidget {
               if (icon != null) ...[Icon(icon, size: 20, color: fg), const SizedBox(width: 6)],
               Text(
                 label,
-                style: TextStyle(color: fg, fontSize: 15, fontWeight: FontWeight.w500),
+                style: TextStyle(color: fg, fontSize: 14, fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -217,12 +217,12 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 64, color: p.textTertiary.withValues(alpha: 0.6)),
+            Icon(icon, size: 56, color: p.textTertiary.withValues(alpha: 0.6)),
             const SizedBox(height: 16),
             Text(
               text,
               textAlign: TextAlign.center,
-              style: TextStyle(color: p.textTertiary, fontSize: 15, letterSpacing: 2),
+              style: TextStyle(color: p.textTertiary, fontSize: 14, letterSpacing: 2),
             ),
             if (action != null) ...[const SizedBox(height: 16), action!],
           ],
