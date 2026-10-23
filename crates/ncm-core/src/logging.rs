@@ -39,6 +39,10 @@ pub fn init(data_dir: &Path) {
     };
     let (file, guard) = tracing_appender::non_blocking(appender);
     let _ = GUARD.set(guard);
+    // 安卓上标准错误没有去处，改写到 logcat（tag `yetease`），adb 能直接看到
+    #[cfg(target_os = "android")]
+    let writer = file.and((|| logcat::Logcat).with_max_level(tracing::Level::INFO));
+    #[cfg(not(target_os = "android"))]
     let writer = file.and(std::io::stderr.with_max_level(tracing::Level::WARN));
     let _ = tracing_subscriber::fmt()
         .with_env_filter(filter)
@@ -58,6 +62,34 @@ pub fn init(data_dir: &Path) {
         arch = std::env::consts::ARCH,
         "logging started"
     );
+}
+
+#[cfg(target_os = "android")]
+mod logcat {
+    use std::ffi::{CString, c_char, c_int};
+
+    #[link(name = "log")]
+    unsafe extern "C" {
+        fn __android_log_write(prio: c_int, tag: *const c_char, text: *const c_char) -> c_int;
+    }
+
+    /// fmt 每条事件格式化完后一次性写入，正好对应 logcat 的一行
+    pub struct Logcat;
+
+    impl std::io::Write for Logcat {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            let text = super::redact(String::from_utf8_lossy(buf).trim_end()).replace('\0', " ");
+            if let Ok(text) = CString::new(text) {
+                // 4 = ANDROID_LOG_INFO
+                unsafe { __android_log_write(4, c"yetease".as_ptr(), text.as_ptr()) };
+            }
+            Ok(buf.len())
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
 }
 
 /// 抹掉日志里可能出现的登录凭据与设备指纹

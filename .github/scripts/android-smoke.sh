@@ -37,6 +37,8 @@ adb logcat -d > smoke/logcat.txt
 grep -E "FATAL EXCEPTION|panicked|Unhandled Exception" smoke/logcat.txt > smoke/crashes.txt || true
 pid="$(adb shell pidof "$PKG" | tr -d '\r')"
 echo "pid=$pid  前台位置=$pos1"
+echo "--- 应用日志（logcat tag yetease）---"
+grep -E " yetease *:" smoke/logcat.txt | tail -n 60
 cat smoke/crashes.txt
 test -n "$pid" || { echo "进程不在"; fail=1; }
 test ! -s smoke/crashes.txt || { echo "日志里有崩溃"; fail=1; }
