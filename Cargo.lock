@@ -2625,6 +2625,8 @@ dependencies = [
  "directories",
  "flutter_rust_bridge",
  "ncm-core",
+ "serde",
+ "serde_json",
  "tokio",
  "tracing",
 ]

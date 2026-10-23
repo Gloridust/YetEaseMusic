@@ -284,7 +284,26 @@ impl Client {
             req = req.header("X-Real-IP", &ip).header("X-Forwarded-For", &ip);
         }
         tracing::debug!(%uri, ?crypto, "request");
-        let resp = req.send().await?;
+        // 连接失败、超时这类网络抖动自动重试（最多 2 次，退避 300ms / 900ms）
+        let mut attempt = 0;
+        let resp = loop {
+            let r = req
+                .try_clone()
+                .expect("form body is cloneable")
+                .send()
+                .await;
+            match r {
+                Err(e) if attempt < 2 && (e.is_connect() || e.is_timeout() || e.is_request()) => {
+                    attempt += 1;
+                    tracing::warn!(%uri, attempt, "request failed, retrying: {e}");
+                    tokio::time::sleep(std::time::Duration::from_millis(
+                        300 * 3u64.pow(attempt - 1),
+                    ))
+                    .await;
+                }
+                r => break r?,
+            }
+        };
         {
             let mut s = self.session.write().unwrap();
             for v in resp.headers().get_all(reqwest::header::SET_COOKIE) {

@@ -3,6 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/desktop_lyrics.dart';
 import 'api/library.dart';
 import 'api/playback.dart';
 import 'api/types.dart';
@@ -25,6 +26,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
+
+  @protected
+  RustStreamSink<DesktopLyricsEvent>
+  dco_decode_StreamSink_desktop_lyrics_event_Sse(dynamic raw);
 
   @protected
   RustStreamSink<UiEvent> dco_decode_StreamSink_ui_event_Sse(dynamic raw);
@@ -82,6 +87,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CommentsInfo dco_decode_comments_info(dynamic raw);
+
+  @protected
+  DesktopLyricsEvent dco_decode_desktop_lyrics_event(dynamic raw);
 
   @protected
   DownloadItem dco_decode_download_item(dynamic raw);
@@ -251,6 +259,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
   @protected
+  RustStreamSink<DesktopLyricsEvent>
+  sse_decode_StreamSink_desktop_lyrics_event_Sse(SseDeserializer deserializer);
+
+  @protected
   RustStreamSink<UiEvent> sse_decode_StreamSink_ui_event_Sse(
     SseDeserializer deserializer,
   );
@@ -308,6 +320,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CommentsInfo sse_decode_comments_info(SseDeserializer deserializer);
+
+  @protected
+  DesktopLyricsEvent sse_decode_desktop_lyrics_event(
+    SseDeserializer deserializer,
+  );
 
   @protected
   DownloadItem sse_decode_download_item(SseDeserializer deserializer);
@@ -500,6 +517,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_desktop_lyrics_event_Sse(
+    RustStreamSink<DesktopLyricsEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_StreamSink_ui_event_Sse(
     RustStreamSink<UiEvent> self,
     SseSerializer serializer,
@@ -570,6 +593,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_comments_info(CommentsInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_desktop_lyrics_event(
+    DesktopLyricsEvent self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_download_item(DownloadItem self, SseSerializer serializer);

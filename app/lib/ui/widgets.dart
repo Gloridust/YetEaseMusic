@@ -100,7 +100,7 @@ class IconBtn extends StatelessWidget {
         width: box,
         height: box,
         decoration: BoxDecoration(
-          color: h ? p.hover : Colors.transparent,
+          color: h ? (color ?? p.textSecondary).withValues(alpha: 0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(Tokens.radiusS),
         ),
         child: Icon(icon, size: size, color: color ?? (h ? p.textPrimary : p.textSecondary)),

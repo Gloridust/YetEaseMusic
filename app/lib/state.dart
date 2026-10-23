@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart' show Int64List;
 
 import 'package:flutter/material.dart';
 
+import 'src/rust/api/desktop_lyrics.dart' as dl;
 import 'src/rust/api/library.dart' as lib;
 import 'src/rust/api/playback.dart' as pb;
 import 'src/rust/api/types.dart';
@@ -33,6 +35,37 @@ class AppState {
   /// 当前歌曲的红心数与评论数（官方样式的 "100w+" / "1w+"）
   final likeCountText = ValueNotifier<String?>(null);
   final commentCountText = ValueNotifier<String?>(null);
+
+  /// 桌面歌词窗口是否开着
+  final desktopLyrics = ValueNotifier(false);
+  Process? _lyricsProc;
+
+  /// 打开 / 关闭桌面歌词（独立进程，通过本机回环端口接收歌词与进度）
+  Future<void> toggleDesktopLyrics() async {
+    final running = _lyricsProc;
+    if (running != null) {
+      running.kill();
+      _lyricsProc = null;
+      desktopLyrics.value = false;
+      return;
+    }
+    try {
+      final port = await dl.desktopLyricsServe();
+      final p = await Process.start(Platform.resolvedExecutable, ['--desktop-lyrics', '--port=$port']);
+      p.stdout.drain<void>();
+      p.stderr.drain<void>();
+      _lyricsProc = p;
+      desktopLyrics.value = true;
+      p.exitCode.then((_) {
+        if (_lyricsProc == p) {
+          _lyricsProc = null;
+          desktopLyrics.value = false;
+        }
+      });
+    } catch (e) {
+      notify('桌面歌词打开失败：$e');
+    }
+  }
 
   /// 系统媒体控件请求显示窗口时自增
   final raiseRequests = ValueNotifier(0);

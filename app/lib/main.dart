@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'debug_tour.dart';
+import 'desktop_lyrics.dart';
 import 'src/rust/api/playback.dart' as pb;
 import 'src/rust/frb_generated.dart';
 import 'state.dart';
@@ -14,8 +15,10 @@ import 'ui/brand.dart';
 import 'ui/shell.dart';
 import 'ui/ui_scaled.dart';
 
-Future<void> main() async {
+Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  // 桌面歌词是同一个程序的另一个进程，只显示歌词，不启动播放内核
+  if (args.contains('--desktop-lyrics')) return runDesktopLyrics(args);
   await maybeExportIcons();
   await RustLib.init();
   // 未捕获的异常写进日志文件，方便导出反馈

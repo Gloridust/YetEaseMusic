@@ -103,6 +103,10 @@ Future<void> maybeRunTour() async {
   app.nowPlayingOpen.value = true;
   await wait(5);
   await shot('now-playing');
+  // 桌面歌词（独立进程，自己截图）
+  await app.toggleDesktopLyrics();
+  await wait(9);
+  await app.toggleDesktopLyrics();
   app.nowPlayingOpen.value = false;
   await wait(1);
 
