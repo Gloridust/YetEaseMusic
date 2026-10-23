@@ -19,13 +19,23 @@ pub async fn bootstrap(data_dir: Option<String>, cache_dir: Option<String>) -> a
         return Ok(());
     }
     run(async move {
-        let mut paths = Paths::platform_default()?;
-        if let Some(d) = data_dir {
-            paths.data_dir = d.into();
-        }
-        if let Some(d) = cache_dir {
-            paths.cache_dir = d.into();
-        }
+        // 两个目录都由界面层给出时（安卓 / iOS 没有桌面标准目录）直接使用，不再查询标准目录
+        let paths = match (data_dir, cache_dir) {
+            (Some(d), Some(c)) => Paths {
+                data_dir: d.into(),
+                cache_dir: c.into(),
+            },
+            (d, c) => {
+                let mut paths = Paths::platform_default()?;
+                if let Some(d) = d {
+                    paths.data_dir = d.into();
+                }
+                if let Some(c) = c {
+                    paths.cache_dir = c.into();
+                }
+                paths
+            }
+        };
         ncm_core::logging::init(&paths.data_dir);
         let c = Core::new(paths)?;
         let _ = state::CORE.set(c);

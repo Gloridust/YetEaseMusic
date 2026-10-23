@@ -7,14 +7,14 @@ on:
     inputs:
       tag:
         description: 要测试的 Release 标签
-        default: v0.2.0
+        default: v0.2.1
   pull_request:
 
 permissions:
   contents: read
 
 env:
-  TAG: ${{ inputs.tag || 'v0.2.0' }}
+  TAG: ${{ inputs.tag || 'v0.2.1' }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -64,7 +64,9 @@ jobs:
         run: |
           gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p "*macos-universal.dmg" -p "yetease-cli-*macos*" -D dl
           hdiutil attach dl/*.dmg -mountpoint /Volumes/yetease -nobrowse
-          cp -R "/Volumes/yetease/YetEase Music.app" "$HOME/Applications/" 2>/dev/null || { mkdir -p "$HOME/Applications"; cp -R "/Volumes/yetease/YetEase Music.app" "$HOME/Applications/"; }
+          # 目录不存在时 cp -R 会把 .app 本身复制成 Applications，必须先建目录
+          mkdir -p "$HOME/Applications"
+          cp -R "/Volumes/yetease/YetEase Music.app" "$HOME/Applications/"
           xattr -cr "$HOME/Applications/YetEase Music.app"
           tar -xzf dl/yetease-cli-*.tar.gz -C dl
       - name: 命令行版
