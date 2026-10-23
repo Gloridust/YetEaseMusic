@@ -89,3 +89,5 @@ Future<String> exportLogs({required String extra}) =>
     RustLib.instance.api.crateApiPlaybackExportLogs(extra: extra);
 
 Future<String> logDir() => RustLib.instance.api.crateApiPlaybackLogDir();
+
+String appVersion() => RustLib.instance.api.crateApiPlaybackAppVersion();

@@ -270,3 +270,8 @@ pub fn log_dir() -> anyhow::Result<String> {
         .to_string_lossy()
         .into_owned())
 }
+
+#[frb(sync)]
+pub fn app_version() -> String {
+    env!("CARGO_PKG_VERSION").to_owned()
+}

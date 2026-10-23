@@ -139,7 +139,7 @@ class SettingsPage extends StatelessWidget {
           ),
         ),
         const _Section(title: '反馈', child: _FeedbackSection()),
-        const _Section(title: '关于', child: _Hint('YetEase Music 0.1.0 · 开源的网易云音乐第三方客户端。\n直连网易云官方接口，不依赖任何第三方服务器，没有广告。')),
+        _Section(title: '关于', child: _Hint('YetEase Music ${pb.appVersion()} · 开源的网易云音乐第三方客户端。\n直连网易云官方接口，不依赖任何第三方服务器，没有广告。')),
       ],
     );
   }
