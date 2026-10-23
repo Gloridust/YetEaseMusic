@@ -8,7 +8,12 @@
 set -euo pipefail
 APP_ID=io.github.gloridust.yetease
 HERE="$(cd "$(dirname "$0")" && pwd)"
-BUNDLE="$HERE/../../build/linux/x64/release/bundle"
+# 发布包里程序就在同目录的 bundle/；在源码树里则取构建产物
+if [[ -x "$HERE/bundle/yetease-music" ]]; then
+  BUNDLE="$HERE/bundle"
+else
+  BUNDLE="$HERE/../../build/linux/x64/release/bundle"
+fi
 PREFIX="${XDG_DATA_HOME:-$HOME/.local/share}"
 OPT="$HOME/.local/opt/yetease-music"
 
