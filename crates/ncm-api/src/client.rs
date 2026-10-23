@@ -150,9 +150,10 @@ impl Client {
     pub fn new(session: Session) -> Result<Self> {
         // reqwest 用 rustls-no-provider，这里装上 ring（交叉编译到安卓比 aws-lc 省事）
         let _ = rustls::crypto::ring::default_provider().install_default();
-        let http = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(20))
-            .build()?;
+        let builder = reqwest::Client::builder().timeout(std::time::Duration::from_secs(20));
+        #[cfg(target_os = "android")]
+        let builder = builder.tls_backend_preconfigured(android_tls());
+        let http = builder.build()?;
         let mut session = session;
         session.ensure_fingerprint();
         Ok(Self {
@@ -396,4 +397,21 @@ mod tests {
         assert_eq!(enc("a b/c=d"), "a%20b%2Fc%3Dd");
         assert_eq!(enc("中"), "%E4%B8%AD");
     }
+}
+
+/// 安卓上 rustls-platform-verifier 需要先经 JNI 初始化，否则所有 HTTPS 请求都会 panic。
+/// 这里改用内置的 webpki 根证书，并设好 HTTP/2 的 ALPN。
+#[cfg(target_os = "android")]
+pub(crate) fn android_tls() -> rustls::ClientConfig {
+    let mut roots = rustls::RootCertStore::empty();
+    roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+    let mut cfg = rustls::ClientConfig::builder_with_provider(std::sync::Arc::new(
+        rustls::crypto::ring::default_provider(),
+    ))
+    .with_safe_default_protocol_versions()
+    .expect("rustls protocol versions")
+    .with_root_certificates(roots)
+    .with_no_client_auth();
+    cfg.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
+    cfg
 }

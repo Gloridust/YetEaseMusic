@@ -2284,7 +2284,7 @@ dependencies = [
 
 [[package]]
 name = "ncm-api"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "aes",
  "base64 0.23.1",
@@ -2302,11 +2302,12 @@ dependencies = [
  "tokio",
  "tracing",
  "url",
+ "webpki-roots",
 ]
 
 [[package]]
 name = "ncm-cli"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -2319,7 +2320,7 @@ dependencies = [
 
 [[package]]
 name = "ncm-core"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "directories",
  "futures-util",
@@ -2339,11 +2340,12 @@ dependencies = [
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
+ "webpki-roots",
 ]
 
 [[package]]
 name = "ncm-player"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "cpal",
  "crossbeam-channel",
@@ -2353,6 +2355,7 @@ dependencies = [
  "symphonia",
  "thiserror 2.0.21",
  "tracing",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -3304,7 +3307,7 @@ checksum = "9278fb35b3e730abe136e9b395b5b81b96d06b9f5478a50f0c8430a2237b22de"
 
 [[package]]
 name = "rust_lib_app"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "directories",
@@ -4720,6 +4723,15 @@ name = "webpki-root-certs"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e49d0e65abc00c142e8f9428da991da9f1a250c39be97459901eb12b9b49f62a"
+dependencies = [
+ "rustls-pki-types",
+]
+
+[[package]]
+name = "webpki-roots"
+version = "1.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f5f280bbb2b287bc8e7de7e3852945a0ff50d1bbcb5ed42b6c7a568c546df171"
 dependencies = [
  "rustls-pki-types",
 ]

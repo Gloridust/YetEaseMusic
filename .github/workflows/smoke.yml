@@ -7,14 +7,14 @@ on:
     inputs:
       tag:
         description: 要测试的 Release 标签
-        default: v0.2.1
+        default: v0.2.2
   pull_request:
 
 permissions:
   contents: read
 
 env:
-  TAG: ${{ inputs.tag || 'v0.2.1' }}
+  TAG: ${{ inputs.tag || 'v0.2.2' }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -115,6 +115,8 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
+          # 默认参数带 -noaudio，音频输出会打不开；这里保留虚拟声卡
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim
           script: bash .github/scripts/android-smoke.sh
       - uses: actions/upload-artifact@v4
         if: always()

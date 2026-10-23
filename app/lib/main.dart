@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart' show Int64List;
 import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -61,6 +62,11 @@ Future<void> main(List<String> args) async {
 
   await AppState.I.start();
   if (Platform.isAndroid) await initAndroidMedia();
+  // 测试用：--autoplay=<歌曲 id> 启动后直接播放（安卓经 dart_entrypoint_args 传入）
+  final autoplay = args.where((a) => a.startsWith('--autoplay=')).map((a) => int.tryParse(a.substring(11))).firstOrNull;
+  if (autoplay != null) {
+    pb.playSongs(ids: Int64List.fromList([autoplay]), index: 0).ignore();
+  }
   if (isDesktop) {
     // 媒体控件里点击「打开播放器」时把窗口带到前台
     AppState.I.raiseRequests.addListener(() async {

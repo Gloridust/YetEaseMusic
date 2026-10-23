@@ -1,6 +1,6 @@
 [package]
 name = "ncm-player"
-version = "0.2.1"
+version = "0.2.2"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -14,3 +14,6 @@ rustls = { version = "0.23.46", default-features = false, features = ["ring", "s
 symphonia = { version = "0.6.1", features = ["mp3", "flac", "aac", "isomp4", "wav", "vorbis", "ogg", "pcm"] }
 thiserror = "2.0.21"
 tracing = "0.1.44"
+
+[target.'cfg(target_os = "android")'.dependencies]
+webpki-roots = "1.0.11"
