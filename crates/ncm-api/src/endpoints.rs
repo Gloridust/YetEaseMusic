@@ -261,12 +261,12 @@ impl Client {
             .ok_or_else(|| Error::Decode("empty song url list".into()))
     }
 
-    /// `lyric`：歌词、翻译、罗马音。
+    /// `lyric_new`：歌词、翻译、罗马音，以及逐字歌词（yrc）
     pub async fn lyrics(&self, id: u64) -> Result<Lyrics> {
         let v = self
             .request(
-                "/api/song/lyric",
-                json!({ "id": id, "tv": -1, "lv": -1, "rv": -1, "kv": -1, "_nmclfl": 1 }),
+                "/api/song/lyric/v1",
+                json!({ "id": id, "cp": false, "tv": 0, "lv": 0, "rv": 0, "kv": 0, "yv": 0, "ytv": 0, "yrv": 0 }),
                 Crypto::Eapi,
             )
             .await?;
@@ -274,6 +274,8 @@ impl Client {
             lrc: opt_str(&v, &["lrc", "lyric"]),
             translation: opt_str(&v, &["tlyric", "lyric"]),
             romaji: opt_str(&v, &["romalrc", "lyric"]),
+            yrc: opt_str(&v, &["yrc", "lyric"]),
+            yrc_translation: opt_str(&v, &["ytlrc", "lyric"]),
         })
     }
 }
@@ -459,6 +461,177 @@ impl Client {
             .map(|list| list.iter().filter_map(program_to_song).collect())
             .unwrap_or_default();
         Ok((songs, v["count"].as_u64().unwrap_or_default()))
+    }
+}
+
+impl Client {
+    // ---------- 专辑 / 歌手 / 排行榜 / 歌单广场 ----------
+
+    /// `album`
+    pub async fn album(&self, id: u64) -> Result<AlbumDetail> {
+        let v = self
+            .request(&format!("/api/v1/album/{id}"), json!({}), Crypto::Weapi)
+            .await?;
+        let mut songs: Vec<Song> = field(&v, &["songs"]).unwrap_or_default();
+        let album: AlbumInfo = field(&v, &["album"])?;
+        // 专辑里的歌曲封面字段常为空，统一用专辑封面
+        for s in &mut songs {
+            if s.album.pic_url.as_deref().is_none_or(str::is_empty) {
+                s.album.pic_url = album.pic_url.clone();
+            }
+        }
+        Ok(AlbumDetail { album, songs })
+    }
+
+    /// `artists`：歌手信息与热门 50 首
+    pub async fn artist(&self, id: u64) -> Result<ArtistDetail> {
+        let v = self
+            .request(&format!("/api/v1/artist/{id}"), json!({}), Crypto::Weapi)
+            .await?;
+        Ok(ArtistDetail {
+            artist: field(&v, &["artist"])?,
+            hot_songs: field(&v, &["hotSongs"]).unwrap_or_default(),
+        })
+    }
+
+    /// `artist_album`：歌手的专辑。返回 (专辑, 是否还有更多)
+    pub async fn artist_albums(
+        &self,
+        id: u64,
+        offset: u32,
+        limit: u32,
+    ) -> Result<(Vec<AlbumInfo>, bool)> {
+        let v = self
+            .request(
+                &format!("/api/artist/albums/{id}"),
+                json!({ "limit": limit, "offset": offset, "total": true }),
+                Crypto::Weapi,
+            )
+            .await?;
+        Ok((
+            field(&v, &["hotAlbums"]).unwrap_or_default(),
+            v["more"].as_bool().unwrap_or_default(),
+        ))
+    }
+
+    /// `toplist`：所有排行榜
+    pub async fn toplists(&self) -> Result<Vec<PlaylistSummary>> {
+        let v = self
+            .request("/api/toplist", json!({}), Crypto::Eapi)
+            .await?;
+        field(&v, &["list"])
+    }
+
+    /// `top_playlist`：歌单广场。`order` 为 hot / new。返回 (歌单, 总数)
+    pub async fn top_playlists(
+        &self,
+        category: &str,
+        order: &str,
+        offset: u32,
+        limit: u32,
+    ) -> Result<(Vec<PlaylistSummary>, u64)> {
+        let v = self
+            .request(
+                "/api/playlist/list",
+                json!({ "cat": category, "order": order, "limit": limit, "offset": offset, "total": true }),
+                Crypto::Weapi,
+            )
+            .await?;
+        Ok((
+            field(&v, &["playlists"]).unwrap_or_default(),
+            v["total"].as_u64().unwrap_or_default(),
+        ))
+    }
+
+    /// `playlist_catlist`：歌单分类
+    pub async fn playlist_categories(&self) -> Result<Vec<PlaylistCategory>> {
+        let v = self
+            .request("/api/playlist/catalogue", json!({}), Crypto::Eapi)
+            .await?;
+        let groups = &v["categories"];
+        Ok(v["sub"]
+            .as_array()
+            .map(|a| {
+                a.iter()
+                    .map(|c| PlaylistCategory {
+                        name: c["name"].as_str().unwrap_or_default().to_owned(),
+                        group: groups[c["category"].as_u64().unwrap_or(0).to_string()]
+                            .as_str()
+                            .unwrap_or_default()
+                            .to_owned(),
+                        hot: c["hot"].as_bool().unwrap_or_default(),
+                    })
+                    .collect()
+            })
+            .unwrap_or_default())
+    }
+
+    /// `simi_song`：相似歌曲
+    pub async fn similar_songs(&self, id: u64) -> Result<Vec<Song>> {
+        let v = self
+            .request(
+                "/api/v1/discovery/simiSong",
+                json!({ "songid": id, "limit": 50, "offset": 0 }),
+                Crypto::Weapi,
+            )
+            .await?;
+        Ok(field(&v, &["songs"]).unwrap_or_default())
+    }
+
+    // ---------- 多类型搜索 ----------
+
+    pub async fn search_playlists(
+        &self,
+        keywords: &str,
+        offset: u32,
+        limit: u32,
+    ) -> Result<(Vec<PlaylistSummary>, u64)> {
+        let v = self.cloudsearch(keywords, 1000, offset, limit).await?;
+        Ok((
+            field(&v, &["result", "playlists"]).unwrap_or_default(),
+            v["result"]["playlistCount"].as_u64().unwrap_or_default(),
+        ))
+    }
+
+    pub async fn search_albums(
+        &self,
+        keywords: &str,
+        offset: u32,
+        limit: u32,
+    ) -> Result<(Vec<AlbumInfo>, u64)> {
+        let v = self.cloudsearch(keywords, 10, offset, limit).await?;
+        Ok((
+            field(&v, &["result", "albums"]).unwrap_or_default(),
+            v["result"]["albumCount"].as_u64().unwrap_or_default(),
+        ))
+    }
+
+    pub async fn search_artists(
+        &self,
+        keywords: &str,
+        offset: u32,
+        limit: u32,
+    ) -> Result<(Vec<ArtistInfo>, u64)> {
+        let v = self.cloudsearch(keywords, 100, offset, limit).await?;
+        Ok((
+            field(&v, &["result", "artists"]).unwrap_or_default(),
+            v["result"]["artistCount"].as_u64().unwrap_or_default(),
+        ))
+    }
+
+    async fn cloudsearch(
+        &self,
+        keywords: &str,
+        kind: u32,
+        offset: u32,
+        limit: u32,
+    ) -> Result<Value> {
+        self.request(
+            "/api/cloudsearch/pc",
+            json!({ "s": keywords, "type": kind, "limit": limit, "offset": offset, "total": true }),
+            Crypto::Eapi,
+        )
+        .await
     }
 }
 

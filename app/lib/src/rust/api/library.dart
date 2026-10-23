@@ -162,3 +162,57 @@ Future<PlatformInt64> clearCache({required bool audio}) =>
 /// 设置音乐缓存上限（MB），立即按新上限清理一次
 Future<void> setCacheLimit({required int mb}) =>
     RustLib.instance.api.crateApiLibrarySetCacheLimit(mb: mb);
+
+Future<AlbumPageInfo> albumDetail({required PlatformInt64 id}) =>
+    RustLib.instance.api.crateApiLibraryAlbumDetail(id: id);
+
+Future<ArtistPageInfo> artistDetail({required PlatformInt64 id}) =>
+    RustLib.instance.api.crateApiLibraryArtistDetail(id: id);
+
+/// 返回 (专辑, 是否还有更多)
+Future<(List<AlbumCard>, bool)> artistAlbums({
+  required PlatformInt64 id,
+  required int offset,
+}) => RustLib.instance.api.crateApiLibraryArtistAlbums(id: id, offset: offset);
+
+Future<List<PlaylistItem>> toplists() =>
+    RustLib.instance.api.crateApiLibraryToplists();
+
+/// 歌单广场。返回 (歌单, 总数)
+Future<(List<PlaylistItem>, PlatformInt64)> topPlaylists({
+  required String category,
+  required int offset,
+}) => RustLib.instance.api.crateApiLibraryTopPlaylists(
+  category: category,
+  offset: offset,
+);
+
+Future<List<CategoryItem>> playlistCategories() =>
+    RustLib.instance.api.crateApiLibraryPlaylistCategories();
+
+Future<List<SongItem>> similarSongs({required PlatformInt64 id}) =>
+    RustLib.instance.api.crateApiLibrarySimilarSongs(id: id);
+
+Future<(List<PlaylistItem>, PlatformInt64)> searchPlaylists({
+  required String keywords,
+  required int offset,
+}) => RustLib.instance.api.crateApiLibrarySearchPlaylists(
+  keywords: keywords,
+  offset: offset,
+);
+
+Future<(List<AlbumCard>, PlatformInt64)> searchAlbums({
+  required String keywords,
+  required int offset,
+}) => RustLib.instance.api.crateApiLibrarySearchAlbums(
+  keywords: keywords,
+  offset: offset,
+);
+
+Future<(List<ArtistCard>, PlatformInt64)> searchArtists({
+  required String keywords,
+  required int offset,
+}) => RustLib.instance.api.crateApiLibrarySearchArtists(
+  keywords: keywords,
+  offset: offset,
+);

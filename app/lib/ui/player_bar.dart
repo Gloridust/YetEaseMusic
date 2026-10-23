@@ -5,6 +5,7 @@ import '../src/rust/api/playback.dart' as pb;
 import '../src/rust/api/types.dart';
 import '../state.dart';
 import '../theme.dart';
+import 'pages/album_page.dart';
 import 'pages/settings_page.dart';
 import 'song_actions.dart';
 import 'song_list.dart';
@@ -168,10 +169,8 @@ class _NowPlayingInfo extends StatelessWidget {
                 style: TextStyle(fontSize: 15, color: fg, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 4),
-              Text(
-                song.artists.map((a) => a.name).join(' / '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              ArtistLinks(
+                artists: song.artists,
                 style: TextStyle(fontSize: 12.5, color: fg2),
               ),
             ],

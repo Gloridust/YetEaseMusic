@@ -10,6 +10,7 @@ import 'state.dart';
 import 'ui/brand.dart';
 import 'ui/login_dialog.dart';
 import 'ui/nav.dart';
+import 'ui/pages/album_page.dart';
 import 'ui/pages/downloads_page.dart';
 import 'ui/pages/follows_page.dart';
 import 'ui/pages/home_page.dart';
@@ -63,6 +64,11 @@ Future<void> maybeRunTour() async {
       ('downloads', const DownloadsPage()),
       ('local', const LocalMusicPage()),
       ('settings', const SettingsPage()),
+      ('square', const HomePage(initialTab: 1)),
+      ('toplist', const HomePage(initialTab: 2)),
+      ('album', const AlbumPage(id: 34720827)),
+      ('artist', const ArtistPage(id: 6452)),
+      ('search-artists', const SearchPage(keywords: '周杰伦', initialTab: 3)),
     ]) {
       Nav.root(name, page);
       await wait(6);

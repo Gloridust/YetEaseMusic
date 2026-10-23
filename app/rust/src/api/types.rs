@@ -62,6 +62,8 @@ pub struct PlaylistItem {
     pub subscribed: bool,
     /// 5 为"我喜欢的音乐"
     pub special_type: i32,
+    /// 排行榜更新频率
+    pub update_frequency: Option<String>,
 }
 
 impl From<&api::PlaylistSummary> for PlaylistItem {
@@ -76,6 +78,7 @@ impl From<&api::PlaylistSummary> for PlaylistItem {
             creator_id: p.creator.as_ref().map_or(0, |c| c.user_id as i64),
             subscribed: p.subscribed,
             special_type: p.special_type,
+            update_frequency: p.update_frequency.clone(),
         }
     }
 }
@@ -112,16 +115,36 @@ pub enum QrState {
 #[derive(Debug, Clone)]
 pub struct LyricItem {
     pub time_ms: i64,
+    pub duration_ms: i64,
     pub text: String,
     pub translation: Option<String>,
+    /// 逐字时间轴，为空表示只有行级时间
+    pub words: Vec<LyricWordItem>,
+}
+
+#[derive(Debug, Clone)]
+pub struct LyricWordItem {
+    pub start_ms: i64,
+    pub duration_ms: i64,
+    pub text: String,
 }
 
 impl From<LyricLine> for LyricItem {
     fn from(l: LyricLine) -> Self {
         Self {
             time_ms: l.time_ms as i64,
+            duration_ms: l.duration_ms as i64,
             text: l.text,
             translation: l.translation,
+            words: l
+                .words
+                .into_iter()
+                .map(|w| LyricWordItem {
+                    start_ms: w.start_ms as i64,
+                    duration_ms: w.duration_ms as i64,
+                    text: w.text,
+                })
+                .collect(),
         }
     }
 }
@@ -405,4 +428,81 @@ pub struct CacheInfo {
     pub audio_bytes: i64,
     pub image_bytes: i64,
     pub audio_limit_mb: i32,
+}
+
+#[derive(Debug, Clone)]
+pub struct AlbumCard {
+    pub id: i64,
+    pub name: String,
+    pub cover_url: Option<String>,
+    pub artist_id: i64,
+    pub artist_name: String,
+    pub publish_time_ms: i64,
+    pub size: i64,
+    pub description: Option<String>,
+    pub company: Option<String>,
+}
+
+impl From<&api::AlbumInfo> for AlbumCard {
+    fn from(a: &api::AlbumInfo) -> Self {
+        Self {
+            id: a.id as i64,
+            name: a.name.clone(),
+            cover_url: a.pic_url.clone(),
+            artist_id: a.artist.as_ref().map_or(0, |x| x.id as i64),
+            artist_name: a
+                .artist
+                .as_ref()
+                .map(|x| x.name.clone())
+                .unwrap_or_default(),
+            publish_time_ms: a.publish_time as i64,
+            size: a.size as i64,
+            description: a.description.clone().filter(|d| !d.trim().is_empty()),
+            company: a.company.clone().filter(|d| !d.trim().is_empty()),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ArtistCard {
+    pub id: i64,
+    pub name: String,
+    pub cover_url: Option<String>,
+    pub brief: Option<String>,
+    pub album_count: i64,
+    pub song_count: i64,
+    pub alias: Vec<String>,
+}
+
+impl From<&api::ArtistInfo> for ArtistCard {
+    fn from(a: &api::ArtistInfo) -> Self {
+        Self {
+            id: a.id as i64,
+            name: a.name.clone(),
+            cover_url: a.pic_url.clone(),
+            brief: a.brief_desc.clone().filter(|d| !d.trim().is_empty()),
+            album_count: a.album_size as i64,
+            song_count: a.music_size as i64,
+            alias: a.alias.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct AlbumPageInfo {
+    pub album: AlbumCard,
+    pub songs: Vec<SongItem>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ArtistPageInfo {
+    pub artist: ArtistCard,
+    pub hot_songs: Vec<SongItem>,
+}
+
+#[derive(Debug, Clone)]
+pub struct CategoryItem {
+    pub name: String,
+    pub group: String,
+    pub hot: bool,
 }

@@ -2,11 +2,14 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
+import '../src/rust/api/library.dart' as lib;
 import '../src/rust/api/playback.dart' as pb;
 import '../src/rust/api/types.dart';
 import '../state.dart';
 import '../theme.dart';
+import 'pages/album_page.dart';
 import 'player_bar.dart';
 import 'rust_image.dart';
 import 'shell.dart';
@@ -68,7 +71,7 @@ class NowPlaying extends StatelessWidget {
                                 ),
                               ),
                               _SongInfo(song: song),
-                              Expanded(flex: 4, child: LyricsView(songId: song.id)),
+                              Expanded(flex: 4, child: _LyricsOrSimilar(song: song)),
                             ],
                           );
                         }
@@ -89,7 +92,7 @@ class NowPlaying extends StatelessWidget {
                                   children: [
                                     _SongInfo(song: song),
                                     const SizedBox(height: 28),
-                                    Expanded(child: LyricsView(songId: song.id)),
+                                    Expanded(child: _LyricsOrSimilar(song: song)),
                                   ],
                                 ),
                               ),
@@ -139,8 +142,28 @@ class _SongInfo extends StatelessWidget {
           spacing: 24,
           runSpacing: 4,
           children: [
-            Text('专辑：${song.albumName}', style: meta),
-            Text('歌手：${song.artists.map((a) => a.name).join(' / ')}', style: meta),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('专辑：', style: meta),
+                Flexible(
+                  child: LinkText(
+                    song.albumName,
+                    style: meta,
+                    onTap: song.local || song.albumId <= 0 ? null : () => openAlbum(song.albumId),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('歌手：', style: meta),
+                Flexible(
+                  child: ArtistLinks(artists: song.artists, style: meta),
+                ),
+              ],
+            ),
           ],
         ),
       ],
@@ -530,7 +553,7 @@ class _LyricsViewState extends State<LyricsView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(line.text),
+              if (active && line.words.isNotEmpty) KaraokeLine(words: line.words) else Text(line.text),
               if (line.translation != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
@@ -543,6 +566,212 @@ class _LyricsViewState extends State<LyricsView> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 播放页右侧：歌词 / 相似推荐
+class _LyricsOrSimilar extends StatefulWidget {
+  const _LyricsOrSimilar({required this.song});
+
+  final SongItem song;
+
+  @override
+  State<_LyricsOrSimilar> createState() => _LyricsOrSimilarState();
+}
+
+class _LyricsOrSimilarState extends State<_LyricsOrSimilar> {
+  int _tab = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final local = widget.song.local;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!local)
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final (i, label) in const ['歌词', '相似推荐'].indexed)
+                  Hover(
+                    onTap: () => setState(() => _tab = i),
+                    builder: (_, h) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _tab == i ? Colors.white.withValues(alpha: 0.16) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(17),
+                      ),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          color: _tab == i || h ? Colors.white : Colors.white60,
+                          fontSize: 14,
+                          fontWeight: _tab == i ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: _tab == 0 || local ? LyricsView(songId: widget.song.id) : _SimilarList(songId: widget.song.id),
+        ),
+      ],
+    );
+  }
+}
+
+class _SimilarList extends StatefulWidget {
+  const _SimilarList({required this.songId});
+
+  final int songId;
+
+  @override
+  State<_SimilarList> createState() => _SimilarListState();
+}
+
+class _SimilarListState extends State<_SimilarList> {
+  late Future<List<SongItem>> _future = lib.similarSongs(id: widget.songId);
+
+  @override
+  void didUpdateWidget(covariant _SimilarList old) {
+    super.didUpdateWidget(old);
+    if (old.songId != widget.songId) _future = lib.similarSongs(id: widget.songId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<SongItem>>(
+      future: _future,
+      builder: (context, snap) {
+        final list = snap.data;
+        if (list == null) {
+          return snap.hasError ? const _LyricHint('加载失败') : const SizedBox.shrink();
+        }
+        if (list.isEmpty) return const _LyricHint('暂无相似推荐');
+        return ListView.builder(
+          padding: const EdgeInsets.only(top: 8, bottom: 24),
+          itemCount: list.length,
+          itemExtent: 58,
+          itemBuilder: (context, i) {
+            final s = list[i];
+            return Hover(
+              onTap: () => AppState.I.playSongs(list, i),
+              builder: (_, h) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: h ? Colors.white.withValues(alpha: 0.08) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(Tokens.radiusM),
+                ),
+                child: Row(
+                  children: [
+                    Cover(url: s.coverUrl, size: 42, radius: Tokens.radiusS),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            s.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                          ),
+                          Text(
+                            s.artists.map((a) => a.name).join(' / '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white54, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.play_circle_outline_rounded, color: h ? Colors.white : Colors.white38),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// 逐字高亮：已唱过的字为白色，正在唱的字从左到右渐变填充。
+/// 只有当前行才挂 Ticker，用同步 FFI 每帧读取精确播放位置。
+class KaraokeLine extends StatefulWidget {
+  const KaraokeLine({super.key, required this.words});
+
+  final List<LyricWordItem> words;
+
+  @override
+  State<KaraokeLine> createState() => _KaraokeLineState();
+}
+
+class _KaraokeLineState extends State<KaraokeLine> with SingleTickerProviderStateMixin {
+  late final Ticker _ticker = createTicker((_) {
+    final p = pb.positionMs();
+    if (p != _pos) setState(() => _pos = p);
+  });
+  int _pos = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pos = pb.positionMs();
+    _ticker.start();
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final style = DefaultTextStyle.of(context).style;
+    final dim = style.copyWith(color: Colors.white.withValues(alpha: 0.45));
+    final lit = style.copyWith(color: Colors.white);
+    return Wrap(
+      children: [
+        for (final w in widget.words)
+          _word(
+            w.text,
+            dim,
+            lit,
+            w.durationMs <= 0 ? (_pos >= w.startMs ? 1.0 : 0.0) : ((_pos - w.startMs) / w.durationMs).clamp(0.0, 1.0),
+          ),
+      ],
+    );
+  }
+
+  Widget _word(String text, TextStyle dim, TextStyle lit, double f) {
+    if (f <= 0) return Text(text, style: dim);
+    if (f >= 1) return Text(text, style: lit);
+    return Stack(
+      children: [
+        Text(text, style: dim),
+        ClipRect(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            widthFactor: f,
+            child: Text(text, style: lit),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -796,7 +796,12 @@ impl Core {
 
     pub async fn lyrics(&self, song_id: u64) -> Result<Vec<LyricLine>> {
         let l = self.api.lyrics(song_id).await?;
-        Ok(lyrics::merge(&l.lrc, &l.translation))
+        Ok(lyrics::merge_all(
+            &l.lrc,
+            &l.translation,
+            &l.yrc,
+            &l.yrc_translation,
+        ))
     }
 }
 
