@@ -11,6 +11,8 @@ use ncm_core::{Core, CoreEvent, Paths};
 use qrcode::QrCode;
 use qrcode::render::unicode;
 
+mod tui;
+
 #[derive(Parser)]
 #[command(name = "yetease", version, about = "网易云音乐第三方客户端（命令行）")]
 struct Cli {
@@ -56,6 +58,8 @@ enum Cmd {
     },
     /// 打印歌词
     Lyrics { id: u64 },
+    /// 全屏终端界面
+    Tui,
     /// 导出脱敏日志（用于反馈问题），默认放到当前目录
     ExportLogs {
         #[arg(default_value = ".")]
@@ -135,6 +139,7 @@ async fn main() -> Result<()> {
                 print_songs(&songs);
             }
         }
+        Cmd::Tui => tui::run(core.clone()).await?,
         Cmd::ExportLogs { dir } => {
             let p = core.export_logs(&dir, "导出方式：命令行")?;
             println!("已导出：{}", p.display());
