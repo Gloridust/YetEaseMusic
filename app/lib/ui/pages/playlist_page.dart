@@ -188,6 +188,7 @@ class _Header extends StatelessWidget {
                               SubscribeButton(
                                 initial: Future.value(s.subscribed),
                                 onChange: (on) => lib.setPlaylistSubscribed(id: s.id, enable: on),
+                                confirmOff: '网易云要求人机验证，第三方客户端无法重新收藏歌单。取消后如需恢复，只能在手机 App 中重新收藏。',
                               ),
                             ],
                             const Spacer(),

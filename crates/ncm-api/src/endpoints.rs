@@ -632,8 +632,13 @@ impl Client {
         } else {
             ("/api/playlist/unsubscribe", json!({ "id": id }))
         };
-        self.request(path, data, Crypto::Eapi).await?;
-        Ok(())
+        match self.request(path, data, Crypto::Eapi).await {
+            // 收藏被易盾拦截时，网易云返回「操作过于频繁」之类的误导性提示，统一换成真实原因
+            Err(Error::Api { .. }) if on => Err(Error::Other(
+                "网易云要求人机验证，第三方客户端暂时无法收藏歌单，请在手机 App 中收藏".into(),
+            )),
+            r => r.map(|_| ()),
+        }
     }
 
     // ---------- 多类型搜索 ----------

@@ -246,3 +246,15 @@ String shortCount(int n) {
   if (n >= 1000) return '999+';
   return n > 0 ? '$n' : '';
 }
+
+/// 把 Rust 侧传来的错误转成给用户看的一句话（去掉 AnyhowException 包装与调用栈）
+String friendlyError(Object e) {
+  var t = e.toString();
+  const prefix = 'AnyhowException(';
+  if (t.startsWith(prefix)) t = t.substring(prefix.length);
+  t = t.split('\n').first.trim();
+  if (t.endsWith(')') && !t.contains('(')) t = t.substring(0, t.length - 1);
+  // 「api error 405: 操作过于频繁」这类只留冒号后的说明
+  final m = RegExp(r'^api error -?\d+: (.+)$').firstMatch(t);
+  return m?.group(1) ?? t;
+}

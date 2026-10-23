@@ -447,11 +447,20 @@ class _ArtistLinksState extends State<ArtistLinks> {
 
 /// 收藏 / 关注按钮：乐观更新，失败时回滚并提示
 class SubscribeButton extends StatefulWidget {
-  const SubscribeButton({super.key, required this.initial, required this.onChange, this.labels = const ('收藏', '已收藏')});
+  const SubscribeButton({
+    super.key,
+    required this.initial,
+    required this.onChange,
+    this.labels = const ('收藏', '已收藏'),
+    this.confirmOff,
+  });
 
   final Future<bool> initial;
   final Future<void> Function(bool on) onChange;
   final (String, String) labels;
+
+  /// 设置后，取消前先弹窗确认（比如取消收藏歌单后无法在本客户端重新收藏）
+  final String? confirmOff;
 
   @override
   State<SubscribeButton> createState() => _SubscribeButtonState();
@@ -479,6 +488,20 @@ class _SubscribeButtonState extends State<SubscribeButton> {
       return;
     }
     final before = _on ?? false;
+    if (before && widget.confirmOff != null) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('取消${widget.labels.$1}？'),
+          content: Text(widget.confirmOff!),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('再想想')),
+            TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('仍然取消')),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+    }
     setState(() {
       _on = !before;
       _busy = true;
@@ -488,7 +511,7 @@ class _SubscribeButtonState extends State<SubscribeButton> {
       AppState.I.notify(!before ? '已${widget.labels.$1}' : '已取消${widget.labels.$1}');
     } catch (e) {
       if (mounted) setState(() => _on = before);
-      AppState.I.notify('${widget.labels.$1}失败：$e');
+      AppState.I.notify('${widget.labels.$1}失败：${friendlyError(e)}');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
