@@ -1,6 +1,7 @@
 # 跨平台构建与发布。
 # - 推送 v* 标签：四个平台全部构建成功后创建 Release 并上传安装包
 # - 手动触发或提 PR：只构建，产物在 Actions 页面的 Artifacts 里下载
+# - 每个平台构建完都会用同一份产物跑冒烟测试（Windows / macOS 真机截图巡览，Android 模拟器前后台播放）
 name: Release
 
 on:
@@ -203,6 +204,126 @@ jobs:
         with:
           name: android
           path: dist/*
+
+  # ---------- 冒烟测试：用本轮构建出来的包，在真实机器 / 模拟器上安装运行 ----------
+
+  smoke-windows:
+    needs: windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: dl
+      - name: 解压免安装版
+        shell: pwsh
+        run: Expand-Archive (Get-ChildItem dl\*portable.zip).FullName -DestinationPath app
+      - name: 命令行版
+        shell: pwsh
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          .\app\yetease.exe --version
+          .\app\yetease.exe search 晴天 -l 3
+      - name: 桌面版截图巡览
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force shots | Out-Null
+          $env:YETEASE_TOUR = "$PWD\shots"
+          $env:YETEASE_TOUR_SONG = "Yesterday Once More Carpenters"
+          $p = Start-Process .\app\yetease-music.exe -PassThru
+          Start-Sleep 150
+          if (-not $p.HasExited) { Stop-Process $p }
+          Get-ChildItem shots
+          if ((Get-ChildItem shots\*.png).Count -lt 5) { throw "截图数量不足，巡览没有跑完" }
+      - name: 收集日志
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force logs | Out-Null
+          Get-ChildItem -Recurse $env:APPDATA -Filter "yetease*.log" -ErrorAction SilentlyContinue | Copy-Item -Destination logs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-windows
+          path: |
+            shots
+            logs
+
+  smoke-macos:
+    needs: macos
+    runs-on: macos-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos
+          path: dl
+      - name: 安装 dmg
+        run: |
+          hdiutil attach dl/*.dmg -mountpoint /Volumes/yetease -nobrowse
+          # 目录不存在时 cp -R 会把 .app 本身复制成 Applications，必须先建目录
+          mkdir -p "$HOME/Applications"
+          cp -R "/Volumes/yetease/YetEase Music.app" "$HOME/Applications/"
+          xattr -cr "$HOME/Applications/YetEase Music.app"
+          tar -xzf dl/yetease-cli-*.tar.gz -C dl
+      - name: 命令行版
+        run: |
+          dl/yetease-cli-*/yetease --version
+          dl/yetease-cli-*/yetease search 晴天 -l 3
+      - name: 桌面版截图巡览
+        run: |
+          mkdir -p shots
+          exe="$HOME/Applications/YetEase Music.app/Contents/MacOS/YetEase Music"
+          YETEASE_TOUR="$PWD/shots" YETEASE_TOUR_SONG="Yesterday Once More Carpenters" "$exe" > app.log 2>&1 &
+          pid=$!
+          sleep 150
+          kill $pid 2>/dev/null || true
+          ls -la shots
+          test "$(ls shots/*.png | wc -l)" -ge 5
+      - name: 收集日志
+        if: always()
+        run: |
+          mkdir -p logs
+          cp app.log logs/ 2>/dev/null || true
+          find "$HOME/Library/Application Support" -name "yetease*.log" -exec cp {} logs/ \; 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-macos
+          path: |
+            shots
+            logs
+
+  smoke-android:
+    needs: android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: android
+          path: all
+      - name: 只保留 x86_64 包（模拟器用）
+        run: mkdir -p dl && cp all/*android-x86_64.apk dl/
+      - name: 启用 KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: 安装、播放、切后台
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          # 默认参数带 -noaudio，音频输出会打不开；这里保留虚拟声卡
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim
+          script: bash .github/scripts/android-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-android
+          path: smoke
 
   release:
     # 某个平台失败时其余平台照常发布（失败的平台修好后可重新运行，--clobber 补传）

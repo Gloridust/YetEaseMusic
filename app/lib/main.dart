@@ -62,7 +62,7 @@ Future<void> main(List<String> args) async {
 
   await AppState.I.start();
   if (Platform.isAndroid) await initAndroidMedia();
-  // 测试用：--autoplay=<歌曲 id> 启动后直接播放（安卓经 dart_entrypoint_args 传入）
+  // 测试用：--autoplay=<歌曲 id> 启动后直接播放（安卓经 Intent 的 yetease_args 传入）
   final autoplay = args.where((a) => a.startsWith('--autoplay=')).map((a) => int.tryParse(a.substring(11))).firstOrNull;
   if (autoplay != null) {
     pb.playSongs(ids: Int64List.fromList([autoplay]), index: 0).ignore();

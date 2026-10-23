@@ -13,7 +13,7 @@ fail=0
 adb install -r dl/*.apk
 adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS 2>/dev/null || true
 adb logcat -c
-adb shell am start -n "$ACT" --esa dart_entrypoint_args "--autoplay=$SONG"
+adb shell am start -n "$ACT" --esa yetease_args "--autoplay=$SONG"
 sleep 40
 adb exec-out screencap -p > smoke/launch.png
 
