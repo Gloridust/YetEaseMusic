@@ -79,3 +79,11 @@ for f in /tmp/yetease-shots/*.png; do
   ffmpeg -y -loglevel error -i "$f" -c:v libwebp -quality 88 "doc/screenshots/$(basename "${f%.png}").webp"
 done
 ```
+
+## 注意：发布构建前先清缓存
+
+Flutter 的增量构建偶尔不会重新裁剪图标字体（`MaterialIcons-Regular.otf`），新加的图标会显示成空白。打 release 包前先清一下：
+
+```bash
+cd app && rm -rf .dart_tool/flutter_build build/linux/x64/release/bundle && flutter build linux --release
+```

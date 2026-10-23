@@ -231,7 +231,10 @@ pub struct Radio {
     pub dj: Option<UserRef>,
     #[serde(default, rename = "programCount", deserialize_with = "num")]
     pub program_count: u64,
-    #[serde(default, rename = "rcmdtext", alias = "desc")]
+    /// 推荐语；接口里 `rcmdtext` 与 `desc` 会同时出现，不能用 alias 合并（serde 会报重复字段）
+    #[serde(default)]
+    pub rcmdtext: Option<String>,
+    #[serde(default)]
     pub desc: Option<String>,
     #[serde(default, rename = "subCount", deserialize_with = "num")]
     pub sub_count: u64,

@@ -147,3 +147,18 @@ Future<void> heartbeatMode({
   likedPlaylistId: likedPlaylistId,
   likedIds: likedIds,
 );
+
+/// 带磁盘缓存的图片下载，Dart 侧的 `RustImage` 用它取字节
+Future<Uint8List> imageBytes({required String url}) =>
+    RustLib.instance.api.crateApiLibraryImageBytes(url: url);
+
+Future<CacheInfo> cacheInfo() =>
+    RustLib.instance.api.crateApiLibraryCacheInfo();
+
+/// 清除缓存，返回释放的字节数。`audio` 为 false 时清图片缓存
+Future<PlatformInt64> clearCache({required bool audio}) =>
+    RustLib.instance.api.crateApiLibraryClearCache(audio: audio);
+
+/// 设置音乐缓存上限（MB），立即按新上限清理一次
+Future<void> setCacheLimit({required int mb}) =>
+    RustLib.instance.api.crateApiLibrarySetCacheLimit(mb: mb);

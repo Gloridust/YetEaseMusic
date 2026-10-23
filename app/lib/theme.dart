@@ -160,6 +160,7 @@ String formatCount(int n) {
 /// 网易云图片地址支持 `?param=WxH` 缩放，按显示尺寸取图省流量
 String? sizedImage(String? url, int px) {
   if (url == null || url.isEmpty) return null;
+  if (url.startsWith('/')) return url; // 本地封面文件
   final u = url.replaceFirst('http://', 'https://');
   return '$u?param=${px}y$px';
 }

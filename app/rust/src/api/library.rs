@@ -362,3 +362,38 @@ fn rand_index(n: usize) -> usize {
         .unwrap_or(0);
     t as usize % n
 }
+
+// ---------- 图片 ----------
+
+/// 带磁盘缓存的图片下载，Dart 侧的 `RustImage` 用它取字节
+pub async fn image_bytes(url: String) -> anyhow::Result<Vec<u8>> {
+    run(async move { Ok(core()?.image(&url).await?) }).await
+}
+
+// ---------- 缓存 ----------
+
+pub async fn cache_info() -> anyhow::Result<CacheInfo> {
+    run(async move {
+        let c = core()?;
+        let (a, i) = c.cache_usage().await;
+        Ok(CacheInfo {
+            audio_bytes: a as i64,
+            image_bytes: i as i64,
+            audio_limit_mb: c.settings().cache_limit_mb as i32,
+        })
+    })
+    .await
+}
+
+/// 清除缓存，返回释放的字节数。`audio` 为 false 时清图片缓存
+pub async fn clear_cache(audio: bool) -> anyhow::Result<i64> {
+    run(async move { Ok(core()?.clear_cache(audio).await as i64) }).await
+}
+
+/// 设置音乐缓存上限（MB），立即按新上限清理一次
+pub fn set_cache_limit(mb: i32) -> anyhow::Result<()> {
+    let c = core()?;
+    c.update_settings(|s| s.cache_limit_mb = mb.clamp(256, 102_400) as u32);
+    c.prune_caches();
+    Ok(())
+}

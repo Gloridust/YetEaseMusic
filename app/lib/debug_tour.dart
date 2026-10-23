@@ -62,6 +62,7 @@ Future<void> maybeRunTour() async {
       ('recent', const RecentPage()),
       ('downloads', const DownloadsPage()),
       ('local', const LocalMusicPage()),
+      ('settings', const SettingsPage()),
     ]) {
       Nav.root(name, page);
       await wait(6);

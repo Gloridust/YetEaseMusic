@@ -1,5 +1,6 @@
 //! 业务核心：把协议层、播放器、队列和本地存储粘在一起。各端（Flutter / CLI）共用这一层。
 
+pub mod images;
 pub mod library;
 pub mod lyrics;
 pub mod queue;
@@ -46,6 +47,8 @@ pub struct Settings {
     pub local_dirs: Vec<String>,
     /// 下载目录
     pub download_dir: String,
+    /// 音乐缓存上限（MB），超出后自动淘汰最旧的
+    pub cache_limit_mb: u32,
 }
 
 impl Default for Settings {
@@ -60,6 +63,7 @@ impl Default for Settings {
             theme: "system".into(),
             local_dirs: vec![music_dir().to_string_lossy().into_owned()],
             download_dir: music_dir().join("YetEase").to_string_lossy().into_owned(),
+            cache_limit_mb: 2048,
         }
     }
 }
@@ -173,6 +177,7 @@ impl Core {
             downloads: Mutex::new(Default::default()),
             downloading: Mutex::new(Default::default()),
         });
+        core.prune_caches();
         {
             let mut d: library::Downloads =
                 read_json(&core.paths.downloads_file()).unwrap_or_default();
@@ -388,6 +393,8 @@ impl Core {
             },
             true,
         );
+        // 每次开始新歌顺带检查一次缓存容量（扫描目录很便宜）
+        self.prune_caches();
         Ok(())
     }
 
@@ -576,6 +583,83 @@ impl Core {
         if let Err(e) = write_json(&self.paths.downloads_file(), &*d) {
             tracing::warn!("save downloads: {e}");
         }
+    }
+
+    // ---------- 缓存管理 ----------
+
+    fn audio_cache_dir(&self) -> PathBuf {
+        self.paths.cache_dir.join("audio")
+    }
+
+    fn image_cache_dir(&self) -> PathBuf {
+        self.paths.cache_dir.join("images")
+    }
+
+    /// 后台检查音乐与图片缓存是否超限
+    pub fn prune_caches(&self) {
+        let audio = (
+            self.audio_cache_dir(),
+            self.settings().cache_limit_mb as u64 * (1 << 20),
+        );
+        let image = (self.image_cache_dir(), images::IMAGE_LIMIT);
+        tokio::task::spawn_blocking(move || {
+            for (dir, limit) in [audio, image] {
+                let freed = images::prune(&dir, limit);
+                if freed > 0 {
+                    tracing::info!("cache pruned {} MB in {}", freed >> 20, dir.display());
+                }
+            }
+        });
+    }
+
+    /// (音乐缓存字节, 图片缓存字节)
+    pub async fn cache_usage(&self) -> (u64, u64) {
+        let (a, i) = (self.audio_cache_dir(), self.image_cache_dir());
+        tokio::task::spawn_blocking(move || (images::usage(&a), images::usage(&i)))
+            .await
+            .unwrap_or_default()
+    }
+
+    /// 清除缓存：`audio` 为 true 清音乐缓存，否则清图片缓存。返回释放的字节数
+    pub async fn clear_cache(&self, audio: bool) -> u64 {
+        let dir = if audio {
+            self.audio_cache_dir()
+        } else {
+            self.image_cache_dir()
+        };
+        tokio::task::spawn_blocking(move || images::clear(&dir))
+            .await
+            .unwrap_or_default()
+    }
+
+    // ---------- 图片缓存 ----------
+
+    /// 取图片字节：命中磁盘缓存直接读，否则下载后写入缓存
+    pub async fn image(&self, url: &str) -> Result<Vec<u8>> {
+        let path = images::path_for(&self.image_cache_dir(), url);
+        if let Ok(b) = tokio::fs::read(&path).await {
+            return Ok(b);
+        }
+        let resp = http_client()
+            .get(url)
+            .send()
+            .await
+            .and_then(|r| r.error_for_status())
+            .map_err(|e| Error::Other(e.to_string()))?;
+        let bytes = resp
+            .bytes()
+            .await
+            .map_err(|e| Error::Other(e.to_string()))?
+            .to_vec();
+        if let Some(dir) = path.parent() {
+            tokio::fs::create_dir_all(dir).await?;
+            // 先写临时文件再改名，避免并发读到半截文件
+            let tmp = path.with_extension("tmp");
+            if tokio::fs::write(&tmp, &bytes).await.is_ok() {
+                let _ = tokio::fs::rename(&tmp, &path).await;
+            }
+        }
+        Ok(bytes)
     }
 
     pub async fn lyrics(&self, song_id: u64) -> Result<Vec<LyricLine>> {

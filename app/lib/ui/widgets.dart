@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../state.dart';
 import '../theme.dart';
+import 'rust_image.dart';
 
 /// 圆角封面，加载中/失败时显示占位
 class Cover extends StatelessWidget {
@@ -29,10 +30,9 @@ class Cover extends StatelessWidget {
         dimension: size,
         child: src == null
             ? placeholder
-            : Image.network(
-                src,
+            : Image(
+                image: ResizeImage(cachedImage(src), width: px, policy: ResizeImagePolicy.fit),
                 fit: BoxFit.cover,
-                cacheWidth: px,
                 gaplessPlayback: true,
                 frameBuilder: (_, child, frame, sync) => sync
                     ? child

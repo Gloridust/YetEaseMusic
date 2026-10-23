@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../src/rust/api/library.dart' as lib;
 import '../../src/rust/api/playback.dart' as pb;
 import '../../src/rust/api/types.dart';
 import '../../state.dart';
@@ -90,6 +91,7 @@ class SettingsPage extends StatelessWidget {
                   ),
           ),
         ),
+        const _Section(title: '存储', child: _StorageSection()),
         _Section(
           title: '外观',
           child: ListenableBuilder(
@@ -237,4 +239,106 @@ class _Check extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 存储：音乐缓存（可设上限）、图片缓存、下载目录
+class _StorageSection extends StatefulWidget {
+  const _StorageSection();
+
+  @override
+  State<_StorageSection> createState() => _StorageSectionState();
+}
+
+class _StorageSectionState extends State<_StorageSection> {
+  CacheInfo? _info;
+  String? _downloadDir;
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  Future<void> _refresh() async {
+    final info = await lib.cacheInfo();
+    final storage = await lib.getStorageSettings();
+    if (mounted) {
+      setState(() {
+        _info = info;
+        _downloadDir = storage.downloadDir;
+      });
+    }
+  }
+
+  Future<void> _clear(bool audio) async {
+    final freed = await lib.clearCache(audio: audio);
+    AppState.I.notify('已清除 ${_fmt(freed)}');
+    if (!audio) PaintingBinding.instance.imageCache.clear();
+    _refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final i = _info;
+    if (i == null) return const SizedBox(height: 40);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Row(
+          label: '音乐缓存',
+          value: '${_fmt(i.audioBytes)} / ${_fmt(i.audioLimitMb * 1024 * 1024)}',
+          onClear: () => _clear(true),
+        ),
+        const SizedBox(height: 8),
+        const _Hint('边听边缓存，再听不费流量。超过上限后自动删除最久没用过的歌曲。'),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final mb in const [1024, 2048, 5120, 10240])
+              _Choice(
+                label: '${mb ~/ 1024} GB',
+                selected: i.audioLimitMb == mb,
+                onTap: () async {
+                  await lib.setCacheLimit(mb: mb);
+                  _refresh();
+                },
+              ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        _Row(label: '图片缓存', value: '${_fmt(i.imageBytes)} / 500 MB', onClear: () => _clear(false)),
+        const SizedBox(height: 18),
+        _Hint('下载目录：${_downloadDir ?? ''}（已下载的歌曲不属于缓存，不会被自动清理）'),
+      ],
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  const _Row({required this.label, required this.value, required this.onClear});
+
+  final String label;
+  final String value;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Row(
+      children: [
+        SizedBox(width: 80, child: Text(label, style: const TextStyle(fontSize: 14))),
+        Text(value, style: TextStyle(fontSize: 14, color: p.textSecondary)),
+        const SizedBox(width: 16),
+        PillButton(label: '清除', onTap: onClear),
+      ],
+    );
+  }
+}
+
+String _fmt(int bytes) {
+  if (bytes >= 1 << 30) return '${(bytes / (1 << 30)).toStringAsFixed(1)} GB';
+  if (bytes >= 1 << 20) return '${(bytes / (1 << 20)).toStringAsFixed(0)} MB';
+  return '${(bytes / 1024).toStringAsFixed(0)} KB';
 }

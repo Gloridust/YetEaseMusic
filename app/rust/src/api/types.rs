@@ -346,7 +346,11 @@ impl From<&api::Radio> for RadioItem {
                 .map(|d| d.nickname.clone())
                 .unwrap_or_default(),
             program_count: r.program_count as i64,
-            desc: r.desc.clone().filter(|d| !d.trim().is_empty()),
+            desc: r
+                .rcmdtext
+                .clone()
+                .or_else(|| r.desc.clone())
+                .filter(|d| !d.trim().is_empty()),
             sub_count: r.sub_count as i64,
         }
     }
@@ -392,4 +396,11 @@ pub struct DownloadingItem {
 pub struct StorageSettings {
     pub local_dirs: Vec<String>,
     pub download_dir: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct CacheInfo {
+    pub audio_bytes: i64,
+    pub image_bytes: i64,
+    pub audio_limit_mb: i32,
 }

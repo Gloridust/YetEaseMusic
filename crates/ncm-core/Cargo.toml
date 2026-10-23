@@ -8,7 +8,9 @@ repository.workspace = true
 [dependencies]
 directories = "6.0.0"
 futures-util = "0.3.34"
+hex = "0.4.3"
 lofty = "0.25.4"
+md-5 = "0.11.0"
 ncm-api = { version = "0.1.0", path = "../ncm-api" }
 ncm-player = { version = "0.1.0", path = "../ncm-player" }
 rand = "0.10.3"

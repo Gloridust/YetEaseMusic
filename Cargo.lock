@@ -1465,7 +1465,9 @@ version = "0.1.0"
 dependencies = [
  "directories",
  "futures-util",
+ "hex",
  "lofty",
+ "md-5 0.11.0",
  "ncm-api",
  "ncm-player",
  "rand",

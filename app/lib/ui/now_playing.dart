@@ -8,6 +8,7 @@ import '../src/rust/api/types.dart';
 import '../state.dart';
 import '../theme.dart';
 import 'player_bar.dart';
+import 'rust_image.dart';
 import 'shell.dart';
 import 'widgets.dart';
 
@@ -177,7 +178,7 @@ class _BackdropState extends State<_Backdrop> {
     final src = sizedImage(widget.url, 64);
     if (src == null) return;
     try {
-      final scheme = await ColorScheme.fromImageProvider(provider: NetworkImage(src), brightness: Brightness.dark);
+      final scheme = await ColorScheme.fromImageProvider(provider: cachedImage(src), brightness: Brightness.dark);
       final hsl = HSLColor.fromColor(scheme.primaryContainer);
       final c = hsl
           .withLightness(hsl.lightness.clamp(0.16, 0.24))
@@ -211,8 +212,8 @@ class _BackdropState extends State<_Backdrop> {
               opacity: 0.28,
               child: ImageFiltered(
                 imageFilter: ImageFilter.blur(sigmaX: 90, sigmaY: 90, tileMode: TileMode.decal),
-                child: Image.network(
-                  cover,
+                child: Image(
+                  image: cachedImage(cover),
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
                   errorBuilder: (_, _, _) => const SizedBox.shrink(),

@@ -59,6 +59,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SongItem dco_decode_box_autoadd_song_item(dynamic raw);
 
   @protected
+  CacheInfo dco_decode_cache_info(dynamic raw);
+
+  @protected
   CommentItem dco_decode_comment_item(dynamic raw);
 
   @protected
@@ -226,6 +229,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SongItem sse_decode_box_autoadd_song_item(SseDeserializer deserializer);
+
+  @protected
+  CacheInfo sse_decode_cache_info(SseDeserializer deserializer);
 
   @protected
   CommentItem sse_decode_comment_item(SseDeserializer deserializer);
@@ -419,6 +425,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     SongItem self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_cache_info(CacheInfo self, SseSerializer serializer);
 
   @protected
   void sse_encode_comment_item(CommentItem self, SseSerializer serializer);
