@@ -164,7 +164,23 @@ impl Core {
         std::fs::create_dir_all(&paths.data_dir)?;
         std::fs::create_dir_all(&paths.cache_dir)?;
         let session: Session = read_json(&paths.session_file()).unwrap_or_default();
-        let settings: Settings = read_json(&paths.settings_file()).unwrap_or_default();
+        let mut settings: Settings = read_json(&paths.settings_file()).unwrap_or_default();
+        // 安卓等平台取不到系统「音乐」目录时，默认值会是相对路径，改放到应用数据目录下
+        if !std::path::Path::new(&settings.download_dir).is_absolute() {
+            settings.download_dir = paths
+                .data_dir
+                .join("downloads")
+                .to_string_lossy()
+                .into_owned();
+        }
+        settings
+            .local_dirs
+            .retain(|d| std::path::Path::new(d).is_absolute());
+        if settings.local_dirs.is_empty() {
+            settings
+                .local_dirs
+                .push(paths.data_dir.join("music").to_string_lossy().into_owned());
+        }
         let api = Client::new(session)?;
         api.set_real_ip(settings.use_cn_ip.then(|| settings.cn_ip.clone()));
         let (player, player_rx) = Player::new();
@@ -188,8 +204,11 @@ impl Core {
         });
         core.prune_caches();
         // Linux 的 MPRIS 不需要窗口句柄，直接启用；其他平台由界面层传入句柄后启用
+        // 没有 D-Bus 会话总线（SSH、容器、无桌面服务器）时跳过，否则 zbus 内部线程会 panic
         #[cfg(target_os = "linux")]
-        core.enable_media_controls(None);
+        if session_bus_available() {
+            core.enable_media_controls(None);
+        }
         {
             let mut d: library::Downloads =
                 read_json(&core.paths.downloads_file()).unwrap_or_default();
@@ -803,6 +822,21 @@ impl Core {
             &l.yrc_translation,
         ))
     }
+}
+
+/// Linux 上是否有可用的 D-Bus 会话总线
+#[cfg(target_os = "linux")]
+fn session_bus_available() -> bool {
+    if let Ok(addr) = std::env::var("DBUS_SESSION_BUS_ADDRESS") {
+        // unix:path=/run/user/1000/bus 形式时顺便确认文件存在
+        return match addr.split_once("unix:path=") {
+            Some((_, rest)) => {
+                std::path::Path::new(rest.split(',').next().unwrap_or(rest)).exists()
+            }
+            None => !addr.is_empty(),
+        };
+    }
+    std::env::var("XDG_RUNTIME_DIR").is_ok_and(|d| std::path::Path::new(&d).join("bus").exists())
 }
 
 fn http_client() -> &'static reqwest::Client {

@@ -1,0 +1,216 @@
+# 跨平台构建与发布。
+# - 推送 v* 标签：四个平台全部构建成功后创建 Release 并上传安装包
+# - 手动触发或提 PR：只构建，产物在 Actions 页面的 Artifacts 里下载
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+  # PR 上只构建不发布，用来提前发现各平台的编译问题
+  pull_request:
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: "3.47.7"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            v="${GITHUB_REF_NAME#v}"
+          else
+            v="$(grep '^version:' app/pubspec.yaml | sed -E 's/version: ([^+]+).*/\1/')-dev.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+  linux:
+    needs: version
+    # 在较老的 22.04 上编译，产物只依赖 glibc 2.34+，新旧发行版都能用
+    runs-on: ubuntu-22.04
+    env:
+      V: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 系统依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgtk-3-dev libasound2-dev libstdc++-12-dev clang cmake pkg-config
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: 测试
+        run: cargo test --workspace --locked
+      - name: 构建命令行版
+        run: cargo build --release --locked -p ncm-cli
+      - name: 构建桌面版
+        working-directory: app
+        run: flutter build linux --release
+      - name: 打包
+        run: |
+          mkdir -p dist
+          strip target/release/yetease
+          D="yetease-music-$V-linux-x86_64"
+          mkdir -p "$D"
+          cp -a app/build/linux/x64/release/bundle "$D/bundle"
+          cp -a app/linux/packaging/icons "$D/icons"
+          cp app/linux/packaging/io.github.gloridust.yetease.desktop "$D/"
+          cp app/linux/packaging/install-local.sh "$D/install.sh"
+          cp LICENSE "$D/"
+          tar -czf "dist/$D.tar.gz" "$D"
+          C="yetease-cli-$V-linux-x86_64"
+          mkdir -p "$C" && cp target/release/yetease LICENSE "$C/"
+          tar -czf "dist/$C.tar.gz" "$C"
+          app/linux/packaging/build-deb.sh "$V" app/build/linux/x64/release/bundle target/release/yetease dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist/*
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    env:
+      V: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: 构建命令行版
+        run: cargo build --release --locked -p ncm-cli
+      - name: 构建桌面版
+        working-directory: app
+        run: flutter build windows --release
+      - name: 打包
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          $rel = "app\build\windows\x64\runner\Release"
+          Copy-Item target\release\yetease.exe $rel\
+          Compress-Archive -Path "$rel\*" -DestinationPath "dist\yetease-music-$env:V-windows-x64-portable.zip"
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) { choco install innosetup -y --no-progress }
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          & $iscc "/DAppVersion=$env:V" "/DSourceDir=$PWD\$rel" "/DCliExe=$PWD\target\release\yetease.exe" "/DOutputDir=$PWD\dist" app\windows\packaging\yetease.iss
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*
+
+  macos:
+    needs: version
+    runs-on: macos-latest
+    env:
+      V: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: 构建命令行版（通用二进制）
+        run: |
+          cargo build --release --locked -p ncm-cli --target aarch64-apple-darwin
+          cargo build --release --locked -p ncm-cli --target x86_64-apple-darwin
+          lipo -create -output yetease target/aarch64-apple-darwin/release/yetease target/x86_64-apple-darwin/release/yetease
+      - name: 构建桌面版
+        working-directory: app
+        run: flutter build macos --release
+      - name: 打包
+        run: |
+          mkdir -p dist dmg
+          cp -R "app/build/macos/Build/Products/Release/YetEase Music.app" dmg/
+          ln -s /Applications dmg/Applications
+          hdiutil create -volname "YetEase Music" -srcfolder dmg -ov -format UDZO "dist/yetease-music-$V-macos-universal.dmg"
+          C="yetease-cli-$V-macos-universal"
+          mkdir -p "$C" && cp yetease LICENSE "$C/"
+          tar -czf "dist/$C.tar.gz" "$C"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/*
+
+  android:
+    needs: version
+    runs-on: ubuntu-latest
+    env:
+      V: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+      - uses: Swatinem/rust-cache@v2
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: 构建 APK
+        working-directory: app
+        run: |
+          flutter build apk --release
+          flutter build apk --release --split-per-abi
+      - name: 打包
+        run: |
+          mkdir -p dist
+          out=app/build/app/outputs/flutter-apk
+          cp "$out/app-release.apk" "dist/yetease-music-$V-android-universal.apk"
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            cp "$out/app-$abi-release.apk" "dist/yetease-music-$V-android-$abi.apk"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: dist/*
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [version, linux, windows, macos, android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: 发布
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist && sha256sum * > SHA256SUMS && cd ..
+          notes="doc/release-notes/${GITHUB_REF_NAME}.md"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          elif [ -f "$notes" ]; then
+            gh release create "$GITHUB_REF_NAME" dist/* --title "YetEase Music ${GITHUB_REF_NAME#v}" --notes-file "$notes"
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* --title "YetEase Music ${GITHUB_REF_NAME#v}" --generate-notes
+          fi

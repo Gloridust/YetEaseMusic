@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'debug_tour.dart';
@@ -31,8 +32,14 @@ Future<void> main(List<String> args) async {
     return false;
   };
   // 开发用：YETEASE_DATA_DIR 指向独立目录即可得到一个全新的未登录环境
-  final dataDir = Platform.environment['YETEASE_DATA_DIR'];
-  await pb.bootstrap(dataDir: dataDir, cacheDir: dataDir == null ? null : '$dataDir/cache');
+  var dataDir = Platform.environment['YETEASE_DATA_DIR'];
+  String? cacheDir = dataDir == null ? null : '$dataDir/cache';
+  // 移动端没有桌面那套标准目录，由系统提供应用私有目录
+  if (Platform.isAndroid || Platform.isIOS) {
+    dataDir ??= (await getApplicationSupportDirectory()).path;
+    cacheDir ??= (await getApplicationCacheDirectory()).path;
+  }
+  await pb.bootstrap(dataDir: dataDir, cacheDir: cacheDir);
 
   if (isDesktop) {
     await windowManager.ensureInitialized();
