@@ -1,0 +1,15 @@
+[package]
+name = "ncm-core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+directories = "6.0.0"
+ncm-api = { version = "0.1.0", path = "../ncm-api" }
+ncm-player = { version = "0.1.0", path = "../ncm-player" }
+rand = "0.10.3"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "sync", "macros", "time", "fs"] }
+tracing = "0.1.44"

@@ -1,0 +1,6 @@
+/target
+**/.dart_tool/
+**/build/
+*.part
+.idea/
+.vscode/

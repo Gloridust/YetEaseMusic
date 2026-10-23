@@ -1,0 +1,26 @@
+[package]
+name = "ncm-api"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+aes = "0.9.3"
+base64 = "0.23.1"
+cbc = { version = "0.2.1", features = ["alloc", "block-padding"] }
+ecb = { version = "0.2.1", features = ["alloc", "block-padding"] }
+hex = "0.4.3"
+md-5 = "0.11.0"
+num-bigint = "0.5.1"
+rand = "0.10.3"
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls-no-provider", "json", "gzip", "brotli", "deflate", "form", "stream", "http2", "system-proxy"] }
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "sync", "time"] }
+tracing = "0.1.44"
+url = "2.5.8"
+
+[dev-dependencies]
+serde_json = "1.0.154"
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread"] }
