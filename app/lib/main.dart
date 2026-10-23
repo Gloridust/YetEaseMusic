@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,6 +18,15 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await maybeExportIcons();
   await RustLib.init();
+  // 未捕获的异常写进日志文件，方便导出反馈
+  FlutterError.onError = (d) {
+    FlutterError.presentError(d);
+    pb.logMessage(level: 'error', message: '${d.exceptionAsString()}\n${d.stack}');
+  };
+  PlatformDispatcher.instance.onError = (e, st) {
+    pb.logMessage(level: 'error', message: '$e\n$st');
+    return false;
+  };
   // 开发用：YETEASE_DATA_DIR 指向独立目录即可得到一个全新的未登录环境
   final dataDir = Platform.environment['YETEASE_DATA_DIR'];
   await pb.bootstrap(dataDir: dataDir, cacheDir: dataDir == null ? null : '$dataDir/cache');

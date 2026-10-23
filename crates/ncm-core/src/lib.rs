@@ -2,6 +2,7 @@
 
 pub mod images;
 pub mod library;
+pub mod logging;
 pub mod lyrics;
 #[cfg(not(target_os = "android"))]
 pub mod media;
@@ -375,7 +376,9 @@ impl Core {
         };
         self.emit(CoreEvent::TrackChanged(Some(song.clone())));
         self.media_metadata(&song);
+        tracing::info!(id = song.id, name = %song.name, "play");
         if let Err(msg) = self.start(&song).await {
+            tracing::warn!(id = song.id, "play failed: {msg}");
             self.emit(CoreEvent::Notice(format!(
                 "《{}》无法播放：{msg}",
                 song.name
@@ -618,6 +621,23 @@ impl Core {
         if let Err(e) = write_json(&self.paths.downloads_file(), &*d) {
             tracing::warn!("save downloads: {e}");
         }
+    }
+
+    // ---------- 日志 ----------
+
+    /// 导出脱敏后的日志到 `dest_dir`
+    pub fn export_logs(&self, dest_dir: &std::path::Path, extra: &str) -> Result<PathBuf> {
+        let s = self.settings();
+        let header = format!(
+            "YetEase Music {} · {} {} · 登录: {} · 音质: {:?} · 海外模式: {}\n{extra}",
+            env!("CARGO_PKG_VERSION"),
+            std::env::consts::OS,
+            std::env::consts::ARCH,
+            self.api.is_logged_in(),
+            s.quality,
+            s.use_cn_ip,
+        );
+        Ok(logging::export(&self.paths.data_dir, dest_dir, &header)?)
     }
 
     // ---------- 系统媒体控制 ----------

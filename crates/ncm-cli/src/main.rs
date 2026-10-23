@@ -56,16 +56,19 @@ enum Cmd {
     },
     /// 打印歌词
     Lyrics { id: u64 },
+    /// 导出脱敏日志（用于反馈问题），默认放到当前目录
+    ExportLogs {
+        #[arg(default_value = ".")]
+        dir: std::path::PathBuf,
+    },
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .with_writer(std::io::stderr)
-        .init();
     let cli = Cli::parse();
-    let core = Core::new(Paths::platform_default()?)?;
+    let paths = Paths::platform_default()?;
+    ncm_core::logging::init(&paths.data_dir);
+    let core = Core::new(paths)?;
     let api = core.api();
 
     match cli.cmd {
@@ -131,6 +134,10 @@ async fn main() -> Result<()> {
             } else {
                 print_songs(&songs);
             }
+        }
+        Cmd::ExportLogs { dir } => {
+            let p = core.export_logs(&dir, "导出方式：命令行")?;
+            println!("已导出：{}", p.display());
         }
         Cmd::Lyrics { id } => {
             for l in core.lyrics(id).await? {

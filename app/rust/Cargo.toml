@@ -8,6 +8,7 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 anyhow = "1.0.104"
+directories = "6.0.0"
 flutter_rust_bridge = "=2.13.0"
 ncm-core = { version = "0.1.0", path = "../../crates/ncm-core" }
 tokio = { version = "1.54.1", features = ["rt-multi-thread", "sync", "time", "macros"] }
