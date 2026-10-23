@@ -223,7 +223,13 @@ jobs:
         run: |
           [Console]::OutputEncoding = [Text.Encoding]::UTF8
           .\app\yetease.exe --version
-          .\app\yetease.exe search 晴天 -l 3
+          # 网易云偶尔对 CI 机房 IP 要求人机验证（-462），这不是程序问题，只记警告
+          $out = .\app\yetease.exe search 晴天 -l 3 2>&1 | Out-String
+          Write-Output $out
+          if ($LASTEXITCODE -ne 0) {
+            if ($out -match '-462') { Write-Output "::warning::搜索被网易云人机验证拦截（CI 机器 IP）"; $global:LASTEXITCODE = 0 }
+            else { exit 1 }
+          }
       - name: 桌面版截图巡览
         shell: pwsh
         run: |
@@ -268,7 +274,14 @@ jobs:
       - name: 命令行版
         run: |
           dl/yetease-cli-*/yetease --version
-          dl/yetease-cli-*/yetease search 晴天 -l 3
+          # 网易云偶尔对 CI 机房 IP 要求人机验证（-462），这不是程序问题，只记警告
+          if ! out="$(dl/yetease-cli-*/yetease search 晴天 -l 3 2>&1)"; then
+            echo "$out"
+            echo "$out" | grep -q -- '-462' || exit 1
+            echo "::warning::搜索被网易云人机验证拦截（CI 机器 IP）"
+          else
+            echo "$out"
+          fi
       - name: 桌面版截图巡览
         run: |
           mkdir -p shots

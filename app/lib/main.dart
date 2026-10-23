@@ -20,6 +20,9 @@ import 'ui/ui_scaled.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  // 安卓的启动参数经 initialRoute 传入（见 MainActivity.getInitialRoute）
+  final route = PlatformDispatcher.instance.defaultRouteName;
+  if (args.isEmpty && route.startsWith('/?')) args = Uri.parse(route).queryParametersAll['arg'] ?? const [];
   // 桌面歌词是同一个程序的另一个进程，只显示歌词，不启动播放内核
   if (args.contains('--desktop-lyrics')) return runDesktopLyrics(args);
   await maybeExportIcons();
@@ -111,6 +114,7 @@ class YetEaseApp extends StatelessWidget {
           key: tourBoundary,
           child: UiScaled(scale: app.uiScale.value, child: child!),
         ),
+        initialRoute: '/',
         home: const Shell(),
       ),
     );
