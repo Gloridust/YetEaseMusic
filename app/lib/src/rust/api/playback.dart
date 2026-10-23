@@ -73,3 +73,7 @@ Future<void> setAppearance({
 
 Future<List<LyricItem>> lyrics({required PlatformInt64 songId}) =>
     RustLib.instance.api.crateApiPlaybackLyrics(songId: songId);
+
+/// 启用系统媒体控制。Linux 上内核已自动启用；Windows 需要传窗口句柄（HWND），macOS 传 None。
+Future<bool> enableMediaControls({PlatformInt64? hwnd}) =>
+    RustLib.instance.api.crateApiPlaybackEnableMediaControls(hwnd: hwnd);

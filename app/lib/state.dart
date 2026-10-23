@@ -34,6 +34,9 @@ class AppState {
   final likeCountText = ValueNotifier<String?>(null);
   final commentCountText = ValueNotifier<String?>(null);
 
+  /// 系统媒体控件请求显示窗口时自增
+  final raiseRequests = ValueNotifier(0);
+
   /// 下载列表或进度变化时自增，下载页据此刷新
   final downloadsTick = ValueNotifier(0);
 
@@ -75,6 +78,8 @@ class AppState {
         pb.getSettings().then(_applySettings);
       case UiEvent_DownloadsChanged():
         downloadsTick.value++;
+      case UiEvent_Raise():
+        raiseRequests.value++;
       case UiEvent_Notice(:final field0):
         notify(field0);
       case UiEvent_Error(:final field0):

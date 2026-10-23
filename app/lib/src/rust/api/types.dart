@@ -625,6 +625,9 @@ sealed class UiEvent with _$UiEvent {
   const factory UiEvent.queueChanged() = UiEvent_QueueChanged;
   const factory UiEvent.settingsChanged() = UiEvent_SettingsChanged;
   const factory UiEvent.downloadsChanged() = UiEvent_DownloadsChanged;
+
+  /// 系统媒体控件请求把窗口带到前台
+  const factory UiEvent.raise() = UiEvent_Raise;
   const factory UiEvent.notice(String field0) = UiEvent_Notice;
   const factory UiEvent.error(String field0) = UiEvent_Error;
 }

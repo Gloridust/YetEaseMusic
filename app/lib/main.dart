@@ -39,6 +39,19 @@ Future<void> main() async {
   }
 
   await AppState.I.start();
+  if (isDesktop) {
+    // 媒体控件里点击「打开播放器」时把窗口带到前台
+    AppState.I.raiseRequests.addListener(() async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+    // Linux 的 MPRIS 由内核自动启用；Windows 需要窗口句柄，macOS 不需要
+    if (Platform.isWindows) {
+      pb.enableMediaControls(hwnd: await windowManager.getId()).ignore();
+    } else if (Platform.isMacOS) {
+      pb.enableMediaControls().ignore();
+    }
+  }
   runApp(const YetEaseApp());
   maybeRunTour();
 }

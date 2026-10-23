@@ -468,7 +468,7 @@ extension UiEventPatterns on UiEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( UiEvent_State value)?  state,TResult Function( UiEvent_Position value)?  position,TResult Function( UiEvent_TrackChanged value)?  trackChanged,TResult Function( UiEvent_QueueChanged value)?  queueChanged,TResult Function( UiEvent_SettingsChanged value)?  settingsChanged,TResult Function( UiEvent_DownloadsChanged value)?  downloadsChanged,TResult Function( UiEvent_Notice value)?  notice,TResult Function( UiEvent_Error value)?  error,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( UiEvent_State value)?  state,TResult Function( UiEvent_Position value)?  position,TResult Function( UiEvent_TrackChanged value)?  trackChanged,TResult Function( UiEvent_QueueChanged value)?  queueChanged,TResult Function( UiEvent_SettingsChanged value)?  settingsChanged,TResult Function( UiEvent_DownloadsChanged value)?  downloadsChanged,TResult Function( UiEvent_Raise value)?  raise,TResult Function( UiEvent_Notice value)?  notice,TResult Function( UiEvent_Error value)?  error,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case UiEvent_State() when state != null:
@@ -477,7 +477,8 @@ return position(_that);case UiEvent_TrackChanged() when trackChanged != null:
 return trackChanged(_that);case UiEvent_QueueChanged() when queueChanged != null:
 return queueChanged(_that);case UiEvent_SettingsChanged() when settingsChanged != null:
 return settingsChanged(_that);case UiEvent_DownloadsChanged() when downloadsChanged != null:
-return downloadsChanged(_that);case UiEvent_Notice() when notice != null:
+return downloadsChanged(_that);case UiEvent_Raise() when raise != null:
+return raise(_that);case UiEvent_Notice() when notice != null:
 return notice(_that);case UiEvent_Error() when error != null:
 return error(_that);case _:
   return orElse();
@@ -497,7 +498,7 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( UiEvent_State value)  state,required TResult Function( UiEvent_Position value)  position,required TResult Function( UiEvent_TrackChanged value)  trackChanged,required TResult Function( UiEvent_QueueChanged value)  queueChanged,required TResult Function( UiEvent_SettingsChanged value)  settingsChanged,required TResult Function( UiEvent_DownloadsChanged value)  downloadsChanged,required TResult Function( UiEvent_Notice value)  notice,required TResult Function( UiEvent_Error value)  error,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( UiEvent_State value)  state,required TResult Function( UiEvent_Position value)  position,required TResult Function( UiEvent_TrackChanged value)  trackChanged,required TResult Function( UiEvent_QueueChanged value)  queueChanged,required TResult Function( UiEvent_SettingsChanged value)  settingsChanged,required TResult Function( UiEvent_DownloadsChanged value)  downloadsChanged,required TResult Function( UiEvent_Raise value)  raise,required TResult Function( UiEvent_Notice value)  notice,required TResult Function( UiEvent_Error value)  error,}){
 final _that = this;
 switch (_that) {
 case UiEvent_State():
@@ -506,7 +507,8 @@ return position(_that);case UiEvent_TrackChanged():
 return trackChanged(_that);case UiEvent_QueueChanged():
 return queueChanged(_that);case UiEvent_SettingsChanged():
 return settingsChanged(_that);case UiEvent_DownloadsChanged():
-return downloadsChanged(_that);case UiEvent_Notice():
+return downloadsChanged(_that);case UiEvent_Raise():
+return raise(_that);case UiEvent_Notice():
 return notice(_that);case UiEvent_Error():
 return error(_that);}
 }
@@ -522,7 +524,7 @@ return error(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( UiEvent_State value)?  state,TResult? Function( UiEvent_Position value)?  position,TResult? Function( UiEvent_TrackChanged value)?  trackChanged,TResult? Function( UiEvent_QueueChanged value)?  queueChanged,TResult? Function( UiEvent_SettingsChanged value)?  settingsChanged,TResult? Function( UiEvent_DownloadsChanged value)?  downloadsChanged,TResult? Function( UiEvent_Notice value)?  notice,TResult? Function( UiEvent_Error value)?  error,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( UiEvent_State value)?  state,TResult? Function( UiEvent_Position value)?  position,TResult? Function( UiEvent_TrackChanged value)?  trackChanged,TResult? Function( UiEvent_QueueChanged value)?  queueChanged,TResult? Function( UiEvent_SettingsChanged value)?  settingsChanged,TResult? Function( UiEvent_DownloadsChanged value)?  downloadsChanged,TResult? Function( UiEvent_Raise value)?  raise,TResult? Function( UiEvent_Notice value)?  notice,TResult? Function( UiEvent_Error value)?  error,}){
 final _that = this;
 switch (_that) {
 case UiEvent_State() when state != null:
@@ -531,7 +533,8 @@ return position(_that);case UiEvent_TrackChanged() when trackChanged != null:
 return trackChanged(_that);case UiEvent_QueueChanged() when queueChanged != null:
 return queueChanged(_that);case UiEvent_SettingsChanged() when settingsChanged != null:
 return settingsChanged(_that);case UiEvent_DownloadsChanged() when downloadsChanged != null:
-return downloadsChanged(_that);case UiEvent_Notice() when notice != null:
+return downloadsChanged(_that);case UiEvent_Raise() when raise != null:
+return raise(_that);case UiEvent_Notice() when notice != null:
 return notice(_that);case UiEvent_Error() when error != null:
 return error(_that);case _:
   return null;
@@ -550,7 +553,7 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( PlayerState field0)?  state,TResult Function( PlatformInt64 positionMs,  PlatformInt64 durationMs,  double buffered)?  position,TResult Function( SongItem? field0)?  trackChanged,TResult Function()?  queueChanged,TResult Function()?  settingsChanged,TResult Function()?  downloadsChanged,TResult Function( String field0)?  notice,TResult Function( String field0)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( PlayerState field0)?  state,TResult Function( PlatformInt64 positionMs,  PlatformInt64 durationMs,  double buffered)?  position,TResult Function( SongItem? field0)?  trackChanged,TResult Function()?  queueChanged,TResult Function()?  settingsChanged,TResult Function()?  downloadsChanged,TResult Function()?  raise,TResult Function( String field0)?  notice,TResult Function( String field0)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case UiEvent_State() when state != null:
 return state(_that.field0);case UiEvent_Position() when position != null:
@@ -558,7 +561,8 @@ return position(_that.positionMs,_that.durationMs,_that.buffered);case UiEvent_T
 return trackChanged(_that.field0);case UiEvent_QueueChanged() when queueChanged != null:
 return queueChanged();case UiEvent_SettingsChanged() when settingsChanged != null:
 return settingsChanged();case UiEvent_DownloadsChanged() when downloadsChanged != null:
-return downloadsChanged();case UiEvent_Notice() when notice != null:
+return downloadsChanged();case UiEvent_Raise() when raise != null:
+return raise();case UiEvent_Notice() when notice != null:
 return notice(_that.field0);case UiEvent_Error() when error != null:
 return error(_that.field0);case _:
   return orElse();
@@ -578,7 +582,7 @@ return error(_that.field0);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( PlayerState field0)  state,required TResult Function( PlatformInt64 positionMs,  PlatformInt64 durationMs,  double buffered)  position,required TResult Function( SongItem? field0)  trackChanged,required TResult Function()  queueChanged,required TResult Function()  settingsChanged,required TResult Function()  downloadsChanged,required TResult Function( String field0)  notice,required TResult Function( String field0)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( PlayerState field0)  state,required TResult Function( PlatformInt64 positionMs,  PlatformInt64 durationMs,  double buffered)  position,required TResult Function( SongItem? field0)  trackChanged,required TResult Function()  queueChanged,required TResult Function()  settingsChanged,required TResult Function()  downloadsChanged,required TResult Function()  raise,required TResult Function( String field0)  notice,required TResult Function( String field0)  error,}) {final _that = this;
 switch (_that) {
 case UiEvent_State():
 return state(_that.field0);case UiEvent_Position():
@@ -586,7 +590,8 @@ return position(_that.positionMs,_that.durationMs,_that.buffered);case UiEvent_T
 return trackChanged(_that.field0);case UiEvent_QueueChanged():
 return queueChanged();case UiEvent_SettingsChanged():
 return settingsChanged();case UiEvent_DownloadsChanged():
-return downloadsChanged();case UiEvent_Notice():
+return downloadsChanged();case UiEvent_Raise():
+return raise();case UiEvent_Notice():
 return notice(_that.field0);case UiEvent_Error():
 return error(_that.field0);}
 }
@@ -602,7 +607,7 @@ return error(_that.field0);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( PlayerState field0)?  state,TResult? Function( PlatformInt64 positionMs,  PlatformInt64 durationMs,  double buffered)?  position,TResult? Function( SongItem? field0)?  trackChanged,TResult? Function()?  queueChanged,TResult? Function()?  settingsChanged,TResult? Function()?  downloadsChanged,TResult? Function( String field0)?  notice,TResult? Function( String field0)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( PlayerState field0)?  state,TResult? Function( PlatformInt64 positionMs,  PlatformInt64 durationMs,  double buffered)?  position,TResult? Function( SongItem? field0)?  trackChanged,TResult? Function()?  queueChanged,TResult? Function()?  settingsChanged,TResult? Function()?  downloadsChanged,TResult? Function()?  raise,TResult? Function( String field0)?  notice,TResult? Function( String field0)?  error,}) {final _that = this;
 switch (_that) {
 case UiEvent_State() when state != null:
 return state(_that.field0);case UiEvent_Position() when position != null:
@@ -610,7 +615,8 @@ return position(_that.positionMs,_that.durationMs,_that.buffered);case UiEvent_T
 return trackChanged(_that.field0);case UiEvent_QueueChanged() when queueChanged != null:
 return queueChanged();case UiEvent_SettingsChanged() when settingsChanged != null:
 return settingsChanged();case UiEvent_DownloadsChanged() when downloadsChanged != null:
-return downloadsChanged();case UiEvent_Notice() when notice != null:
+return downloadsChanged();case UiEvent_Raise() when raise != null:
+return raise();case UiEvent_Notice() when notice != null:
 return notice(_that.field0);case UiEvent_Error() when error != null:
 return error(_that.field0);case _:
   return null;
@@ -916,6 +922,38 @@ int get hashCode => runtimeType.hashCode;
 @override
 String toString() {
     return 'UiEvent.downloadsChanged()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class UiEvent_Raise extends UiEvent {
+  const UiEvent_Raise(): super._();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is UiEvent_Raise);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'UiEvent.raise()';
 }
 
 

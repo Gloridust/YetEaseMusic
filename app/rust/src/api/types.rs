@@ -269,6 +269,8 @@ pub enum UiEvent {
     QueueChanged,
     SettingsChanged,
     DownloadsChanged,
+    /// 系统媒体控件请求把窗口带到前台
+    Raise,
     Notice(String),
     Error(String),
 }

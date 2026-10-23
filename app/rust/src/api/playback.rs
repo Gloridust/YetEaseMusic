@@ -61,6 +61,7 @@ pub fn events(sink: StreamSink<UiEvent>) -> anyhow::Result<()> {
                 CoreEvent::QueueChanged => UiEvent::QueueChanged,
                 CoreEvent::SettingsChanged => UiEvent::SettingsChanged,
                 CoreEvent::DownloadsChanged => UiEvent::DownloadsChanged,
+                CoreEvent::Raise => UiEvent::Raise,
                 CoreEvent::Notice(n) => UiEvent::Notice(n),
             };
             if sink.add(ui).is_err() {
@@ -227,4 +228,19 @@ pub async fn lyrics(song_id: i64) -> anyhow::Result<Vec<LyricItem>> {
             .collect())
     })
     .await
+}
+
+/// 启用系统媒体控制。Linux 上内核已自动启用；Windows 需要传窗口句柄（HWND），macOS 传 None。
+pub fn enable_media_controls(hwnd: Option<i64>) -> anyhow::Result<bool> {
+    #[cfg(not(target_os = "android"))]
+    {
+        let c = core()?;
+        let _g = rt().enter();
+        return Ok(c.enable_media_controls(hwnd.map(|h| h as usize)));
+    }
+    #[cfg(target_os = "android")]
+    {
+        let _ = hwnd;
+        Ok(false)
+    }
 }

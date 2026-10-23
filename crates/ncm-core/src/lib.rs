@@ -3,6 +3,8 @@
 pub mod images;
 pub mod library;
 pub mod lyrics;
+#[cfg(not(target_os = "android"))]
+pub mod media;
 pub mod queue;
 
 use std::path::PathBuf;
@@ -131,6 +133,8 @@ pub enum CoreEvent {
     SettingsChanged,
     /// 下载列表或某个下载任务的进度变了
     DownloadsChanged,
+    /// 系统媒体控件请求把窗口带到前台
+    Raise,
     /// 面向用户的提示，比如"该歌曲暂无版权"
     Notice(String),
 }
@@ -149,6 +153,8 @@ pub struct Core {
     downloads: Mutex<library::Downloads>,
     /// 进行中的下载：id → (歌曲, 进度 0~1)
     downloading: Mutex<std::collections::HashMap<u64, (Song, f32)>>,
+    #[cfg(not(target_os = "android"))]
+    media: Mutex<Option<media::MediaHandle>>,
 }
 
 impl Core {
@@ -176,8 +182,13 @@ impl Core {
             local: Mutex::new(Default::default()),
             downloads: Mutex::new(Default::default()),
             downloading: Mutex::new(Default::default()),
+            #[cfg(not(target_os = "android"))]
+            media: Mutex::new(None),
         });
         core.prune_caches();
+        // Linux 的 MPRIS 不需要窗口句柄，直接启用；其他平台由界面层传入句柄后启用
+        #[cfg(target_os = "linux")]
+        core.enable_media_controls(None);
         {
             let mut d: library::Downloads =
                 read_json(&core.paths.downloads_file()).unwrap_or_default();
@@ -200,8 +211,27 @@ impl Core {
             })?;
         let weak: Weak<Self> = Arc::downgrade(&core);
         tokio::spawn(async move {
+            // 用于识别跳转：位置偏离「上次位置 + 经过时间」太多就同步给系统控件
+            let mut last: Option<(u64, std::time::Instant)> = None;
             while let Some(e) = rx.recv().await {
                 let Some(core) = weak.upgrade() else { break };
+                match &e {
+                    PlayerEvent::State(_) => {
+                        core.media_playback();
+                        last = None;
+                    }
+                    PlayerEvent::Position { position_ms, .. } => {
+                        let jumped = last.is_some_and(|(p, t)| {
+                            let expected = p + t.elapsed().as_millis() as u64;
+                            position_ms.abs_diff(expected) > 1500
+                        });
+                        if jumped {
+                            core.media_playback();
+                        }
+                        last = Some((*position_ms, std::time::Instant::now()));
+                    }
+                    _ => {}
+                }
                 if matches!(e, PlayerEvent::Ended) {
                     let next = core.queue.lock().unwrap().after_end();
                     if let Some(i) = next {
@@ -260,6 +290,10 @@ impl Core {
         };
         self.api.set_real_ip(s.use_cn_ip.then(|| s.cn_ip.clone()));
         self.player.set_volume(s.volume);
+        #[cfg(not(target_os = "android"))]
+        if let Some(m) = self.media.lock().unwrap().as_ref() {
+            m.update(media::Update::Volume(s.volume));
+        }
         self.queue.lock().unwrap().set_mode(s.play_mode);
         self.save_settings();
         self.emit(CoreEvent::SettingsChanged);
@@ -340,6 +374,7 @@ impl Core {
             q.songs[index].clone()
         };
         self.emit(CoreEvent::TrackChanged(Some(song.clone())));
+        self.media_metadata(&song);
         if let Err(msg) = self.start(&song).await {
             self.emit(CoreEvent::Notice(format!(
                 "《{}》无法播放：{msg}",
@@ -582,6 +617,83 @@ impl Core {
         let d = self.downloads.lock().unwrap();
         if let Err(e) = write_json(&self.paths.downloads_file(), &*d) {
             tracing::warn!("save downloads: {e}");
+        }
+    }
+
+    // ---------- 系统媒体控制 ----------
+
+    /// 启用系统媒体控制。Linux 不需要窗口句柄；Windows 需要传 Flutter 窗口的 HWND。
+    /// 重复调用无副作用。
+    #[cfg(not(target_os = "android"))]
+    pub fn enable_media_controls(self: &Arc<Self>, hwnd: Option<usize>) -> bool {
+        if self.media.lock().unwrap().is_some() {
+            return true;
+        }
+        let weak = Arc::downgrade(self);
+        let rt = tokio::runtime::Handle::current();
+        let handle = media::start(hwnd.map(|h| h as *mut std::ffi::c_void), move |a| {
+            let Some(core) = weak.upgrade() else { return };
+            rt.spawn(async move { core.handle_media_action(a).await });
+        });
+        let ok = handle.is_some();
+        *self.media.lock().unwrap() = handle;
+        if ok {
+            if let Some(s) = self.current_song() {
+                self.media_metadata(&s);
+            }
+            self.media_playback();
+        }
+        ok
+    }
+
+    #[cfg(not(target_os = "android"))]
+    async fn handle_media_action(&self, a: media::MediaAction) {
+        use media::MediaAction::*;
+        let p = &self.player;
+        match a {
+            Play => p.play(),
+            Pause => p.pause(),
+            Toggle => p.toggle(),
+            Next => self.next().await,
+            Previous => self.prev().await,
+            Stop => p.pause(),
+            SeekTo(ms) => p.seek(ms),
+            SeekBy(d) => p.seek(p.position_ms().saturating_add_signed(d)),
+            Volume(v) => self.update_settings(|s| s.volume = v),
+            Raise => self.emit(CoreEvent::Raise),
+        }
+    }
+
+    fn media_metadata(&self, _song: &Song) {
+        #[cfg(not(target_os = "android"))]
+        if let Some(m) = self.media.lock().unwrap().as_ref() {
+            let s = _song;
+            let cover_url = s.album.pic_url.as_ref().map(|u| {
+                if u.starts_with('/') {
+                    format!("file://{u}")
+                } else {
+                    format!("{}?param=512y512", u.replace("http://", "https://"))
+                }
+            });
+            m.update(media::Update::Metadata {
+                title: s.name.clone(),
+                artist: s.artist_names(),
+                album: s.album.name.clone(),
+                cover_url,
+                duration_ms: s.duration_ms,
+            });
+        }
+    }
+
+    fn media_playback(&self) {
+        #[cfg(not(target_os = "android"))]
+        if let Some(m) = self.media.lock().unwrap().as_ref() {
+            let st = self.player.state();
+            m.update(media::Update::Playback {
+                playing: st == PlaybackState::Playing,
+                stopped: st == PlaybackState::Stopped && self.current_song().is_none(),
+                position_ms: self.player.position_ms(),
+            });
         }
     }
 
