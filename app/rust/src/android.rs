@@ -14,11 +14,11 @@ pub extern "system" fn Java_io_github_gloridust_app_YetEaseApplication_nativeIni
 ) {
     unsafe {
         let mut vm: *mut JavaVM = std::ptr::null_mut();
-        if ((**env).GetJavaVM)(env, &mut vm) != 0 || vm.is_null() {
+        if ((**env).v1_2.GetJavaVM)(env, &mut vm) != 0 || vm.is_null() {
             return;
         }
         // 全局引用，生命周期与进程相同
-        let context = ((**env).NewGlobalRef)(env, context);
+        let context = ((**env).v1_2.NewGlobalRef)(env, context);
         ndk_context::initialize_android_context(vm.cast(), context.cast());
     }
 }
