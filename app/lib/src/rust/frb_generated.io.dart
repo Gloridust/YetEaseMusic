@@ -57,7 +57,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SongItem dco_decode_box_autoadd_song_item(dynamic raw);
 
   @protected
+  CommentItem dco_decode_comment_item(dynamic raw);
+
+  @protected
+  CommentsInfo dco_decode_comments_info(dynamic raw);
+
+  @protected
+  DownloadItem dco_decode_download_item(dynamic raw);
+
+  @protected
+  DownloadingItem dco_decode_downloading_item(dynamic raw);
+
+  @protected
   double dco_decode_f_32(dynamic raw);
+
+  @protected
+  FollowItem dco_decode_follow_item(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
@@ -66,7 +81,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
+  LikeCountInfo dco_decode_like_count_info(dynamic raw);
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
   List<ArtistItem> dco_decode_list_artist_item(dynamic raw);
+
+  @protected
+  List<CommentItem> dco_decode_list_comment_item(dynamic raw);
+
+  @protected
+  List<DownloadItem> dco_decode_list_download_item(dynamic raw);
+
+  @protected
+  List<DownloadingItem> dco_decode_list_downloading_item(dynamic raw);
+
+  @protected
+  List<FollowItem> dco_decode_list_follow_item(dynamic raw);
 
   @protected
   List<LyricItem> dco_decode_list_lyric_item(dynamic raw);
@@ -79,6 +112,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<RadioItem> dco_decode_list_radio_item(dynamic raw);
+
+  @protected
+  List<RecentItem> dco_decode_list_recent_item(dynamic raw);
 
   @protected
   List<SongItem> dco_decode_list_song_item(dynamic raw);
@@ -117,6 +156,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   QrState dco_decode_qr_state(dynamic raw);
 
   @protected
+  RadioItem dco_decode_radio_item(dynamic raw);
+
+  @protected
+  RecentItem dco_decode_recent_item(dynamic raw);
+
+  @protected
+  (List<FollowItem>, bool) dco_decode_record_list_follow_item_bool(dynamic raw);
+
+  @protected
   (List<SongItem>, PlatformInt64) dco_decode_record_list_song_item_i_64(
     dynamic raw,
   );
@@ -126,6 +174,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SongItem dco_decode_song_item(dynamic raw);
+
+  @protected
+  StorageSettings dco_decode_storage_settings(dynamic raw);
 
   @protected
   ThemePref dco_decode_theme_pref(dynamic raw);
@@ -175,7 +226,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SongItem sse_decode_box_autoadd_song_item(SseDeserializer deserializer);
 
   @protected
+  CommentItem sse_decode_comment_item(SseDeserializer deserializer);
+
+  @protected
+  CommentsInfo sse_decode_comments_info(SseDeserializer deserializer);
+
+  @protected
+  DownloadItem sse_decode_download_item(SseDeserializer deserializer);
+
+  @protected
+  DownloadingItem sse_decode_downloading_item(SseDeserializer deserializer);
+
+  @protected
   double sse_decode_f_32(SseDeserializer deserializer);
+
+  @protected
+  FollowItem sse_decode_follow_item(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -184,7 +250,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
+  LikeCountInfo sse_decode_like_count_info(SseDeserializer deserializer);
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
   List<ArtistItem> sse_decode_list_artist_item(SseDeserializer deserializer);
+
+  @protected
+  List<CommentItem> sse_decode_list_comment_item(SseDeserializer deserializer);
+
+  @protected
+  List<DownloadItem> sse_decode_list_download_item(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<DownloadingItem> sse_decode_list_downloading_item(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FollowItem> sse_decode_list_follow_item(SseDeserializer deserializer);
 
   @protected
   List<LyricItem> sse_decode_list_lyric_item(SseDeserializer deserializer);
@@ -199,6 +287,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<RadioItem> sse_decode_list_radio_item(SseDeserializer deserializer);
+
+  @protected
+  List<RecentItem> sse_decode_list_recent_item(SseDeserializer deserializer);
 
   @protected
   List<SongItem> sse_decode_list_song_item(SseDeserializer deserializer);
@@ -241,6 +335,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   QrState sse_decode_qr_state(SseDeserializer deserializer);
 
   @protected
+  RadioItem sse_decode_radio_item(SseDeserializer deserializer);
+
+  @protected
+  RecentItem sse_decode_recent_item(SseDeserializer deserializer);
+
+  @protected
+  (List<FollowItem>, bool) sse_decode_record_list_follow_item_bool(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   (List<SongItem>, PlatformInt64) sse_decode_record_list_song_item_i_64(
     SseDeserializer deserializer,
   );
@@ -252,6 +357,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SongItem sse_decode_song_item(SseDeserializer deserializer);
+
+  @protected
+  StorageSettings sse_decode_storage_settings(SseDeserializer deserializer);
 
   @protected
   ThemePref sse_decode_theme_pref(SseDeserializer deserializer);
@@ -311,7 +419,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_comment_item(CommentItem self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_comments_info(CommentsInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_download_item(DownloadItem self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_downloading_item(
+    DownloadingItem self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_follow_item(FollowItem self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -320,8 +446,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_like_count_info(LikeCountInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_artist_item(
     List<ArtistItem> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_comment_item(
+    List<CommentItem> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_download_item(
+    List<DownloadItem> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_downloading_item(
+    List<DownloadingItem> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_follow_item(
+    List<FollowItem> self,
     SseSerializer serializer,
   );
 
@@ -346,6 +502,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_radio_item(
+    List<RadioItem> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_recent_item(
+    List<RecentItem> self,
     SseSerializer serializer,
   );
 
@@ -398,6 +566,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_qr_state(QrState self, SseSerializer serializer);
 
   @protected
+  void sse_encode_radio_item(RadioItem self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_recent_item(RecentItem self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_record_list_follow_item_bool(
+    (List<FollowItem>, bool) self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_record_list_song_item_i_64(
     (List<SongItem>, PlatformInt64) self,
     SseSerializer serializer,
@@ -411,6 +591,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_song_item(SongItem self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_storage_settings(
+    StorageSettings self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_theme_pref(ThemePref self, SseSerializer serializer);

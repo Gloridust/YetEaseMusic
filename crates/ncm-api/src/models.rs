@@ -176,3 +176,80 @@ pub struct Account {
     pub avatar_url: Option<String>,
     pub vip_type: i32,
 }
+
+/// 红心数（`count_desc` 形如 "100w+"）
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct LikeCount {
+    #[serde(default, deserialize_with = "num")]
+    pub count: u64,
+    #[serde(default, rename = "countDesc")]
+    pub count_desc: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct Comment {
+    #[serde(default, rename = "commentId", deserialize_with = "num")]
+    pub id: u64,
+    #[serde(default, deserialize_with = "nn")]
+    pub content: String,
+    #[serde(default)]
+    pub user: Option<UserRef>,
+    #[serde(default, rename = "likedCount", deserialize_with = "num")]
+    pub liked_count: u64,
+    /// 毫秒时间戳
+    #[serde(default, deserialize_with = "num")]
+    pub time: u64,
+    #[serde(default, rename = "timeStr")]
+    pub time_str: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct Comments {
+    pub total: u64,
+    pub hot: Vec<Comment>,
+    pub latest: Vec<Comment>,
+    pub more: bool,
+}
+
+/// 最近播放记录
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct PlayRecord {
+    pub song: Song,
+    /// 毫秒时间戳
+    pub play_time: u64,
+}
+
+/// 播客（电台）
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct Radio {
+    pub id: u64,
+    #[serde(default, deserialize_with = "nn")]
+    pub name: String,
+    #[serde(default, rename = "picUrl")]
+    pub pic_url: Option<String>,
+    #[serde(default)]
+    pub dj: Option<UserRef>,
+    #[serde(default, rename = "programCount", deserialize_with = "num")]
+    pub program_count: u64,
+    #[serde(default, rename = "rcmdtext", alias = "desc")]
+    pub desc: Option<String>,
+    #[serde(default, rename = "subCount", deserialize_with = "num")]
+    pub sub_count: u64,
+}
+
+/// 关注的用户 / 歌手
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct FollowedUser {
+    #[serde(default, rename = "userId", deserialize_with = "num")]
+    pub user_id: u64,
+    #[serde(default, deserialize_with = "nn")]
+    pub nickname: String,
+    #[serde(default, rename = "avatarUrl")]
+    pub avatar_url: Option<String>,
+    #[serde(default)]
+    pub signature: Option<String>,
+    #[serde(default, deserialize_with = "num")]
+    pub followeds: u64,
+    #[serde(default, rename = "userType", deserialize_with = "num")]
+    pub user_type: u64,
+}

@@ -10,7 +10,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'types.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `as_str`, `parse`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 class AccountInfo {
   final PlatformInt64 userId;
@@ -105,6 +105,185 @@ class ArtistItem {
 }
 
 enum AudioQuality { standard, higher, exHigh, lossless, hiRes }
+
+class CommentItem {
+  final PlatformInt64 id;
+  final String content;
+  final String userName;
+  final String? userAvatar;
+  final PlatformInt64 likedCount;
+  final PlatformInt64 timeMs;
+  final String? timeText;
+
+  const CommentItem({
+    required this.id,
+    required this.content,
+    required this.userName,
+    this.userAvatar,
+    required this.likedCount,
+    required this.timeMs,
+    this.timeText,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      content.hashCode ^
+      userName.hashCode ^
+      userAvatar.hashCode ^
+      likedCount.hashCode ^
+      timeMs.hashCode ^
+      timeText.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CommentItem &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          content == other.content &&
+          userName == other.userName &&
+          userAvatar == other.userAvatar &&
+          likedCount == other.likedCount &&
+          timeMs == other.timeMs &&
+          timeText == other.timeText;
+}
+
+class CommentsInfo {
+  final PlatformInt64 total;
+  final List<CommentItem> hot;
+  final List<CommentItem> latest;
+  final bool more;
+
+  const CommentsInfo({
+    required this.total,
+    required this.hot,
+    required this.latest,
+    required this.more,
+  });
+
+  @override
+  int get hashCode =>
+      total.hashCode ^ hot.hashCode ^ latest.hashCode ^ more.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CommentsInfo &&
+          runtimeType == other.runtimeType &&
+          total == other.total &&
+          hot == other.hot &&
+          latest == other.latest &&
+          more == other.more;
+}
+
+class DownloadItem {
+  final SongItem song;
+  final String path;
+  final PlatformInt64 size;
+  final PlatformInt64 timeSec;
+  final String level;
+
+  const DownloadItem({
+    required this.song,
+    required this.path,
+    required this.size,
+    required this.timeSec,
+    required this.level,
+  });
+
+  @override
+  int get hashCode =>
+      song.hashCode ^
+      path.hashCode ^
+      size.hashCode ^
+      timeSec.hashCode ^
+      level.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DownloadItem &&
+          runtimeType == other.runtimeType &&
+          song == other.song &&
+          path == other.path &&
+          size == other.size &&
+          timeSec == other.timeSec &&
+          level == other.level;
+}
+
+class DownloadingItem {
+  final SongItem song;
+  final double progress;
+
+  const DownloadingItem({required this.song, required this.progress});
+
+  @override
+  int get hashCode => song.hashCode ^ progress.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DownloadingItem &&
+          runtimeType == other.runtimeType &&
+          song == other.song &&
+          progress == other.progress;
+}
+
+class FollowItem {
+  final PlatformInt64 userId;
+  final String nickname;
+  final String? avatarUrl;
+  final String? signature;
+  final PlatformInt64 followers;
+
+  const FollowItem({
+    required this.userId,
+    required this.nickname,
+    this.avatarUrl,
+    this.signature,
+    required this.followers,
+  });
+
+  @override
+  int get hashCode =>
+      userId.hashCode ^
+      nickname.hashCode ^
+      avatarUrl.hashCode ^
+      signature.hashCode ^
+      followers.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FollowItem &&
+          runtimeType == other.runtimeType &&
+          userId == other.userId &&
+          nickname == other.nickname &&
+          avatarUrl == other.avatarUrl &&
+          signature == other.signature &&
+          followers == other.followers;
+}
+
+class LikeCountInfo {
+  final PlatformInt64 count;
+
+  /// 形如 "100w+"
+  final String text;
+
+  const LikeCountInfo({required this.count, required this.text});
+
+  @override
+  int get hashCode => count.hashCode ^ text.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LikeCountInfo &&
+          runtimeType == other.runtimeType &&
+          count == other.count &&
+          text == other.text;
+}
 
 class LyricItem {
   final PlatformInt64 timeMs;
@@ -267,6 +446,67 @@ sealed class QrState with _$QrState {
   const factory QrState.failed({required String message}) = QrState_Failed;
 }
 
+class RadioItem {
+  final PlatformInt64 id;
+  final String name;
+  final String? coverUrl;
+  final String djName;
+  final PlatformInt64 programCount;
+  final String? desc;
+  final PlatformInt64 subCount;
+
+  const RadioItem({
+    required this.id,
+    required this.name,
+    this.coverUrl,
+    required this.djName,
+    required this.programCount,
+    this.desc,
+    required this.subCount,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      coverUrl.hashCode ^
+      djName.hashCode ^
+      programCount.hashCode ^
+      desc.hashCode ^
+      subCount.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RadioItem &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          coverUrl == other.coverUrl &&
+          djName == other.djName &&
+          programCount == other.programCount &&
+          desc == other.desc &&
+          subCount == other.subCount;
+}
+
+class RecentItem {
+  final SongItem song;
+  final PlatformInt64 playTimeMs;
+
+  const RecentItem({required this.song, required this.playTimeMs});
+
+  @override
+  int get hashCode => song.hashCode ^ playTimeMs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RecentItem &&
+          runtimeType == other.runtimeType &&
+          song == other.song &&
+          playTimeMs == other.playTimeMs;
+}
+
 class SongItem {
   final PlatformInt64 id;
   final String name;
@@ -280,6 +520,9 @@ class SongItem {
   final PlatformInt64 durationMs;
   final bool vip;
 
+  /// 本地文件（不能红心、评论、加入在线歌单）
+  final bool local;
+
   const SongItem({
     required this.id,
     required this.name,
@@ -290,6 +533,7 @@ class SongItem {
     this.coverUrl,
     required this.durationMs,
     required this.vip,
+    required this.local,
   });
 
   @override
@@ -302,7 +546,8 @@ class SongItem {
       albumName.hashCode ^
       coverUrl.hashCode ^
       durationMs.hashCode ^
-      vip.hashCode;
+      vip.hashCode ^
+      local.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -317,7 +562,26 @@ class SongItem {
           albumName == other.albumName &&
           coverUrl == other.coverUrl &&
           durationMs == other.durationMs &&
-          vip == other.vip;
+          vip == other.vip &&
+          local == other.local;
+}
+
+class StorageSettings {
+  final List<String> localDirs;
+  final String downloadDir;
+
+  const StorageSettings({required this.localDirs, required this.downloadDir});
+
+  @override
+  int get hashCode => localDirs.hashCode ^ downloadDir.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StorageSettings &&
+          runtimeType == other.runtimeType &&
+          localDirs == other.localDirs &&
+          downloadDir == other.downloadDir;
 }
 
 enum ThemePref { system, light, dark }
@@ -335,6 +599,7 @@ sealed class UiEvent with _$UiEvent {
   const factory UiEvent.trackChanged([SongItem? field0]) = UiEvent_TrackChanged;
   const factory UiEvent.queueChanged() = UiEvent_QueueChanged;
   const factory UiEvent.settingsChanged() = UiEvent_SettingsChanged;
+  const factory UiEvent.downloadsChanged() = UiEvent_DownloadsChanged;
   const factory UiEvent.notice(String field0) = UiEvent_Notice;
   const factory UiEvent.error(String field0) = UiEvent_Error;
 }

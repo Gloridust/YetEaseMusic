@@ -278,6 +278,211 @@ impl Client {
     }
 }
 
+impl Client {
+    // ---------- 歌曲社交信息 ----------
+
+    /// `song_red_count`：红心数
+    pub async fn song_like_count(&self, id: u64) -> Result<LikeCount> {
+        let v = self
+            .request("/api/song/red/count", json!({ "songId": id }), Crypto::Eapi)
+            .await?;
+        field(&v, &["data"])
+    }
+
+    /// `comment_music`：歌曲评论。`before` 为上一页最后一条的时间戳（翻页用，首页传 0）。
+    pub async fn song_comments(
+        &self,
+        id: u64,
+        limit: u32,
+        offset: u32,
+        before: u64,
+    ) -> Result<Comments> {
+        let v = self
+            .request(
+                &format!("/api/v1/resource/comments/R_SO_4_{id}"),
+                json!({ "rid": id, "limit": limit, "offset": offset, "beforeTime": before }),
+                Crypto::Weapi,
+            )
+            .await?;
+        Ok(Comments {
+            total: v["total"].as_u64().unwrap_or_default(),
+            hot: serde_json::from_value(v["hotComments"].clone()).unwrap_or_default(),
+            latest: serde_json::from_value(v["comments"].clone()).unwrap_or_default(),
+            more: v["more"].as_bool().unwrap_or_default(),
+        })
+    }
+
+    // ---------- 我的音乐 ----------
+
+    /// `record_recent_song`：最近播放（云端记录，与手机端同步）
+    pub async fn recent_songs(&self, limit: u32) -> Result<Vec<PlayRecord>> {
+        let v = self
+            .request(
+                "/api/play-record/song/list",
+                json!({ "limit": limit }),
+                Crypto::Weapi,
+            )
+            .await?;
+        Ok(v["data"]["list"]
+            .as_array()
+            .map(|list| {
+                list.iter()
+                    .filter_map(|r| {
+                        Some(PlayRecord {
+                            song: serde_json::from_value(r["data"].clone()).ok()?,
+                            play_time: r["playTime"].as_u64().unwrap_or_default(),
+                        })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default())
+    }
+
+    /// `user_follows`：关注的人
+    pub async fn follows(
+        &self,
+        uid: u64,
+        offset: u32,
+        limit: u32,
+    ) -> Result<(Vec<FollowedUser>, bool)> {
+        let v = self
+            .request(
+                &format!("/api/user/getfollows/{uid}"),
+                json!({ "offset": offset, "limit": limit, "order": true }),
+                Crypto::Weapi,
+            )
+            .await?;
+        Ok((
+            field(&v, &["follow"]).unwrap_or_default(),
+            v["more"].as_bool().unwrap_or_default(),
+        ))
+    }
+
+    /// `playlist_create`：新建歌单，返回歌单信息
+    pub async fn create_playlist(&self, name: &str, private: bool) -> Result<PlaylistSummary> {
+        let v = self
+            .request(
+                "/api/playlist/create",
+                json!({ "name": name, "privacy": if private { "10" } else { "0" }, "type": "NORMAL" }),
+                Crypto::Weapi,
+            )
+            .await?;
+        field(&v, &["playlist"])
+    }
+
+    /// `playlist_tracks`：向歌单添加或移除歌曲
+    pub async fn playlist_tracks(
+        &self,
+        playlist_id: u64,
+        song_ids: &[u64],
+        add: bool,
+    ) -> Result<()> {
+        let ids = serde_json::to_string(song_ids)?;
+        let data = json!({ "op": if add { "add" } else { "del" }, "pid": playlist_id, "trackIds": ids, "imme": "true" });
+        match self
+            .request("/api/playlist/manipulate/tracks", data, Crypto::Eapi)
+            .await
+        {
+            // api-enhanced 的经验：512 时把 id 重复一遍再提交即可
+            Err(Error::Api { code: 512, .. }) => {
+                let doubled: Vec<u64> = song_ids.iter().chain(song_ids).copied().collect();
+                let data = json!({ "op": if add { "add" } else { "del" }, "pid": playlist_id, "trackIds": serde_json::to_string(&doubled)?, "imme": "true" });
+                self.request("/api/playlist/manipulate/tracks", data, Crypto::Eapi)
+                    .await?;
+                Ok(())
+            }
+            r => r.map(|_| ()),
+        }
+    }
+
+    /// `playmode_intelligence_list`：心动模式。以 `seed` 为起点，从「我喜欢」歌单生成推荐序列。
+    pub async fn intelligence_list(&self, seed: u64, liked_playlist_id: u64) -> Result<Vec<Song>> {
+        let v = self
+            .request(
+                "/api/playmode/intelligence/list",
+                json!({ "songId": seed, "type": "fromPlayOne", "playlistId": liked_playlist_id, "startMusicId": seed, "count": 1 }),
+                Crypto::Eapi,
+            )
+            .await?;
+        Ok(v["data"]
+            .as_array()
+            .map(|a| {
+                a.iter()
+                    .filter_map(|x| serde_json::from_value(x["songInfo"].clone()).ok())
+                    .collect()
+            })
+            .unwrap_or_default())
+    }
+
+    // ---------- 播客 ----------
+
+    /// `dj_sublist`：我订阅的播客
+    pub async fn subscribed_radios(&self) -> Result<Vec<Radio>> {
+        let v = self
+            .request(
+                "/api/djradio/get/subed",
+                json!({ "limit": 100, "offset": 0, "total": true }),
+                Crypto::Weapi,
+            )
+            .await?;
+        Ok(field(&v, &["djRadios"]).unwrap_or_default())
+    }
+
+    /// `dj_personalize_recommend`：推荐播客
+    pub async fn recommend_radios(&self, limit: u32) -> Result<Vec<Radio>> {
+        let v = self
+            .request(
+                "/api/djradio/personalize/rcmd",
+                json!({ "limit": limit }),
+                Crypto::Weapi,
+            )
+            .await?;
+        Ok(field(&v, &["data"]).unwrap_or_default())
+    }
+
+    /// `dj_program`：播客的节目，转换成可直接播放的歌曲。返回 (节目, 总数)。
+    pub async fn radio_programs(
+        &self,
+        radio_id: u64,
+        offset: u32,
+        limit: u32,
+    ) -> Result<(Vec<Song>, u64)> {
+        let v = self
+            .request(
+                "/api/dj/program/byradio",
+                json!({ "radioId": radio_id, "limit": limit, "offset": offset, "asc": false }),
+                Crypto::Weapi,
+            )
+            .await?;
+        let songs = v["programs"]
+            .as_array()
+            .map(|list| list.iter().filter_map(program_to_song).collect())
+            .unwrap_or_default();
+        Ok((songs, v["count"].as_u64().unwrap_or_default()))
+    }
+}
+
+/// 节目本身不是歌曲，但它的 `mainSong` 可以直接取播放地址
+fn program_to_song(p: &Value) -> Option<Song> {
+    let id = p["mainSong"]["id"].as_u64().filter(|&i| i > 0)?;
+    Some(Song {
+        id,
+        name: p["name"].as_str().unwrap_or_default().to_owned(),
+        artists: vec![ArtistRef {
+            id: 0,
+            name: p["dj"]["nickname"].as_str().unwrap_or_default().to_owned(),
+        }],
+        album: AlbumRef {
+            id: p["radio"]["id"].as_u64().unwrap_or_default(),
+            name: p["radio"]["name"].as_str().unwrap_or_default().to_owned(),
+            pic_url: p["coverUrl"].as_str().map(str::to_owned),
+        },
+        duration_ms: p["duration"].as_u64().unwrap_or_default(),
+        fee: 0,
+        alias: vec![],
+    })
+}
+
 /// 扫码登录二维码的内容。
 pub fn qr_login_url(key: &str) -> String {
     format!("https://music.163.com/login?codekey={key}")

@@ -3,18 +3,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../src/rust/api/types.dart';
 import '../state.dart';
 import '../theme.dart';
 import 'login_dialog.dart';
 import 'nav.dart';
 import 'now_playing.dart';
 import 'pages/home_page.dart';
-import 'pages/playlist_page.dart';
 import 'pages/search_page.dart';
 import 'pages/settings_page.dart';
 import 'player_bar.dart';
 import 'queue_panel.dart';
+import 'sidebar.dart';
 import 'widgets.dart';
 
 bool get isDesktop => Platform.isLinux || Platform.isWindows || Platform.isMacOS;
@@ -111,228 +110,9 @@ class _ShellState extends State<Shell> {
   }
 }
 
-class Sidebar extends StatelessWidget {
-  const Sidebar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    final app = AppState.I;
-    return Container(
-      color: p.sidebar,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _DragArea(
-            child: SizedBox(
-              height: Tokens.topBarHeight + 8,
-              child: Row(
-                children: [
-                  const SizedBox(width: 24),
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: const BoxDecoration(color: Tokens.accent, shape: BoxShape.circle),
-                    child: const Icon(Icons.graphic_eq_rounded, color: Colors.white, size: 18),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'YetEase',
-                    style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, letterSpacing: 0.3),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            child: ValueListenableBuilder(
-              valueListenable: app.myPlaylists,
-              builder: (context, lists, _) {
-                final liked = lists.where((l) => l.specialType == 5).firstOrNull;
-                final mine = lists.where((l) => l.specialType != 5 && !l.subscribed).toList();
-                final subs = lists.where((l) => l.subscribed).toList();
-                return ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  children: [
-                    const SizedBox(height: 8),
-                    _NavItem(icon: Icons.music_note_rounded, label: '推荐', route: 'home', page: () => const HomePage()),
-                    ValueListenableBuilder(
-                      valueListenable: app.account,
-                      builder: (context, acc, _) => acc == null
-                          ? const SizedBox.shrink()
-                          : _NavItem(
-                              icon: Icons.today_rounded,
-                              label: '每日推荐',
-                              route: 'daily',
-                              page: () => const PlaylistPage.daily(),
-                            ),
-                    ),
-                    const _Divider(),
-                    if (liked != null)
-                      _NavItem(
-                        icon: Icons.favorite_rounded,
-                        label: '我喜欢的音乐',
-                        route: 'playlist:${liked.id}',
-                        page: () => PlaylistPage(id: liked.id),
-                      )
-                    else
-                      _NavItem(
-                        icon: Icons.favorite_rounded,
-                        label: '我喜欢的音乐',
-                        route: 'liked-login',
-                        onTap: () => showLoginDialog(context),
-                      ),
-                    if (mine.isNotEmpty) ...[
-                      const _Divider(),
-                      _GroupTitle('创建的歌单 ${mine.length}'),
-                      for (final l in mine) _PlaylistItem(item: l),
-                    ],
-                    if (subs.isNotEmpty) ...[
-                      const _Divider(),
-                      _GroupTitle('收藏的歌单 ${subs.length}'),
-                      for (final l in subs) _PlaylistItem(item: l),
-                    ],
-                    const SizedBox(height: 16),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Divider extends StatelessWidget {
-  const _Divider();
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-    child: Divider(height: 1, color: context.palette.divider),
-  );
-}
-
-class _GroupTitle extends StatelessWidget {
-  const _GroupTitle(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-    child: Text(
-      text,
-      style: TextStyle(color: context.palette.textTertiary, fontSize: 13, fontWeight: FontWeight.w600),
-    ),
-  );
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({required this.icon, required this.label, required this.route, this.page, this.onTap});
-
-  final IconData icon;
-  final String label;
-  final String route;
-  final Widget Function()? page;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    return ValueListenableBuilder(
-      valueListenable: Nav.location,
-      builder: (context, loc, _) {
-        final sel = loc == route;
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Hover(
-            onTap: () {
-              if (onTap != null) return onTap!();
-              Scaffold.maybeOf(context)?.closeDrawer();
-              Nav.root(route, page!());
-            },
-            builder: (_, h) => AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
-              height: 40,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: sel ? Tokens.accent : (h ? p.hover : Colors.transparent),
-                borderRadius: BorderRadius.circular(Tokens.radiusM),
-              ),
-              child: Row(
-                children: [
-                  Icon(icon, size: 19, color: sel ? Colors.white : p.textSecondary),
-                  const SizedBox(width: 12),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: sel ? Colors.white : p.textPrimary,
-                      fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _PlaylistItem extends StatelessWidget {
-  const _PlaylistItem({required this.item});
-
-  final PlaylistItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    final route = 'playlist:${item.id}';
-    return ValueListenableBuilder(
-      valueListenable: Nav.location,
-      builder: (context, loc, _) {
-        final sel = loc == route;
-        return Hover(
-          onTap: () {
-            Scaffold.maybeOf(context)?.closeDrawer();
-            Nav.root(route, PlaylistPage(id: item.id));
-          },
-          builder: (_, h) => Container(
-            height: 38,
-            margin: const EdgeInsets.symmetric(vertical: 1),
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: sel ? Tokens.accentSoft : (h ? p.hover : Colors.transparent),
-              borderRadius: BorderRadius.circular(Tokens.radiusM),
-            ),
-            child: Row(
-              children: [
-                Cover(url: item.coverUrl, size: 26, radius: Tokens.radiusS),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    item.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, color: sel ? Tokens.accent : p.textPrimary),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
 /// 标题栏区域可拖动窗口、双击最大化（仅桌面端）
-class _DragArea extends StatelessWidget {
-  const _DragArea({required this.child});
+class DragArea extends StatelessWidget {
+  const DragArea({super.key, required this.child});
 
   final Widget child;
 
@@ -380,7 +160,7 @@ class _TopBarState extends State<TopBar> {
     final p = context.palette;
     final app = AppState.I;
     final narrow = MediaQuery.sizeOf(context).width < 600;
-    return _DragArea(
+    return DragArea(
       child: SizedBox(
         height: Tokens.topBarHeight + 8,
         child: Row(
@@ -525,5 +305,5 @@ class WindowDragArea extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => _DragArea(child: child);
+  Widget build(BuildContext context) => DragArea(child: child);
 }

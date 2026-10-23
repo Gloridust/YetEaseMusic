@@ -7,15 +7,36 @@ import 'package:window_manager/window_manager.dart';
 
 import 'src/rust/api/library.dart' as lib;
 import 'state.dart';
+import 'ui/brand.dart';
 import 'ui/login_dialog.dart';
 import 'ui/nav.dart';
+import 'ui/pages/downloads_page.dart';
+import 'ui/pages/follows_page.dart';
 import 'ui/pages/home_page.dart';
+import 'ui/pages/local_page.dart';
+import 'ui/pages/podcast_page.dart';
+import 'ui/pages/recent_page.dart';
 import 'ui/pages/playlist_page.dart';
 import 'ui/pages/search_page.dart';
 import 'ui/pages/settings_page.dart';
 
 /// 开发用：设置 YETEASE_TOUR=<输出目录> 后自动走一遍主要页面并截图（界面回归检查、README 配图）。
 final tourBoundary = GlobalKey();
+
+/// 开发用：设置 YETEASE_EXPORT_ICONS=<目录> 后把应用图标导出成各尺寸 PNG 并退出
+Future<void> maybeExportIcons() async {
+  final dir = Platform.environment['YETEASE_EXPORT_ICONS'];
+  if (dir == null) return;
+  for (final size in const [16, 24, 32, 48, 64, 72, 96, 128, 144, 192, 256, 512, 1024]) {
+    final rec = ui.PictureRecorder();
+    const LogoPainter().paint(Canvas(rec), Size.square(size.toDouble()));
+    final img = await rec.endRecording().toImage(size, size);
+    final png = await img.toByteData(format: ui.ImageByteFormat.png);
+    await File('$dir/icon-$size.png').writeAsBytes(png!.buffer.asUint8List());
+  }
+  debugPrint('icons exported');
+  exit(0);
+}
 
 Future<void> maybeRunTour() async {
   final dir = Platform.environment['YETEASE_TOUR'];
@@ -31,6 +52,24 @@ Future<void> maybeRunTour() async {
   }
 
   final app = AppState.I;
+  // 只巡览侧边栏各页面（不播放），用于检查新页面
+  if (Platform.environment['YETEASE_TOUR_PAGES'] != null) {
+    await wait(5);
+    await shot('p-home');
+    for (final (name, page) in [
+      ('podcast', const PodcastPage()),
+      ('follows', const FollowsPage()),
+      ('recent', const RecentPage()),
+      ('downloads', const DownloadsPage()),
+      ('local', const LocalMusicPage()),
+    ]) {
+      Nav.root(name, page);
+      await wait(6);
+      await shot('p-$name');
+    }
+    debugPrint('tour: done');
+    return;
+  }
   final vol = app.volume.value;
   final theme = app.themeMode.value;
   app.themeMode.value = ThemeMode.light;

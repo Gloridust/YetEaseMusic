@@ -7,11 +7,15 @@ repository.workspace = true
 
 [dependencies]
 directories = "6.0.0"
+futures-util = "0.3.34"
+lofty = "0.25.4"
 ncm-api = { version = "0.1.0", path = "../ncm-api" }
 ncm-player = { version = "0.1.0", path = "../ncm-player" }
 rand = "0.10.3"
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls-no-provider", "http2", "system-proxy", "stream"] }
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 thiserror = "2.0.21"
-tokio = { version = "1.54.1", features = ["rt-multi-thread", "sync", "macros", "time", "fs"] }
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "sync", "macros", "time", "fs", "io-util"] }
 tracing = "0.1.44"

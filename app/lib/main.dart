@@ -9,11 +9,13 @@ import 'src/rust/api/playback.dart' as pb;
 import 'src/rust/frb_generated.dart';
 import 'state.dart';
 import 'theme.dart';
+import 'ui/brand.dart';
 import 'ui/shell.dart';
 import 'ui/ui_scaled.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await maybeExportIcons();
   await RustLib.init();
   // 开发用：YETEASE_DATA_DIR 指向独立目录即可得到一个全新的未登录环境
   final dataDir = Platform.environment['YETEASE_DATA_DIR'];
@@ -22,11 +24,11 @@ Future<void> main() async {
   if (isDesktop) {
     await windowManager.ensureInitialized();
     await windowManager.waitUntilReadyToShow(
-      const WindowOptions(
+      WindowOptions(
         size: Size(1280, 840),
         minimumSize: Size(420, 560),
         center: true,
-        title: 'YetEase Music',
+        title: kAppName,
         titleBarStyle: TitleBarStyle.hidden,
       ),
       () async {
@@ -50,7 +52,7 @@ class YetEaseApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: Listenable.merge([app.themeMode, app.uiScale]),
       builder: (context, _) => MaterialApp(
-        title: 'YetEase Music',
+        title: kAppName,
         debugShowCheckedModeBanner: false,
         theme: buildTheme(Brightness.light),
         darkTheme: buildTheme(Brightness.dark),

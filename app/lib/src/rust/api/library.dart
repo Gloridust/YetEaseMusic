@@ -9,7 +9,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 import 'types.dart';
 
-// These functions are ignored because they are not marked as `pub`: `songs`
+// These functions are ignored because they are not marked as `pub`: `rand_index`, `songs`
 
 Future<AccountInfo?> account() => RustLib.instance.api.crateApiLibraryAccount();
 
@@ -49,3 +49,101 @@ Future<Int64List> likedSongIds({required PlatformInt64 userId}) =>
 
 Future<void> likeSong({required PlatformInt64 id, required bool like}) =>
     RustLib.instance.api.crateApiLibraryLikeSong(id: id, like: like);
+
+Future<LikeCountInfo> songLikeCount({required PlatformInt64 id}) =>
+    RustLib.instance.api.crateApiLibrarySongLikeCount(id: id);
+
+/// 歌曲评论。`before_ms` 翻页时传上一页最后一条评论的时间。
+Future<CommentsInfo> songComments({
+  required PlatformInt64 id,
+  required int offset,
+  required PlatformInt64 beforeMs,
+}) => RustLib.instance.api.crateApiLibrarySongComments(
+  id: id,
+  offset: offset,
+  beforeMs: beforeMs,
+);
+
+Future<List<RecentItem>> recentSongs() =>
+    RustLib.instance.api.crateApiLibraryRecentSongs();
+
+Future<(List<FollowItem>, bool)> follows({
+  required PlatformInt64 userId,
+  required int offset,
+}) =>
+    RustLib.instance.api.crateApiLibraryFollows(userId: userId, offset: offset);
+
+Future<PlaylistItem> createPlaylist({
+  required String name,
+  required bool private,
+}) => RustLib.instance.api.crateApiLibraryCreatePlaylist(
+  name: name,
+  private: private,
+);
+
+Future<void> addToPlaylist({
+  required PlatformInt64 playlistId,
+  required Int64List songIds,
+}) => RustLib.instance.api.crateApiLibraryAddToPlaylist(
+  playlistId: playlistId,
+  songIds: songIds,
+);
+
+Future<void> removeFromPlaylist({
+  required PlatformInt64 playlistId,
+  required Int64List songIds,
+}) => RustLib.instance.api.crateApiLibraryRemoveFromPlaylist(
+  playlistId: playlistId,
+  songIds: songIds,
+);
+
+Future<List<RadioItem>> subscribedRadios() =>
+    RustLib.instance.api.crateApiLibrarySubscribedRadios();
+
+Future<List<RadioItem>> recommendRadios({required int limit}) =>
+    RustLib.instance.api.crateApiLibraryRecommendRadios(limit: limit);
+
+/// 返回 (节目, 总数)
+Future<(List<SongItem>, PlatformInt64)> radioPrograms({
+  required PlatformInt64 radioId,
+  required int offset,
+}) => RustLib.instance.api.crateApiLibraryRadioPrograms(
+  radioId: radioId,
+  offset: offset,
+);
+
+Future<List<SongItem>> scanLocalMusic() =>
+    RustLib.instance.api.crateApiLibraryScanLocalMusic();
+
+Future<List<DownloadItem>> downloads() =>
+    RustLib.instance.api.crateApiLibraryDownloads();
+
+Future<List<DownloadingItem>> downloading() =>
+    RustLib.instance.api.crateApiLibraryDownloading();
+
+/// 后台下载，立即返回；进度通过 `UiEvent::DownloadsChanged` 通知
+Future<void> downloadSongs({required Int64List ids}) =>
+    RustLib.instance.api.crateApiLibraryDownloadSongs(ids: ids);
+
+Future<void> deleteDownload({required PlatformInt64 id}) =>
+    RustLib.instance.api.crateApiLibraryDeleteDownload(id: id);
+
+Future<StorageSettings> getStorageSettings() =>
+    RustLib.instance.api.crateApiLibraryGetStorageSettings();
+
+Future<void> setStorageSettings({
+  required List<String> localDirs,
+  required String downloadDir,
+}) => RustLib.instance.api.crateApiLibrarySetStorageSettings(
+  localDirs: localDirs,
+  downloadDir: downloadDir,
+);
+
+/// 心动模式：从「我喜欢」里挑一首作起点（当前歌曲是红心歌曲时优先用它），生成推荐序列并开始播放
+Future<void> heartbeatMode({
+  required PlatformInt64 likedPlaylistId,
+  required Int64List likedIds,
+}) => RustLib.instance.api.crateApiLibraryHeartbeatMode(
+  likedPlaylistId: likedPlaylistId,
+  likedIds: likedIds,
+);

@@ -1,17 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 100 100">
+  <!-- 与 app/lib/ui/brand.dart 的 LogoPainter 保持一致 -->
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#FF7A6B"/>
-      <stop offset="0.55" stop-color="#F23D4C"/>
-      <stop offset="1" stop-color="#B8336A"/>
-    </linearGradient>
+    <radialGradient id="bg" cx="0.325" cy="0.275" r="0.525">
+      <stop offset="0" stop-color="#FF6A6A"/>
+      <stop offset="0.55" stop-color="#EC4141"/>
+      <stop offset="1" stop-color="#D72D3C"/>
+    </radialGradient>
   </defs>
-  <circle cx="64" cy="64" r="60" fill="url(#g)"/>
-  <g fill="#fff">
-    <rect x="30" y="54" width="8" height="20" rx="4"/>
-    <rect x="44" y="40" width="8" height="48" rx="4"/>
-    <rect x="58" y="28" width="8" height="72" rx="4"/>
-    <rect x="72" y="44" width="8" height="40" rx="4"/>
-    <rect x="86" y="54" width="8" height="20" rx="4"/>
+  <circle cx="50" cy="50" r="50" fill="url(#bg)"/>
+  <g fill="none" stroke="#fff" stroke-width="7.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 外圈：从 -40° 顺时针画 300°，缺口在右上 -->
+    <path d="M68.68 37.64 A27 27 0 1 1 43.31 28.41"/>
+    <circle cx="48.5" cy="57" r="10.5"/>
+    <path d="M59 57 L59 24 C59 17 66 15 71 18.5 C74.5 21 75.5 25 74.5 28.5"/>
   </g>
 </svg>

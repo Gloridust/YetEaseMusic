@@ -16,6 +16,8 @@ pub struct SongItem {
     pub cover_url: Option<String>,
     pub duration_ms: i64,
     pub vip: bool,
+    /// 本地文件（不能红心、评论、加入在线歌单）
+    pub local: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -43,6 +45,7 @@ impl From<&api::Song> for SongItem {
             cover_url: s.album.pic_url.clone(),
             duration_ms: s.duration_ms as i64,
             vip: s.fee == 1,
+            local: ncm_core::library::is_local(s.id),
         }
     }
 }
@@ -265,6 +268,128 @@ pub enum UiEvent {
     TrackChanged(Option<SongItem>),
     QueueChanged,
     SettingsChanged,
+    DownloadsChanged,
     Notice(String),
     Error(String),
+}
+
+#[derive(Debug, Clone)]
+pub struct LikeCountInfo {
+    pub count: i64,
+    /// 形如 "100w+"
+    pub text: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct CommentItem {
+    pub id: i64,
+    pub content: String,
+    pub user_name: String,
+    pub user_avatar: Option<String>,
+    pub liked_count: i64,
+    pub time_ms: i64,
+    pub time_text: Option<String>,
+}
+
+impl From<&api::Comment> for CommentItem {
+    fn from(c: &api::Comment) -> Self {
+        Self {
+            id: c.id as i64,
+            content: c.content.clone(),
+            user_name: c
+                .user
+                .as_ref()
+                .map(|u| u.nickname.clone())
+                .unwrap_or_default(),
+            user_avatar: c.user.as_ref().and_then(|u| u.avatar_url.clone()),
+            liked_count: c.liked_count as i64,
+            time_ms: c.time as i64,
+            time_text: c.time_str.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct CommentsInfo {
+    pub total: i64,
+    pub hot: Vec<CommentItem>,
+    pub latest: Vec<CommentItem>,
+    pub more: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct RecentItem {
+    pub song: SongItem,
+    pub play_time_ms: i64,
+}
+
+#[derive(Debug, Clone)]
+pub struct RadioItem {
+    pub id: i64,
+    pub name: String,
+    pub cover_url: Option<String>,
+    pub dj_name: String,
+    pub program_count: i64,
+    pub desc: Option<String>,
+    pub sub_count: i64,
+}
+
+impl From<&api::Radio> for RadioItem {
+    fn from(r: &api::Radio) -> Self {
+        Self {
+            id: r.id as i64,
+            name: r.name.clone(),
+            cover_url: r.pic_url.clone(),
+            dj_name: r
+                .dj
+                .as_ref()
+                .map(|d| d.nickname.clone())
+                .unwrap_or_default(),
+            program_count: r.program_count as i64,
+            desc: r.desc.clone().filter(|d| !d.trim().is_empty()),
+            sub_count: r.sub_count as i64,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct FollowItem {
+    pub user_id: i64,
+    pub nickname: String,
+    pub avatar_url: Option<String>,
+    pub signature: Option<String>,
+    pub followers: i64,
+}
+
+impl From<&api::FollowedUser> for FollowItem {
+    fn from(u: &api::FollowedUser) -> Self {
+        Self {
+            user_id: u.user_id as i64,
+            nickname: u.nickname.clone(),
+            avatar_url: u.avatar_url.clone(),
+            signature: u.signature.clone().filter(|s| !s.trim().is_empty()),
+            followers: u.followeds as i64,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct DownloadItem {
+    pub song: SongItem,
+    pub path: String,
+    pub size: i64,
+    pub time_sec: i64,
+    pub level: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct DownloadingItem {
+    pub song: SongItem,
+    pub progress: f32,
+}
+
+#[derive(Debug, Clone)]
+pub struct StorageSettings {
+    pub local_dirs: Vec<String>,
+    pub download_dir: String,
 }

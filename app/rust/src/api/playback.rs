@@ -60,6 +60,7 @@ pub fn events(sink: StreamSink<UiEvent>) -> anyhow::Result<()> {
                 CoreEvent::TrackChanged(s) => UiEvent::TrackChanged(s.as_ref().map(Into::into)),
                 CoreEvent::QueueChanged => UiEvent::QueueChanged,
                 CoreEvent::SettingsChanged => UiEvent::SettingsChanged,
+                CoreEvent::DownloadsChanged => UiEvent::DownloadsChanged,
                 CoreEvent::Notice(n) => UiEvent::Notice(n),
             };
             if sink.add(ui).is_err() {

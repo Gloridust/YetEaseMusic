@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../src/rust/api/playback.dart' as pb;
@@ -5,10 +6,13 @@ import '../src/rust/api/types.dart';
 import '../state.dart';
 import '../theme.dart';
 import 'pages/settings_page.dart';
+import 'song_actions.dart';
 import 'song_list.dart';
 import 'widgets.dart';
 
-/// 底部播放栏。`dark` 用在播放页里（背景是深色封面渐变）。
+/// 底部播放栏，布局对齐官方客户端：
+/// 左：旋转小唱片 + 歌名歌手 + 红心数 / 评论数；中：模式 · 上一首 · 播放 · 下一首 · 播放列表；
+/// 右：音质 · 收藏到歌单 · 音量 · 更多。`dark` 用在播放页里。
 class PlayerBar extends StatelessWidget {
   const PlayerBar({super.key, this.dark = false, required this.onQueue});
 
@@ -33,73 +37,16 @@ class PlayerBar extends StatelessWidget {
                 final narrow = c.maxWidth < 760;
                 return Row(
                   children: [
-                    const SizedBox(width: 20),
-                    // 左：当前歌曲
+                    const SizedBox(width: 16),
                     Expanded(
                       flex: 3,
                       child: ValueListenableBuilder(
                         valueListenable: app.current,
-                        builder: (context, song, _) {
-                          if (song == null) return const SizedBox.shrink();
-                          return Row(
-                            children: [
-                              if (!dark)
-                                Hover(
-                                  onTap: () => app.nowPlayingOpen.value = true,
-                                  builder: (_, h) => Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      Cover(url: song.coverUrl, size: 46, radius: Tokens.radiusM),
-                                      AnimatedOpacity(
-                                        opacity: h ? 1 : 0,
-                                        duration: const Duration(milliseconds: 120),
-                                        child: Container(
-                                          width: 46,
-                                          height: 46,
-                                          decoration: BoxDecoration(
-                                            color: Colors.black38,
-                                            borderRadius: BorderRadius.circular(Tokens.radiusM),
-                                          ),
-                                          child: const Icon(
-                                            Icons.keyboard_arrow_up_rounded,
-                                            color: Colors.white,
-                                            size: 26,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              if (!dark) const SizedBox(width: 14),
-                              Flexible(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      song.name,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 14.5, color: fg, fontWeight: FontWeight.w500),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      song.artists.map((a) => a.name).join(' / '),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 12, color: fg2),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              LikeButton(song: song, size: 20, color: fg2),
-                            ],
-                          );
-                        },
+                        builder: (context, song, _) => song == null
+                            ? const SizedBox.shrink()
+                            : _NowPlayingInfo(song: song, dark: dark, fg: fg, fg2: fg2, narrow: narrow),
                       ),
                     ),
-                    // 中：控制
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -129,39 +76,42 @@ class PlayerBar extends StatelessWidget {
                         ],
                       ],
                     ),
-                    // 右：音质 / 时间 / 音量
                     Expanded(
                       flex: narrow ? 1 : 3,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           if (!narrow) ...[
-                            _TimeLabel(color: fg2),
-                            const SizedBox(width: 16),
+                            if (c.maxWidth > 1000) ...[_TimeLabel(color: fg2), const SizedBox(width: 10)],
+                            _QualityBadge(color: fg2),
+                            const SizedBox(width: 6),
                             ValueListenableBuilder(
-                              valueListenable: app.settings,
-                              builder: (context, s, _) => s == null
-                                  ? const SizedBox.shrink()
-                                  : Tooltip(
-                                      message: '默认音质（可在设置中修改）',
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(color: fg2, width: 1.2),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          qualityLabel(s.quality),
-                                          style: TextStyle(fontSize: 12, color: fg2, fontWeight: FontWeight.w600),
-                                        ),
-                                      ),
-                                    ),
+                              valueListenable: app.current,
+                              builder: (context, s, _) => IconBtn(
+                                Icons.library_add_outlined,
+                                color: fg2,
+                                tooltip: '收藏到歌单',
+                                onTap: s == null || s.local ? null : () => showCollectDialog(context, [s]),
+                              ),
                             ),
-                            const SizedBox(width: 8),
-                            _VolumeControl(color: fg2),
+                            _VolumeButton(color: fg2),
+                            Builder(
+                              builder: (context) => IconBtn(
+                                Icons.more_horiz_rounded,
+                                color: fg2,
+                                tooltip: '更多',
+                                onTap: () {
+                                  final s = app.current.value;
+                                  if (s == null) return;
+                                  final box = context.findRenderObject() as RenderBox;
+                                  final pos = box.localToGlobal(Offset(0, -8));
+                                  showSongMenu(context, pos, [s], 0);
+                                },
+                              ),
+                            ),
                           ] else
                             IconBtn(Icons.queue_music_rounded, color: fg2, onTap: onQueue),
-                          const SizedBox(width: 20),
+                          const SizedBox(width: 16),
                         ],
                       ),
                     ),
@@ -171,6 +121,316 @@ class PlayerBar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 左侧：转动的小唱片 + 歌名 / 歌手 + 红心数 / 评论数
+class _NowPlayingInfo extends StatelessWidget {
+  const _NowPlayingInfo({
+    required this.song,
+    required this.dark,
+    required this.fg,
+    required this.fg2,
+    required this.narrow,
+  });
+
+  final SongItem song;
+  final bool dark;
+  final Color fg, fg2;
+  final bool narrow;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppState.I;
+    return Row(
+      children: [
+        if (!dark) ...[
+          Hover(
+            onTap: () => app.nowPlayingOpen.value = true,
+            builder: (_, h) => Tooltip(
+              message: '打开播放页',
+              child: MiniDisc(url: song.coverUrl, size: 54, hovered: h),
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
+        Flexible(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                song.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 15, color: fg, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                song.artists.map((a) => a.name).join(' / '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12.5, color: fg2),
+              ),
+            ],
+          ),
+        ),
+        if (!song.local && !narrow) ...[
+          const SizedBox(width: 10),
+          ValueListenableBuilder(
+            valueListenable: app.likeCountText,
+            builder: (context, t, _) => _Counted(
+              count: t,
+              child: LikeButton(song: song, size: 20, color: fg2),
+            ),
+          ),
+          ValueListenableBuilder(
+            valueListenable: app.commentCountText,
+            builder: (context, t, _) => _Counted(
+              count: t,
+              child: IconBtn(
+                Icons.chat_bubble_outline_rounded,
+                size: 19,
+                color: fg2,
+                tooltip: '评论',
+                onTap: () => openComments(song),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// 图标右上角的小号计数（官方的 100w+ / 1w+ 样式）
+class _Counted extends StatelessWidget {
+  const _Counted({required this.count, required this.child});
+
+  final String? count;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = count;
+    return Padding(
+      padding: EdgeInsets.only(right: c == null || c.isEmpty ? 0 : 18),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          child,
+          if (c != null && c.isNotEmpty)
+            Positioned(
+              left: 24,
+              top: 1,
+              child: Text(
+                c,
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w600,
+                  color: context.palette.textSecondary,
+                  height: 1,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 小唱片：黑胶圆环中嵌封面，播放时缓慢转动
+class MiniDisc extends StatefulWidget {
+  const MiniDisc({super.key, required this.url, this.size = 54, this.hovered = false});
+
+  final String? url;
+  final double size;
+  final bool hovered;
+
+  @override
+  State<MiniDisc> createState() => _MiniDiscState();
+}
+
+class _MiniDiscState extends State<MiniDisc> with SingleTickerProviderStateMixin {
+  late final _spin = AnimationController(vsync: this, duration: const Duration(seconds: 20));
+
+  @override
+  void initState() {
+    super.initState();
+    AppState.I.playerState.addListener(_sync);
+    _sync();
+  }
+
+  void _sync() => AppState.I.isPlaying ? _spin.repeat() : _spin.stop();
+
+  @override
+  void dispose() {
+    AppState.I.playerState.removeListener(_sync);
+    _spin.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = widget.size;
+    return SizedBox.square(
+      dimension: s,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          RotationTransition(
+            turns: _spin,
+            child: ClipOval(
+              child: Container(
+                width: s,
+                height: s,
+                color: const Color(0xFF1B1B1D),
+                alignment: Alignment.center,
+                child: ClipOval(
+                  child: Cover(url: widget.url, size: s * 0.66, radius: 0),
+                ),
+              ),
+            ),
+          ),
+          AnimatedOpacity(
+            opacity: widget.hovered ? 1 : 0,
+            duration: const Duration(milliseconds: 120),
+            child: ClipOval(
+              child: Container(
+                width: s,
+                height: s,
+                color: Colors.black45,
+                child: const Icon(Icons.keyboard_arrow_up_rounded, color: Colors.white, size: 28),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 音质标签，点击切换默认音质
+class _QualityBadge extends StatelessWidget {
+  const _QualityBadge({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return ValueListenableBuilder(
+      valueListenable: AppState.I.settings,
+      builder: (context, s, _) {
+        if (s == null) return const SizedBox.shrink();
+        return PopupMenuButton<AudioQuality>(
+          tooltip: '音质',
+          color: p.surface,
+          position: PopupMenuPosition.over,
+          offset: const Offset(0, -220),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Tokens.radiusM)),
+          onSelected: (q) => pb.setQuality(quality: q),
+          itemBuilder: (_) => [
+            for (final q in AudioQuality.values.reversed)
+              PopupMenuItem(
+                value: q,
+                height: 38,
+                child: Row(
+                  children: [
+                    Text(qualityLabel(q), style: TextStyle(color: q == s.quality ? Tokens.accent : p.textPrimary)),
+                    const Spacer(),
+                    if (q == s.quality) const Icon(Icons.check_rounded, size: 16, color: Tokens.accent),
+                  ],
+                ),
+              ),
+          ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                border: Border.all(color: color, width: 1.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                qualityLabel(s.quality),
+                style: TextStyle(fontSize: 11.5, color: color, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 音量：点图标弹出竖向滑块；滚轮直接调节
+class _VolumeButton extends StatelessWidget {
+  const _VolumeButton({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppState.I;
+    final p = context.palette;
+    return ValueListenableBuilder(
+      valueListenable: app.volume,
+      builder: (context, v, _) => Listener(
+        onPointerSignal: (e) {
+          if (e is PointerScrollEvent) app.setVolume((v - e.scrollDelta.dy / 1000).clamp(0.0, 1.0));
+        },
+        child: MenuAnchor(
+          style: MenuStyle(
+            backgroundColor: WidgetStatePropertyAll(p.surface),
+            shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(Tokens.radiusM))),
+          ),
+          alignmentOffset: const Offset(-8, -190),
+          menuChildren: [
+            SizedBox(
+              width: 48,
+              height: 170,
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  ValueListenableBuilder(
+                    valueListenable: app.volume,
+                    builder: (context, vol, _) =>
+                        Text('${(vol * 100).round()}', style: TextStyle(fontSize: 12, color: p.textSecondary)),
+                  ),
+                  Expanded(
+                    child: RotatedBox(
+                      quarterTurns: 3,
+                      child: SliderTheme(
+                        data: SliderThemeData(
+                          trackHeight: 3,
+                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                          overlayShape: SliderComponentShape.noOverlay,
+                          activeTrackColor: Tokens.accent,
+                          inactiveTrackColor: p.divider,
+                          thumbColor: Tokens.accent,
+                        ),
+                        child: ValueListenableBuilder(
+                          valueListenable: app.volume,
+                          builder: (context, vol, _) => Slider(value: vol, onChanged: app.setVolume),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ),
+            ),
+          ],
+          builder: (context, ctl, _) => IconBtn(
+            v == 0 ? Icons.volume_off_outlined : (v < 0.5 ? Icons.volume_down_outlined : Icons.volume_up_outlined),
+            color: color,
+            tooltip: '音量',
+            onTap: () => ctl.isOpen ? ctl.close() : ctl.open(),
+          ),
+        ),
       ),
     );
   }
@@ -241,45 +501,6 @@ class _TimeLabel extends StatelessWidget {
       builder: (context, _) => Text(
         '${formatMs(app.position.value)} / ${formatMs(app.duration.value)}',
         style: TextStyle(fontSize: 12, color: color, fontFeatures: const [FontFeature.tabularFigures()]),
-      ),
-    );
-  }
-}
-
-class _VolumeControl extends StatelessWidget {
-  const _VolumeControl({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final app = AppState.I;
-    return ValueListenableBuilder(
-      valueListenable: app.volume,
-      builder: (context, v, _) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconBtn(
-            v == 0 ? Icons.volume_off_rounded : (v < 0.5 ? Icons.volume_down_rounded : Icons.volume_up_rounded),
-            color: color,
-            tooltip: '静音',
-            onTap: () => app.setVolume(v == 0 ? 0.6 : 0),
-          ),
-          SizedBox(
-            width: 96,
-            child: SliderTheme(
-              data: SliderThemeData(
-                trackHeight: 3,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                overlayShape: SliderComponentShape.noOverlay,
-                activeTrackColor: Tokens.accent,
-                inactiveTrackColor: color.withValues(alpha: 0.25),
-                thumbColor: Tokens.accent,
-              ),
-              child: Slider(value: v, onChanged: app.setVolume),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../state.dart';
 import '../theme.dart';
 
 /// 圆角封面，加载中/失败时显示占位
@@ -274,5 +275,69 @@ class UnderlineTabs extends StatelessWidget {
           ),
       ],
     );
+  }
+}
+
+/// 页面统一的大标题行
+class PageHeader extends StatelessWidget {
+  const PageHeader({super.key, required this.title, this.subtitle, this.actions = const []});
+
+  final String title;
+  final String? subtitle;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 8, 28, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+          if (subtitle != null) ...[
+            const SizedBox(width: 10),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(subtitle!, style: TextStyle(color: p.textTertiary, fontSize: 13)),
+            ),
+          ],
+          const Spacer(),
+          for (final (i, a) in actions.indexed) ...[if (i > 0) const SizedBox(width: 10), a],
+        ],
+      ),
+    );
+  }
+}
+
+/// 未登录时页面的占位
+class LoginRequired extends StatelessWidget {
+  const LoginRequired({super.key, required this.text, required this.onLogin});
+
+  final String text;
+  final VoidCallback onLogin;
+
+  @override
+  Widget build(BuildContext context) => EmptyState(
+    icon: Icons.lock_outline_rounded,
+    text: text,
+    action: PillButton(label: '立即登录', primary: true, onTap: onLogin),
+  );
+}
+
+/// 账号变化时自动刷新内容的页面基类
+mixin AccountAware<T extends StatefulWidget> on State<T> {
+  void onAccountChanged();
+
+  @override
+  void initState() {
+    super.initState();
+    AppState.I.account.addListener(onAccountChanged);
+  }
+
+  @override
+  void dispose() {
+    AppState.I.account.removeListener(onAccountChanged);
+    super.dispose();
   }
 }

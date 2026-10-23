@@ -30,6 +30,13 @@ class AppState {
   final volume = ValueNotifier(0.8);
   final settings = ValueNotifier<AppSettings?>(null);
 
+  /// 当前歌曲的红心数与评论数（官方样式的 "100w+" / "1w+"）
+  final likeCountText = ValueNotifier<String?>(null);
+  final commentCountText = ValueNotifier<String?>(null);
+
+  /// 下载列表或进度变化时自增，下载页据此刷新
+  final downloadsTick = ValueNotifier(0);
+
   // 界面
   final nowPlayingOpen = ValueNotifier(false);
   final themeMode = ValueNotifier(ThemeMode.system);
@@ -58,6 +65,7 @@ class AppState {
         buffered.value = b;
       case UiEvent_TrackChanged(:final field0):
         current.value = field0;
+        _loadCounts(field0);
         position.value = 0;
         duration.value = field0?.durationMs ?? 0;
         _syncSnapshot();
@@ -65,6 +73,8 @@ class AppState {
         _syncSnapshot();
       case UiEvent_SettingsChanged():
         pb.getSettings().then(_applySettings);
+      case UiEvent_DownloadsChanged():
+        downloadsTick.value++;
       case UiEvent_Notice(:final field0):
         notify(field0);
       case UiEvent_Error(:final field0):
@@ -96,6 +106,25 @@ class AppState {
         ThemeMode.system => ThemePref.system,
       },
     );
+  }
+
+  Future<void> _loadCounts(SongItem? s) async {
+    likeCountText.value = null;
+    commentCountText.value = null;
+    if (s == null || s.local) return;
+    final id = s.id;
+    lib
+        .songLikeCount(id: id)
+        .then((c) {
+          if (current.value?.id == id) likeCountText.value = c.text;
+        })
+        .catchError((_) {});
+    lib
+        .songComments(id: id, offset: 0, beforeMs: 0)
+        .then((c) {
+          if (current.value?.id == id) commentCountText.value = shortCount(c.total);
+        })
+        .catchError((_) {});
   }
 
   Future<void> _syncSnapshot() async {
@@ -169,4 +198,13 @@ class AppState {
     volume.value = v;
     pb.setVolume(volume: v);
   }
+}
+
+/// 官方客户端的计数写法：999+ / 1w+ / 10w+ / 100w+
+String shortCount(int n) {
+  if (n >= 1000000) return '100w+';
+  if (n >= 100000) return '10w+';
+  if (n >= 10000) return '1w+';
+  if (n >= 1000) return '999+';
+  return n > 0 ? '$n' : '';
 }

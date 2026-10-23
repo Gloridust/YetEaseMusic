@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-import '../src/rust/api/playback.dart' as pb;
 import '../src/rust/api/types.dart';
 import '../state.dart';
 import '../theme.dart';
+import 'song_actions.dart';
 import 'widgets.dart';
 
 const _rowHeight = 54.0;
 
 /// 列表表头：# / 标题 / 专辑 / 喜欢 / 时长
 class SongListHeader extends StatelessWidget {
-  const SongListHeader({super.key});
+  const SongListHeader({super.key, this.lastLabel = '时长'});
+
+  /// 最后一列的标题（最近播放页显示「播放时间」）
+  final String lastLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +29,7 @@ class SongListHeader extends StatelessWidget {
         title: Text('标题', style: style),
         album: Text('专辑', style: style),
         like: Text('喜欢', style: style, textAlign: TextAlign.center),
-        duration: Text('时长', style: style),
+        duration: Text(lastLabel, style: style),
       ),
     );
   }
@@ -56,7 +58,7 @@ class _Columns extends StatelessWidget {
             Expanded(flex: 5, child: title),
             if (wide) ...[const SizedBox(width: 16), Expanded(flex: 3, child: album)],
             SizedBox(width: 56, child: like),
-            SizedBox(width: 56, child: duration),
+            SizedBox(width: 72, child: duration),
           ],
         );
       },
@@ -65,16 +67,19 @@ class _Columns extends StatelessWidget {
 }
 
 class SliverSongList extends StatelessWidget {
-  const SliverSongList({super.key, required this.songs});
+  const SliverSongList({super.key, required this.songs, this.lastColumn});
 
   final List<SongItem> songs;
+
+  /// 替换最后一列（默认显示时长）
+  final List<String>? lastColumn;
 
   @override
   Widget build(BuildContext context) {
     return SliverFixedExtentList(
       itemExtent: _rowHeight,
       delegate: SliverChildBuilderDelegate(
-        (context, i) => SongRow(songs: songs, index: i),
+        (context, i) => SongRow(songs: songs, index: i, lastText: lastColumn?[i]),
         childCount: songs.length,
       ),
     );
@@ -82,39 +87,17 @@ class SliverSongList extends StatelessWidget {
 }
 
 class SongRow extends StatelessWidget {
-  const SongRow({super.key, required this.songs, required this.index});
+  const SongRow({super.key, required this.songs, required this.index, this.lastText});
 
   final List<SongItem> songs;
   final int index;
+  final String? lastText;
 
   SongItem get song => songs[index];
 
   void _play() => AppState.I.playSongs(songs, index);
 
-  Future<void> _menu(BuildContext context, Offset at) async {
-    final p = context.palette;
-    final r = await showMenu<String>(
-      context: context,
-      position: RelativeRect.fromLTRB(at.dx, at.dy, at.dx, at.dy),
-      color: p.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Tokens.radiusM)),
-      items: const [
-        PopupMenuItem(value: 'play', child: Text('播放')),
-        PopupMenuItem(value: 'next', child: Text('下一首播放')),
-        PopupMenuItem(value: 'link', child: Text('复制歌曲链接')),
-      ],
-    );
-    switch (r) {
-      case 'play':
-        _play();
-      case 'next':
-        await pb.enqueueNext(id: song.id);
-        AppState.I.notify('已添加到下一首播放');
-      case 'link':
-        await Clipboard.setData(ClipboardData(text: 'https://music.163.com/song?id=${song.id}'));
-        AppState.I.notify('链接已复制');
-    }
-  }
+  void _menu(BuildContext context, Offset at) => showSongMenu(context, at, songs, index);
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +189,10 @@ class SongRow extends StatelessWidget {
                   style: TextStyle(color: p.textSecondary, fontSize: 13),
                 ),
                 like: Center(child: LikeButton(song: song)),
-                duration: Text(formatMs(song.durationMs), style: TextStyle(color: p.textTertiary, fontSize: 13)),
+                duration: Text(
+                  lastText ?? formatMs(song.durationMs),
+                  style: TextStyle(color: p.textTertiary, fontSize: 13),
+                ),
               ),
             ),
           ),
@@ -225,6 +211,7 @@ class LikeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (song.local) return SizedBox(width: size + 12);
     return ValueListenableBuilder(
       valueListenable: AppState.I.likedIds,
       builder: (context, liked, _) {
