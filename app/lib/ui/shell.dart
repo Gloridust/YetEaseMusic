@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../src/rust/api/playback.dart' as pb;
 import '../state.dart';
 import '../theme.dart';
 import 'login_dialog.dart';
@@ -14,7 +15,6 @@ import 'pages/settings_page.dart';
 import 'player_bar.dart';
 import 'queue_panel.dart';
 import 'sidebar.dart';
-import 'sidebar_prefs.dart';
 import 'widgets.dart';
 
 bool get isDesktop => Platform.isLinux || Platform.isWindows || Platform.isMacOS;
@@ -26,14 +26,23 @@ class Shell extends StatefulWidget {
   State<Shell> createState() => _ShellState();
 }
 
-class _ShellState extends State<Shell> {
+class _ShellState extends State<Shell> with WindowListener {
   final _scaffold = GlobalKey<ScaffoldState>();
-  double _sidebarWidth = Tokens.sidebarWidth;
+  // 设置在界面显示之前已经读好，首帧就是保存的宽度
+  double _sidebarWidth = (AppState.I.settings.value?.sidebarWidth ?? Tokens.sidebarWidth)
+      .clamp(Tokens.sidebarMinWidth, Tokens.sidebarMaxWidth)
+      .toDouble();
+
+  /// 最大化 / 全屏时窗口贴着屏幕边缘，不需要描边
+  bool _edgeToEdge = false;
 
   @override
   void initState() {
     super.initState();
-    _restoreSidebarWidth();
+    if (Platform.isLinux) {
+      windowManager.addListener(this);
+      _syncWindowState();
+    }
     AppState.I.notices.listen((msg) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -49,17 +58,31 @@ class _ShellState extends State<Shell> {
     });
   }
 
-  Future<void> _restoreSidebarWidth() async {
-    final saved = await SidebarPrefs.load();
-    if (saved == null || !mounted) return;
-    setState(() => _sidebarWidth = saved.clamp(Tokens.sidebarMinWidth, Tokens.sidebarMaxWidth).toDouble());
+  @override
+  void dispose() {
+    if (Platform.isLinux) windowManager.removeListener(this);
+    super.dispose();
   }
+
+  Future<void> _syncWindowState() async {
+    final edge = await windowManager.isMaximized() || await windowManager.isFullScreen();
+    if (mounted && edge != _edgeToEdge) setState(() => _edgeToEdge = edge);
+  }
+
+  @override
+  void onWindowMaximize() => _syncWindowState();
+  @override
+  void onWindowUnmaximize() => _syncWindowState();
+  @override
+  void onWindowEnterFullScreen() => _syncWindowState();
+  @override
+  void onWindowLeaveFullScreen() => _syncWindowState();
 
   void _setSidebarWidth(double width) {
     setState(() => _sidebarWidth = width.clamp(Tokens.sidebarMinWidth, Tokens.sidebarMaxWidth).toDouble());
   }
 
-  void _saveSidebarWidth() => SidebarPrefs.save(_sidebarWidth).ignore();
+  void _saveSidebarWidth() => pb.setSidebarWidth(width: _sidebarWidth).ignore();
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +166,7 @@ class _ShellState extends State<Shell> {
                   ),
                 ),
               ),
-              if (Platform.isLinux)
+              if (Platform.isLinux && !_edgeToEdge)
                 Positioned.fill(
                   child: IgnorePointer(
                     child: DecoratedBox(

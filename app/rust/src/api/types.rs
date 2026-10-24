@@ -241,6 +241,7 @@ pub struct AppSettings {
     pub ui_scale: f32,
     pub theme: ThemePref,
     pub close_to_tray: bool,
+    pub sidebar_width: f32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

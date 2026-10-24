@@ -204,7 +204,14 @@ pub fn get_settings() -> anyhow::Result<AppSettings> {
         ui_scale: s.ui_scale,
         theme: ThemePref::parse(&s.theme),
         close_to_tray: s.close_to_tray,
+        sidebar_width: s.sidebar_width,
     })
+}
+
+/// 桌面端侧栏宽度（拖动结束时保存）
+pub fn set_sidebar_width(width: f32) -> anyhow::Result<()> {
+    core()?.update_settings(|s| s.sidebar_width = width);
+    Ok(())
 }
 
 /// 关闭主窗口时是否留在托盘里继续播放

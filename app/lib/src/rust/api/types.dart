@@ -121,6 +121,7 @@ class AppSettings {
   final double uiScale;
   final ThemePref theme;
   final bool closeToTray;
+  final double sidebarWidth;
 
   const AppSettings({
     required this.quality,
@@ -131,6 +132,7 @@ class AppSettings {
     required this.uiScale,
     required this.theme,
     required this.closeToTray,
+    required this.sidebarWidth,
   });
 
   @override
@@ -142,7 +144,8 @@ class AppSettings {
       cnIp.hashCode ^
       uiScale.hashCode ^
       theme.hashCode ^
-      closeToTray.hashCode;
+      closeToTray.hashCode ^
+      sidebarWidth.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -156,7 +159,8 @@ class AppSettings {
           cnIp == other.cnIp &&
           uiScale == other.uiScale &&
           theme == other.theme &&
-          closeToTray == other.closeToTray;
+          closeToTray == other.closeToTray &&
+          sidebarWidth == other.sidebarWidth;
 }
 
 class ArtistCard {

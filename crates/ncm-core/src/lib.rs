@@ -56,6 +56,8 @@ pub struct Settings {
     pub cache_limit_mb: u32,
     /// 关闭主窗口时留在托盘里继续播放（没有托盘时界面会忽略它，直接退出）
     pub close_to_tray: bool,
+    /// 桌面端侧栏宽度（逻辑像素，界面层负责限定范围）
+    pub sidebar_width: f32,
 }
 
 impl Default for Settings {
@@ -72,6 +74,7 @@ impl Default for Settings {
             download_dir: music_dir().join("YetEase").to_string_lossy().into_owned(),
             cache_limit_mb: 2048,
             close_to_tray: true,
+            sidebar_width: 240.0,
         }
     }
 }
