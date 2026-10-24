@@ -6,6 +6,7 @@ import '../src/rust/api/types.dart';
 import '../state.dart';
 import '../theme.dart';
 import 'brand.dart';
+import 'heartbeat_icon.dart';
 import 'login_dialog.dart';
 import 'nav.dart';
 import 'pages/downloads_page.dart';
@@ -305,7 +306,7 @@ class _HeartbeatButton extends StatelessWidget {
         },
         builder: (context, h) => Padding(
           padding: const EdgeInsets.all(6),
-          child: Icon(Icons.monitor_heart_outlined, size: 18, color: h ? Tokens.accent : IconTheme.of(context).color),
+          child: HeartbeatIcon(size: 18, color: h ? Tokens.accent : (IconTheme.of(context).color ?? Tokens.accent)),
         ),
       ),
     );
