@@ -52,14 +52,18 @@ class _SidebarState extends State<Sidebar> {
                   const AppLogo(size: 30),
                   const SizedBox(width: 10),
                   Flexible(
-                    child: Text(
-                      kAppName,
-                      maxLines: 1,
-                      overflow: TextOverflow.fade,
-                      softWrap: false,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: p.textPrimary),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        kAppName,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: p.textPrimary),
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 10),
                 ],
               ),
             ),
@@ -253,6 +257,8 @@ class NavItem extends StatelessWidget {
                   Expanded(
                     child: Text(
                       label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 14,
                         color: sel ? Colors.white : p.textPrimary,
