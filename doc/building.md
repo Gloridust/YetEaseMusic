@@ -101,7 +101,7 @@ Flathub 要求开源应用从源码构建，并且构建过程不能联网。清
 2. 生成离线清单（依赖有变化时才需要重新生成，但每次都跑一遍最省心）：
 
    ```bash
-   python3 flatpak-flutter.py --app-pubspec app flatpak-flutter.yml
+   python3 flatpak-flutter.py --app-module yetease --app-pubspec app flatpak-flutter.yml
    ```
 
 3. 本地按 Flathub 的方式断网构建并安装验证。Builder 本身是 Flatpak 应用，看不到 `/tmp`，工作目录要放在家目录下；它的沙箱里 rofiles-fuse 起不来时加 `--disable-rofiles-fuse`：
