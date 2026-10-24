@@ -117,6 +117,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.2.6" date="2026-10-24">
+      <description>
+        <p>The system text size now scales the whole interface, so large text no longer gets clipped. The sidebar can be resized by dragging, and the player bar shows a placeholder when nothing is playing.</p>
+      </description>
+    </release>
     <release version="0.2.5" date="2026-10-24">
       <description>
         <p>System tray: closing the window keeps the music playing; reopen or quit from the tray. Starting the app again brings back the existing window.</p>
