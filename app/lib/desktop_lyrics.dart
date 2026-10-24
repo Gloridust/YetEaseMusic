@@ -10,6 +10,7 @@ import 'src/rust/api/desktop_lyrics.dart' as dl;
 import 'src/rust/api/types.dart';
 import 'src/rust/frb_generated.dart';
 import 'theme.dart';
+import 'ui/ui_scaled.dart';
 
 /// 桌面歌词窗口的入口：主程序以 `--desktop-lyrics --port=N` 启动本程序时走这里。
 Future<void> runDesktopLyrics(List<String> args) async {
@@ -61,6 +62,13 @@ class _LyricsApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.dark).copyWith(scaffoldBackgroundColor: Colors.transparent),
       color: Colors.transparent,
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(textScaler: clampDesktopTextScaler(mq.textScaler)),
+          child: child!,
+        );
+      },
       // 必须包一层 Material，否则文字没有默认样式（会显示黄色下划线和等宽字体）
       home: RepaintBoundary(
         key: _shotKey,

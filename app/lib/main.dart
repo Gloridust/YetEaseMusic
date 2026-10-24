@@ -135,10 +135,17 @@ class YetEaseApp extends StatelessWidget {
           _ToggleIntent: CallbackAction<_ToggleIntent>(onInvoke: (_) => pb.toggle()),
         },
         // 缩放包在 Navigator 外层，弹窗、抽屉、提示条也一起缩放
-        builder: (context, child) => RepaintBoundary(
-          key: tourBoundary,
-          child: UiScaled(scale: app.uiScale.value, child: child!),
-        ),
+        builder: (context, child) {
+          final mq = MediaQuery.of(context);
+          return MediaQuery(
+            // 限制系统文字缩放，避免 4K@200% + 200% 文字时字号叠成 4 倍
+            data: isDesktop ? mq.copyWith(textScaler: clampDesktopTextScaler(mq.textScaler)) : mq,
+            child: RepaintBoundary(
+              key: tourBoundary,
+              child: UiScaled(scale: app.uiScale.value, child: child!),
+            ),
+          );
+        },
         initialRoute: '/',
         home: const Shell(),
       ),
