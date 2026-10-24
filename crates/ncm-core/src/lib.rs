@@ -2,7 +2,10 @@
 
 pub mod images;
 pub mod library;
+pub mod logging;
 pub mod lyrics;
+#[cfg(not(target_os = "android"))]
+pub mod media;
 pub mod queue;
 
 use std::path::PathBuf;
@@ -131,6 +134,8 @@ pub enum CoreEvent {
     SettingsChanged,
     /// 下载列表或某个下载任务的进度变了
     DownloadsChanged,
+    /// 系统媒体控件请求把窗口带到前台
+    Raise,
     /// 面向用户的提示，比如"该歌曲暂无版权"
     Notice(String),
 }
@@ -149,6 +154,8 @@ pub struct Core {
     downloads: Mutex<library::Downloads>,
     /// 进行中的下载：id → (歌曲, 进度 0~1)
     downloading: Mutex<std::collections::HashMap<u64, (Song, f32)>>,
+    #[cfg(not(target_os = "android"))]
+    media: Mutex<Option<media::MediaHandle>>,
 }
 
 impl Core {
@@ -157,7 +164,23 @@ impl Core {
         std::fs::create_dir_all(&paths.data_dir)?;
         std::fs::create_dir_all(&paths.cache_dir)?;
         let session: Session = read_json(&paths.session_file()).unwrap_or_default();
-        let settings: Settings = read_json(&paths.settings_file()).unwrap_or_default();
+        let mut settings: Settings = read_json(&paths.settings_file()).unwrap_or_default();
+        // 安卓等平台取不到系统「音乐」目录时，默认值会是相对路径，改放到应用数据目录下
+        if !std::path::Path::new(&settings.download_dir).is_absolute() {
+            settings.download_dir = paths
+                .data_dir
+                .join("downloads")
+                .to_string_lossy()
+                .into_owned();
+        }
+        settings
+            .local_dirs
+            .retain(|d| std::path::Path::new(d).is_absolute());
+        if settings.local_dirs.is_empty() {
+            settings
+                .local_dirs
+                .push(paths.data_dir.join("music").to_string_lossy().into_owned());
+        }
         let api = Client::new(session)?;
         api.set_real_ip(settings.use_cn_ip.then(|| settings.cn_ip.clone()));
         let (player, player_rx) = Player::new();
@@ -176,8 +199,16 @@ impl Core {
             local: Mutex::new(Default::default()),
             downloads: Mutex::new(Default::default()),
             downloading: Mutex::new(Default::default()),
+            #[cfg(not(target_os = "android"))]
+            media: Mutex::new(None),
         });
         core.prune_caches();
+        // Linux 的 MPRIS 不需要窗口句柄，直接启用；其他平台由界面层传入句柄后启用
+        // 没有 D-Bus 会话总线（SSH、容器、无桌面服务器）时跳过，否则 zbus 内部线程会 panic
+        #[cfg(target_os = "linux")]
+        if session_bus_available() {
+            core.enable_media_controls(None);
+        }
         {
             let mut d: library::Downloads =
                 read_json(&core.paths.downloads_file()).unwrap_or_default();
@@ -200,8 +231,27 @@ impl Core {
             })?;
         let weak: Weak<Self> = Arc::downgrade(&core);
         tokio::spawn(async move {
+            // 用于识别跳转：位置偏离「上次位置 + 经过时间」太多就同步给系统控件
+            let mut last: Option<(u64, std::time::Instant)> = None;
             while let Some(e) = rx.recv().await {
                 let Some(core) = weak.upgrade() else { break };
+                match &e {
+                    PlayerEvent::State(_) => {
+                        core.media_playback();
+                        last = None;
+                    }
+                    PlayerEvent::Position { position_ms, .. } => {
+                        let jumped = last.is_some_and(|(p, t)| {
+                            let expected = p + t.elapsed().as_millis() as u64;
+                            position_ms.abs_diff(expected) > 1500
+                        });
+                        if jumped {
+                            core.media_playback();
+                        }
+                        last = Some((*position_ms, std::time::Instant::now()));
+                    }
+                    _ => {}
+                }
                 if matches!(e, PlayerEvent::Ended) {
                     let next = core.queue.lock().unwrap().after_end();
                     if let Some(i) = next {
@@ -260,6 +310,10 @@ impl Core {
         };
         self.api.set_real_ip(s.use_cn_ip.then(|| s.cn_ip.clone()));
         self.player.set_volume(s.volume);
+        #[cfg(not(target_os = "android"))]
+        if let Some(m) = self.media.lock().unwrap().as_ref() {
+            m.update(media::Update::Volume(s.volume));
+        }
         self.queue.lock().unwrap().set_mode(s.play_mode);
         self.save_settings();
         self.emit(CoreEvent::SettingsChanged);
@@ -340,7 +394,10 @@ impl Core {
             q.songs[index].clone()
         };
         self.emit(CoreEvent::TrackChanged(Some(song.clone())));
+        self.media_metadata(&song);
+        tracing::info!(id = song.id, name = %song.name, "play");
         if let Err(msg) = self.start(&song).await {
+            tracing::warn!(id = song.id, "play failed: {msg}");
             self.emit(CoreEvent::Notice(format!(
                 "《{}》无法播放：{msg}",
                 song.name
@@ -585,6 +642,100 @@ impl Core {
         }
     }
 
+    // ---------- 日志 ----------
+
+    /// 导出脱敏后的日志到 `dest_dir`
+    pub fn export_logs(&self, dest_dir: &std::path::Path, extra: &str) -> Result<PathBuf> {
+        let s = self.settings();
+        let header = format!(
+            "YetEase Music {} · {} {} · 登录: {} · 音质: {:?} · 海外模式: {}\n{extra}",
+            env!("CARGO_PKG_VERSION"),
+            std::env::consts::OS,
+            std::env::consts::ARCH,
+            self.api.is_logged_in(),
+            s.quality,
+            s.use_cn_ip,
+        );
+        Ok(logging::export(&self.paths.data_dir, dest_dir, &header)?)
+    }
+
+    // ---------- 系统媒体控制 ----------
+
+    /// 启用系统媒体控制。Linux 不需要窗口句柄；Windows 需要传 Flutter 窗口的 HWND。
+    /// 重复调用无副作用。
+    #[cfg(not(target_os = "android"))]
+    pub fn enable_media_controls(self: &Arc<Self>, hwnd: Option<usize>) -> bool {
+        if self.media.lock().unwrap().is_some() {
+            return true;
+        }
+        let weak = Arc::downgrade(self);
+        let rt = tokio::runtime::Handle::current();
+        let handle = media::start(hwnd.map(|h| h as *mut std::ffi::c_void), move |a| {
+            let Some(core) = weak.upgrade() else { return };
+            rt.spawn(async move { core.handle_media_action(a).await });
+        });
+        let ok = handle.is_some();
+        *self.media.lock().unwrap() = handle;
+        if ok {
+            if let Some(s) = self.current_song() {
+                self.media_metadata(&s);
+            }
+            self.media_playback();
+        }
+        ok
+    }
+
+    #[cfg(not(target_os = "android"))]
+    async fn handle_media_action(&self, a: media::MediaAction) {
+        use media::MediaAction::*;
+        let p = &self.player;
+        match a {
+            Play => p.play(),
+            Pause => p.pause(),
+            Toggle => p.toggle(),
+            Next => self.next().await,
+            Previous => self.prev().await,
+            Stop => p.pause(),
+            SeekTo(ms) => p.seek(ms),
+            SeekBy(d) => p.seek(p.position_ms().saturating_add_signed(d)),
+            Volume(v) => self.update_settings(|s| s.volume = v),
+            Raise => self.emit(CoreEvent::Raise),
+        }
+    }
+
+    fn media_metadata(&self, _song: &Song) {
+        #[cfg(not(target_os = "android"))]
+        if let Some(m) = self.media.lock().unwrap().as_ref() {
+            let s = _song;
+            let cover_url = s.album.pic_url.as_ref().map(|u| {
+                if u.starts_with('/') {
+                    format!("file://{u}")
+                } else {
+                    format!("{}?param=512y512", u.replace("http://", "https://"))
+                }
+            });
+            m.update(media::Update::Metadata {
+                title: s.name.clone(),
+                artist: s.artist_names(),
+                album: s.album.name.clone(),
+                cover_url,
+                duration_ms: s.duration_ms,
+            });
+        }
+    }
+
+    fn media_playback(&self) {
+        #[cfg(not(target_os = "android"))]
+        if let Some(m) = self.media.lock().unwrap().as_ref() {
+            let st = self.player.state();
+            m.update(media::Update::Playback {
+                playing: st == PlaybackState::Playing,
+                stopped: st == PlaybackState::Stopped && self.current_song().is_none(),
+                position_ms: self.player.position_ms(),
+            });
+        }
+    }
+
     // ---------- 缓存管理 ----------
 
     fn audio_cache_dir(&self) -> PathBuf {
@@ -664,15 +815,38 @@ impl Core {
 
     pub async fn lyrics(&self, song_id: u64) -> Result<Vec<LyricLine>> {
         let l = self.api.lyrics(song_id).await?;
-        Ok(lyrics::merge(&l.lrc, &l.translation))
+        Ok(lyrics::merge_all(
+            &l.lrc,
+            &l.translation,
+            &l.yrc,
+            &l.yrc_translation,
+        ))
     }
+}
+
+/// Linux 上是否有可用的 D-Bus 会话总线
+#[cfg(target_os = "linux")]
+fn session_bus_available() -> bool {
+    if let Ok(addr) = std::env::var("DBUS_SESSION_BUS_ADDRESS") {
+        // unix:path=/run/user/1000/bus 形式时顺便确认文件存在
+        return match addr.split_once("unix:path=") {
+            Some((_, rest)) => {
+                std::path::Path::new(rest.split(',').next().unwrap_or(rest)).exists()
+            }
+            None => !addr.is_empty(),
+        };
+    }
+    std::env::var("XDG_RUNTIME_DIR").is_ok_and(|d| std::path::Path::new(&d).join("bus").exists())
 }
 
 fn http_client() -> &'static reqwest::Client {
     static C: std::sync::OnceLock<reqwest::Client> = std::sync::OnceLock::new();
     C.get_or_init(|| {
         let _ = rustls::crypto::ring::default_provider().install_default();
-        reqwest::Client::builder()
+        let builder = reqwest::Client::builder();
+        #[cfg(target_os = "android")]
+        let builder = builder.tls_backend_preconfigured(android_tls());
+        builder
             .connect_timeout(std::time::Duration::from_secs(10))
             .user_agent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
             .build()
@@ -699,4 +873,21 @@ fn restrict_permissions(path: &PathBuf) {
     }
     #[cfg(not(unix))]
     let _ = path;
+}
+
+/// 安卓上 rustls-platform-verifier 需要先经 JNI 初始化，否则所有 HTTPS 请求都会 panic。
+/// 这里改用内置的 webpki 根证书，并设好 HTTP/2 的 ALPN。
+#[cfg(target_os = "android")]
+pub(crate) fn android_tls() -> rustls::ClientConfig {
+    let mut roots = rustls::RootCertStore::empty();
+    roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+    let mut cfg = rustls::ClientConfig::builder_with_provider(std::sync::Arc::new(
+        rustls::crypto::ring::default_provider(),
+    ))
+    .with_safe_default_protocol_versions()
+    .expect("rustls protocol versions")
+    .with_root_certificates(roots)
+    .with_no_client_auth();
+    cfg.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
+    cfg
 }

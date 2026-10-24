@@ -19,13 +19,24 @@ pub async fn bootstrap(data_dir: Option<String>, cache_dir: Option<String>) -> a
         return Ok(());
     }
     run(async move {
-        let mut paths = Paths::platform_default()?;
-        if let Some(d) = data_dir {
-            paths.data_dir = d.into();
-        }
-        if let Some(d) = cache_dir {
-            paths.cache_dir = d.into();
-        }
+        // 两个目录都由界面层给出时（安卓 / iOS 没有桌面标准目录）直接使用，不再查询标准目录
+        let paths = match (data_dir, cache_dir) {
+            (Some(d), Some(c)) => Paths {
+                data_dir: d.into(),
+                cache_dir: c.into(),
+            },
+            (d, c) => {
+                let mut paths = Paths::platform_default()?;
+                if let Some(d) = d {
+                    paths.data_dir = d.into();
+                }
+                if let Some(c) = c {
+                    paths.cache_dir = c.into();
+                }
+                paths
+            }
+        };
+        ncm_core::logging::init(&paths.data_dir);
         let c = Core::new(paths)?;
         let _ = state::CORE.set(c);
         Ok(())
@@ -61,6 +72,7 @@ pub fn events(sink: StreamSink<UiEvent>) -> anyhow::Result<()> {
                 CoreEvent::QueueChanged => UiEvent::QueueChanged,
                 CoreEvent::SettingsChanged => UiEvent::SettingsChanged,
                 CoreEvent::DownloadsChanged => UiEvent::DownloadsChanged,
+                CoreEvent::Raise => UiEvent::Raise,
                 CoreEvent::Notice(n) => UiEvent::Notice(n),
             };
             if sink.add(ui).is_err() {
@@ -227,4 +239,49 @@ pub async fn lyrics(song_id: i64) -> anyhow::Result<Vec<LyricItem>> {
             .collect())
     })
     .await
+}
+
+/// 启用系统媒体控制。Linux 上内核已自动启用；Windows 需要传窗口句柄（HWND），macOS 传 None。
+pub fn enable_media_controls(hwnd: Option<i64>) -> anyhow::Result<bool> {
+    #[cfg(not(target_os = "android"))]
+    {
+        let c = core()?;
+        let _g = rt().enter();
+        return Ok(c.enable_media_controls(hwnd.map(|h| h as usize)));
+    }
+    #[cfg(target_os = "android")]
+    {
+        let _ = hwnd;
+        Ok(false)
+    }
+}
+
+/// Dart 侧的日志（未捕获异常等）写进同一份日志文件
+#[frb(sync)]
+pub fn log_message(level: String, message: String) {
+    match level.as_str() {
+        "error" => tracing::error!(target: "dart", "{message}"),
+        "warn" => tracing::warn!(target: "dart", "{message}"),
+        _ => tracing::info!(target: "dart", "{message}"),
+    }
+}
+
+/// 导出脱敏日志到「下载」目录（取不到时放数据目录），返回文件路径
+pub fn export_logs(extra: String) -> anyhow::Result<String> {
+    let c = core()?;
+    let dest = directories::UserDirs::new()
+        .and_then(|u| u.download_dir().map(|d| d.to_path_buf()))
+        .unwrap_or_else(|| c.paths().data_dir.clone());
+    Ok(c.export_logs(&dest, &extra)?.to_string_lossy().into_owned())
+}
+
+pub fn log_dir() -> anyhow::Result<String> {
+    Ok(ncm_core::logging::log_dir(&core()?.paths().data_dir)
+        .to_string_lossy()
+        .into_owned())
+}
+
+#[frb(sync)]
+pub fn app_version() -> String {
+    env!("CARGO_PKG_VERSION").to_owned()
 }

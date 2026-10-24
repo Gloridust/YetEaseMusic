@@ -5,8 +5,10 @@ import '../src/rust/api/playback.dart' as pb;
 import '../src/rust/api/types.dart';
 import '../state.dart';
 import '../theme.dart';
+import 'pages/album_page.dart';
 import 'pages/settings_page.dart';
 import 'song_actions.dart';
+import 'shell.dart';
 import 'song_list.dart';
 import 'widgets.dart';
 
@@ -94,6 +96,7 @@ class PlayerBar extends StatelessWidget {
                                 onTap: s == null || s.local ? null : () => showCollectDialog(context, [s]),
                               ),
                             ),
+                            if (isDesktop) _LyricsToggle(color: fg2),
                             _VolumeButton(color: fg2),
                             Builder(
                               builder: (context) => IconBtn(
@@ -168,10 +171,8 @@ class _NowPlayingInfo extends StatelessWidget {
                 style: TextStyle(fontSize: 15, color: fg, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 4),
-              Text(
-                song.artists.map((a) => a.name).join(' / '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              ArtistLinks(
+                artists: song.artists,
                 style: TextStyle(fontSize: 12.5, color: fg2),
               ),
             ],
@@ -366,6 +367,39 @@ class _QualityBadge extends StatelessWidget {
   }
 }
 
+/// 「词」：开关桌面歌词，开启时高亮
+class _LyricsToggle extends StatelessWidget {
+  const _LyricsToggle({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder(
+      valueListenable: AppState.I.desktopLyrics,
+      builder: (context, on, _) => Tooltip(
+        message: on ? '关闭桌面歌词' : '打开桌面歌词',
+        child: Hover(
+          onTap: AppState.I.toggleDesktopLyrics,
+          builder: (_, h) => Container(
+            width: 32,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: h ? color.withValues(alpha: 0.12) : Colors.transparent,
+              borderRadius: BorderRadius.circular(Tokens.radiusS),
+            ),
+            child: Text(
+              '词',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: on ? Tokens.accent : color),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// 音量：点图标弹出竖向滑块；滚轮直接调节
 class _VolumeButton extends StatelessWidget {
   const _VolumeButton({required this.color});
@@ -556,7 +590,11 @@ class _ProgressLineState extends State<ProgressLine> {
                     final d = app.duration.value;
                     final played = _drag ?? (d == 0 ? 0.0 : (app.position.value / d).clamp(0.0, 1.0));
                     final h = _hover || _drag != null ? 5.0 : 3.0;
-                    final track = widget.dark ? Colors.white12 : p.divider;
+                    // 三层：底轨 < 已缓冲 < 已播放，深浅主题各自保证层次分明
+                    final track = widget.dark ? Colors.white.withValues(alpha: 0.10) : p.divider;
+                    final buffered = widget.dark
+                        ? Colors.white.withValues(alpha: 0.22)
+                        : p.textTertiary.withValues(alpha: 0.35);
                     return SizedBox(
                       height: 12,
                       child: Stack(
@@ -567,7 +605,7 @@ class _ProgressLineState extends State<ProgressLine> {
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 120),
                               height: h,
-                              color: track.withValues(alpha: 0.9),
+                              color: buffered,
                             ),
                           ),
                           FractionallySizedBox(
@@ -575,7 +613,7 @@ class _ProgressLineState extends State<ProgressLine> {
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 120),
                               height: h,
-                              color: widget.dark ? Colors.white70 : Tokens.accent,
+                              color: widget.dark ? Colors.white : Tokens.accent,
                             ),
                           ),
                         ],

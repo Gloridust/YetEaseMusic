@@ -35,6 +35,7 @@ A new Flutter FFI plugin project.
     # created by this build step.
     :output_files => ["${BUILT_PRODUCTS_DIR}/librust_lib_app.a"],
   }
+  s.frameworks = 'CoreAudio', 'AudioToolbox', 'AudioUnit', 'MediaPlayer', 'SystemConfiguration', 'CoreFoundation', 'Security', 'IOKit', 'AppKit'
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
     # Flutter.framework does not contain a i386 slice.

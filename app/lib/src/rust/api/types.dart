@@ -10,7 +10,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'types.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `as_str`, `parse`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 class AccountInfo {
   final PlatformInt64 userId;
@@ -41,6 +41,75 @@ class AccountInfo {
           nickname == other.nickname &&
           avatarUrl == other.avatarUrl &&
           vipType == other.vipType;
+}
+
+class AlbumCard {
+  final PlatformInt64 id;
+  final String name;
+  final String? coverUrl;
+  final PlatformInt64 artistId;
+  final String artistName;
+  final PlatformInt64 publishTimeMs;
+  final PlatformInt64 size;
+  final String? description;
+  final String? company;
+
+  const AlbumCard({
+    required this.id,
+    required this.name,
+    this.coverUrl,
+    required this.artistId,
+    required this.artistName,
+    required this.publishTimeMs,
+    required this.size,
+    this.description,
+    this.company,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      coverUrl.hashCode ^
+      artistId.hashCode ^
+      artistName.hashCode ^
+      publishTimeMs.hashCode ^
+      size.hashCode ^
+      description.hashCode ^
+      company.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AlbumCard &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          coverUrl == other.coverUrl &&
+          artistId == other.artistId &&
+          artistName == other.artistName &&
+          publishTimeMs == other.publishTimeMs &&
+          size == other.size &&
+          description == other.description &&
+          company == other.company;
+}
+
+class AlbumPageInfo {
+  final AlbumCard album;
+  final List<SongItem> songs;
+
+  const AlbumPageInfo({required this.album, required this.songs});
+
+  @override
+  int get hashCode => album.hashCode ^ songs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AlbumPageInfo &&
+          runtimeType == other.runtimeType &&
+          album == other.album &&
+          songs == other.songs;
 }
 
 class AppSettings {
@@ -86,6 +155,53 @@ class AppSettings {
           theme == other.theme;
 }
 
+class ArtistCard {
+  final PlatformInt64 id;
+  final String name;
+  final String? coverUrl;
+  final String? brief;
+  final PlatformInt64 albumCount;
+  final PlatformInt64 songCount;
+  final List<String> alias;
+  final bool followed;
+
+  const ArtistCard({
+    required this.id,
+    required this.name,
+    this.coverUrl,
+    this.brief,
+    required this.albumCount,
+    required this.songCount,
+    required this.alias,
+    required this.followed,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      coverUrl.hashCode ^
+      brief.hashCode ^
+      albumCount.hashCode ^
+      songCount.hashCode ^
+      alias.hashCode ^
+      followed.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ArtistCard &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          coverUrl == other.coverUrl &&
+          brief == other.brief &&
+          albumCount == other.albumCount &&
+          songCount == other.songCount &&
+          alias == other.alias &&
+          followed == other.followed;
+}
+
 class ArtistItem {
   final PlatformInt64 id;
   final String name;
@@ -102,6 +218,24 @@ class ArtistItem {
           runtimeType == other.runtimeType &&
           id == other.id &&
           name == other.name;
+}
+
+class ArtistPageInfo {
+  final ArtistCard artist;
+  final List<SongItem> hotSongs;
+
+  const ArtistPageInfo({required this.artist, required this.hotSongs});
+
+  @override
+  int get hashCode => artist.hashCode ^ hotSongs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ArtistPageInfo &&
+          runtimeType == other.runtimeType &&
+          artist == other.artist &&
+          hotSongs == other.hotSongs;
 }
 
 enum AudioQuality { standard, higher, exHigh, lossless, hiRes }
@@ -129,6 +263,30 @@ class CacheInfo {
           audioBytes == other.audioBytes &&
           imageBytes == other.imageBytes &&
           audioLimitMb == other.audioLimitMb;
+}
+
+class CategoryItem {
+  final String name;
+  final String group;
+  final bool hot;
+
+  const CategoryItem({
+    required this.name,
+    required this.group,
+    required this.hot,
+  });
+
+  @override
+  int get hashCode => name.hashCode ^ group.hashCode ^ hot.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CategoryItem &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          group == other.group &&
+          hot == other.hot;
 }
 
 class CommentItem {
@@ -312,13 +470,28 @@ class LikeCountInfo {
 
 class LyricItem {
   final PlatformInt64 timeMs;
+  final PlatformInt64 durationMs;
   final String text;
   final String? translation;
 
-  const LyricItem({required this.timeMs, required this.text, this.translation});
+  /// 逐字时间轴，为空表示只有行级时间
+  final List<LyricWordItem> words;
+
+  const LyricItem({
+    required this.timeMs,
+    required this.durationMs,
+    required this.text,
+    this.translation,
+    required this.words,
+  });
 
   @override
-  int get hashCode => timeMs.hashCode ^ text.hashCode ^ translation.hashCode;
+  int get hashCode =>
+      timeMs.hashCode ^
+      durationMs.hashCode ^
+      text.hashCode ^
+      translation.hashCode ^
+      words.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -326,8 +499,34 @@ class LyricItem {
       other is LyricItem &&
           runtimeType == other.runtimeType &&
           timeMs == other.timeMs &&
+          durationMs == other.durationMs &&
           text == other.text &&
-          translation == other.translation;
+          translation == other.translation &&
+          words == other.words;
+}
+
+class LyricWordItem {
+  final PlatformInt64 startMs;
+  final PlatformInt64 durationMs;
+  final String text;
+
+  const LyricWordItem({
+    required this.startMs,
+    required this.durationMs,
+    required this.text,
+  });
+
+  @override
+  int get hashCode => startMs.hashCode ^ durationMs.hashCode ^ text.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LyricWordItem &&
+          runtimeType == other.runtimeType &&
+          startMs == other.startMs &&
+          durationMs == other.durationMs &&
+          text == other.text;
 }
 
 enum PlayOrder { sequential, repeatAll, repeatOne, shuffle }
@@ -419,6 +618,9 @@ class PlaylistItem {
   /// 5 为"我喜欢的音乐"
   final int specialType;
 
+  /// 排行榜更新频率
+  final String? updateFrequency;
+
   const PlaylistItem({
     required this.id,
     required this.name,
@@ -429,6 +631,7 @@ class PlaylistItem {
     required this.creatorId,
     required this.subscribed,
     required this.specialType,
+    this.updateFrequency,
   });
 
   @override
@@ -441,7 +644,8 @@ class PlaylistItem {
       creatorName.hashCode ^
       creatorId.hashCode ^
       subscribed.hashCode ^
-      specialType.hashCode;
+      specialType.hashCode ^
+      updateFrequency.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -456,7 +660,8 @@ class PlaylistItem {
           creatorName == other.creatorName &&
           creatorId == other.creatorId &&
           subscribed == other.subscribed &&
-          specialType == other.specialType;
+          specialType == other.specialType &&
+          updateFrequency == other.updateFrequency;
 }
 
 @freezed
@@ -625,6 +830,9 @@ sealed class UiEvent with _$UiEvent {
   const factory UiEvent.queueChanged() = UiEvent_QueueChanged;
   const factory UiEvent.settingsChanged() = UiEvent_SettingsChanged;
   const factory UiEvent.downloadsChanged() = UiEvent_DownloadsChanged;
+
+  /// 系统媒体控件请求把窗口带到前台
+  const factory UiEvent.raise() = UiEvent_Raise;
   const factory UiEvent.notice(String field0) = UiEvent_Notice;
   const factory UiEvent.error(String field0) = UiEvent_Error;
 }

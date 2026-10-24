@@ -195,7 +195,10 @@ pub(crate) fn http_client() -> &'static reqwest::blocking::Client {
     static C: OnceLock<reqwest::blocking::Client> = OnceLock::new();
     C.get_or_init(|| {
         let _ = rustls::crypto::ring::default_provider().install_default();
-        reqwest::blocking::Client::builder()
+        let builder = reqwest::blocking::Client::builder();
+        #[cfg(target_os = "android")]
+        let builder = builder.tls_backend_preconfigured(android_tls());
+        builder
             .connect_timeout(Duration::from_secs(10))
             .user_agent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
             .build()
@@ -373,7 +376,13 @@ impl Engine {
             .is_some_and(|o| o.sample_rate == rate && o.channels == channels);
         if !reuse {
             self.output = None;
-            self.output = Some(Output::open(rate, channels, self.shared.clone())?);
+            // 音频后端内部 panic（如安卓上缺 JNI 上下文）不能带走整个引擎线程，转成普通错误
+            let shared = self.shared.clone();
+            let opened = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                Output::open(rate, channels, shared)
+            }))
+            .unwrap_or_else(|_| Err(Error::Output("audio backend panicked".into())));
+            self.output = Some(opened?);
         }
         self.status.rate.store(rate, Ordering::Relaxed);
         self.shared.played_frames.store(0, Ordering::Relaxed);
@@ -592,4 +601,21 @@ fn open_track(source: Source) -> Result<Track, Error> {
         eof: false,
         _download: download,
     })
+}
+
+/// 安卓上 rustls-platform-verifier 需要先经 JNI 初始化，否则所有 HTTPS 请求都会 panic。
+/// 这里改用内置的 webpki 根证书，并设好 HTTP/2 的 ALPN。
+#[cfg(target_os = "android")]
+pub(crate) fn android_tls() -> rustls::ClientConfig {
+    let mut roots = rustls::RootCertStore::empty();
+    roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+    let mut cfg = rustls::ClientConfig::builder_with_provider(std::sync::Arc::new(
+        rustls::crypto::ring::default_provider(),
+    ))
+    .with_safe_default_protocol_versions()
+    .expect("rustls protocol versions")
+    .with_root_certificates(roots)
+    .with_no_client_auth();
+    cfg.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
+    cfg
 }

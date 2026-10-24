@@ -11,8 +11,9 @@ Rust 原生内核 × Flutter 自绘界面 · 为 Linux 而生，也照顾 Window
 [English](README.en.md) · [技术文档](doc/architecture.md) · [从源码构建](doc/building.md)
 
 ![Linux](https://img.shields.io/badge/Linux-可用-2ea44f?logo=linux&logoColor=white)
-![Windows](https://img.shields.io/badge/Windows-开发中-f0ad4e?logo=windows&logoColor=white)
-![Android](https://img.shields.io/badge/Android%20%2F%20车机-开发中-f0ad4e?logo=android&logoColor=white)
+![Windows](https://img.shields.io/badge/Windows-可用-2ea44f?logo=windows&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS-可用-2ea44f?logo=apple&logoColor=white)
+![Android](https://img.shields.io/badge/Android%20%2F%20车机-测试版-f0ad4e?logo=android&logoColor=white)
 ![CLI](https://img.shields.io/badge/命令行-可用-2ea44f?logo=gnometerminal&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
@@ -91,44 +92,58 @@ YetEase 想把这些空白补上：**一套内核，多个界面，每一端都�
 
 | | 状态 |
 |---|---|
-| 扫码登录、账号歌单同步 | ✅ |
-| 推荐歌单、每日推荐 | ✅ |
-| 歌单详情、歌单内搜索、随机播放 | ✅ |
-| 单曲搜索（滚动加载） | ✅ |
-| 红心喜欢 / 取消喜欢 | ✅ |
+| 扫码登录，歌单、红心、每日推荐、最近播放与手机端同步 | ✅ |
+| 精选 / 歌单广场 / 排行榜，播客，关注 | ✅ |
+| 歌单、专辑、歌手页面，歌手名与专辑名一点即达 | ✅ |
+| 搜索单曲 / 歌单 / 专辑 / 歌手（滚动加载） | ✅ |
+| 红心、心动模式、新建歌单、收藏到歌单 | ✅ |
 | 播放队列、下一首播放、四种播放模式 | ✅ |
-| 边下边播 + 自动缓存，标准到 Hi-Res 多档音质 | ✅ |
-| 逐行歌词（含翻译），点击歌词跳转 | ✅ |
-| 浅色 / 深色主题、界面缩放、空格键播放暂停 | ✅ |
-| 海外网络模式（在海外或开全局代理时也能播放） | ✅ |
-| 命令行版：登录、搜索、歌单、每日推荐、播放 | ✅ |
-| 系统媒体控制（Linux MPRIS / Windows SMTC） | 🚧 |
-| 专辑页、歌手页、排行榜 | 🚧 |
-| 最近播放、下载管理、本地音乐 | 🚧 |
-| 桌面歌词、逐字歌词 | 📝 |
-| Windows 安装包、Android / 车机版 | 🚧 |
-| 终端界面（TUI） | 📝 |
+| 边下边播 + 自动缓存（可设上限），标准到 Hi-Res 多档音质 | ✅ |
+| 逐字歌词（卡拉 OK 式高亮）、翻译、点击跳转，相似推荐 | ✅ |
+| 桌面歌词（透明悬浮、逐字填充、可锁定） | ✅ |
+| 歌曲评论（精彩评论 + 最新评论） | ✅ |
+| 下载管理（自动写入标签与封面）、本地音乐 | ✅ |
+| 系统媒体控制：Linux MPRIS（媒体键、GNOME 顶栏）、Windows SMTC、macOS 正在播放 | ✅ |
+| 浅色 / 深色主题、界面缩放、海外网络模式 | ✅ |
+| 日志导出（自动脱敏），方便反馈问题 | ✅ |
+| 命令行版与终端界面（`yetease tui`） | ✅ |
+| 收藏专辑、关注歌手、收藏歌单¹ | ✅ |
+| Android 后台播放、通知栏 / 锁屏控件、蓝牙与方向盘按键² | ✅ |
 
-✅ 已完成 · 🚧 开发中 · 📝 计划中
+✅ 已完成
+
+¹ 收藏歌单需要网易云的易盾人机校验，原生客户端可能被拒，被拒时会明确提示到手机 App 中操作；取消收藏不受影响。
+² 已接入 Android 媒体会话，但还没在实体车机上充分测试，欢迎反馈。
 
 ## 平台
 
 | 平台 | 状态 | 说明 |
 |---|---|---|
-| Linux（x86_64） | ✅ 可用 | 主力平台，在 Ubuntu 26.04 + GNOME Wayland 上开发测试 |
-| 命令行 | ✅ 可用 | 不依赖图形界面，服务器、SSH 上都能用 |
-| Windows / Windows 平板 | 🚧 | 内核已跨平台，界面适配与打包进行中 |
-| Android / 安卓车机 | 🚧 | 同上，重点做横屏大屏和方向盘按键 |
-| macOS | 📝 | 技术上可行，暂未投入 |
+| Linux（x86_64） | ✅ 可用 | 主力平台，提供 `.deb` 与通用压缩包，Ubuntu 22.04 / Debian 12 / Fedora 35 及以上 |
+| 命令行 / 终端界面 | ✅ 可用 | 不依赖图形界面，服务器、SSH 上都能用 |
+| Windows 10 / 11（含平板） | ✅ 可用 | 安装包与免安装版，由 CI 自动构建 |
+| macOS（Intel / Apple 芯片） | ✅ 可用 | 通用 dmg，由 CI 自动构建；未签名，首次打开需右键选「打开」 |
+| Android / 安卓车机 | 🧪 测试版 | 支持后台播放与媒体按键；车机实机测试中 |
 
 ## 开始使用
 
-目前还在早期开发阶段，暂未发布安装包，需要从源码构建，步骤见 **[doc/building.md](doc/building.md)**。
+到 **[Releases](https://github.com/Gloridust/YetEaseMusic/releases/latest)** 下载对应平台的安装包：
 
-构建好之后，桌面版直接打开即可；命令行版的用法大致是：
+| 平台 | 文件 |
+|---|---|
+| Ubuntu / Debian | `yetease-music_<版本>_amd64.deb`，双击或 `sudo apt install ./yetease-music_*.deb` |
+| 其他 Linux | `yetease-music-<版本>-linux-x86_64.tar.gz`，解压后运行 `./install.sh` |
+| Windows | `yetease-music-<版本>-windows-x64-setup.exe`（另有免安装版 zip） |
+| macOS | `yetease-music-<版本>-macos-universal.dmg` |
+| Android | `yetease-music-<版本>-android-universal.apk`（不确定架构就选它） |
+
+想自己编译，见 **[doc/building.md](doc/building.md)**。
+
+命令行版（deb 里自带，也可以单独下载）：
 
 ```bash
 yetease login                 # 扫码登录
+yetease tui                   # 全屏终端界面
 yetease search 晴天            # 搜索
 yetease play 晴天 周杰伦        # 搜索并播放第一首
 yetease daily --play          # 播放每日推荐
@@ -141,6 +156,12 @@ yetease daily --play          # 播放每日推荐
 
 **灰色 / 无版权的歌能听吗？**
 不能。YetEase 只使用网易云官方提供的音源，不内置任何第三方音源。
+
+**GNOME 下桌面歌词不能置顶？**
+GNOME（Wayland）不允许应用自己置顶窗口。在歌词窗口上按 Alt+Space，选「置顶」即可。X11、Windows、macOS 会自动置顶。
+
+**遇到问题怎么反馈？**
+*设置 → 反馈 → 导出日志*，把生成的文件附到 [Issue](https://github.com/Gloridust/YetEaseMusic/issues/new) 里。导出的日志已自动抹掉登录凭据。
 
 **会员歌曲呢？**
 登录有会员的账号即可按会员权益播放；未登录或非会员只能播放试听片段。

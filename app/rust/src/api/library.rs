@@ -397,3 +397,157 @@ pub fn set_cache_limit(mb: i32) -> anyhow::Result<()> {
     c.prune_caches();
     Ok(())
 }
+
+// ---------- 专辑 / 歌手 / 排行榜 / 歌单广场 / 搜索 ----------
+
+pub async fn album_detail(id: i64) -> anyhow::Result<AlbumPageInfo> {
+    run(async move {
+        let d = core()?.api().album(id as u64).await?;
+        Ok(AlbumPageInfo {
+            album: (&d.album).into(),
+            songs: songs(&d.songs),
+        })
+    })
+    .await
+}
+
+pub async fn artist_detail(id: i64) -> anyhow::Result<ArtistPageInfo> {
+    run(async move {
+        let d = core()?.api().artist(id as u64).await?;
+        Ok(ArtistPageInfo {
+            artist: (&d.artist).into(),
+            hot_songs: songs(&d.hot_songs),
+        })
+    })
+    .await
+}
+
+/// 返回 (专辑, 是否还有更多)
+pub async fn artist_albums(id: i64, offset: i32) -> anyhow::Result<(Vec<AlbumCard>, bool)> {
+    run(async move {
+        let (list, more) = core()?
+            .api()
+            .artist_albums(id as u64, offset.max(0) as u32, 60)
+            .await?;
+        Ok((list.iter().map(Into::into).collect(), more))
+    })
+    .await
+}
+
+pub async fn toplists() -> anyhow::Result<Vec<PlaylistItem>> {
+    run(async move {
+        Ok(core()?
+            .api()
+            .toplists()
+            .await?
+            .iter()
+            .map(Into::into)
+            .collect())
+    })
+    .await
+}
+
+/// 歌单广场。返回 (歌单, 总数)
+pub async fn top_playlists(
+    category: String,
+    offset: i32,
+) -> anyhow::Result<(Vec<PlaylistItem>, i64)> {
+    run(async move {
+        let (list, total) = core()?
+            .api()
+            .top_playlists(&category, "hot", offset.max(0) as u32, 50)
+            .await?;
+        Ok((list.iter().map(Into::into).collect(), total as i64))
+    })
+    .await
+}
+
+pub async fn playlist_categories() -> anyhow::Result<Vec<CategoryItem>> {
+    run(async move {
+        Ok(core()?
+            .api()
+            .playlist_categories()
+            .await?
+            .into_iter()
+            .map(|c| CategoryItem {
+                name: c.name,
+                group: c.group,
+                hot: c.hot,
+            })
+            .collect())
+    })
+    .await
+}
+
+pub async fn similar_songs(id: i64) -> anyhow::Result<Vec<SongItem>> {
+    run(async move { Ok(songs(&core()?.api().similar_songs(id as u64).await?)) }).await
+}
+
+pub async fn search_playlists(
+    keywords: String,
+    offset: i32,
+) -> anyhow::Result<(Vec<PlaylistItem>, i64)> {
+    run(async move {
+        let (list, total) = core()?
+            .api()
+            .search_playlists(&keywords, offset.max(0) as u32, 40)
+            .await?;
+        Ok((list.iter().map(Into::into).collect(), total as i64))
+    })
+    .await
+}
+
+pub async fn search_albums(keywords: String, offset: i32) -> anyhow::Result<(Vec<AlbumCard>, i64)> {
+    run(async move {
+        let (list, total) = core()?
+            .api()
+            .search_albums(&keywords, offset.max(0) as u32, 40)
+            .await?;
+        Ok((list.iter().map(Into::into).collect(), total as i64))
+    })
+    .await
+}
+
+pub async fn search_artists(
+    keywords: String,
+    offset: i32,
+) -> anyhow::Result<(Vec<ArtistCard>, i64)> {
+    run(async move {
+        let (list, total) = core()?
+            .api()
+            .search_artists(&keywords, offset.max(0) as u32, 40)
+            .await?;
+        Ok((list.iter().map(Into::into).collect(), total as i64))
+    })
+    .await
+}
+
+// ---------- 收藏 ----------
+
+pub async fn album_subscribed(id: i64) -> anyhow::Result<bool> {
+    run(async move { Ok(core()?.api().album_subscribed(id as u64).await?) }).await
+}
+
+pub async fn set_album_subscribed(id: i64, enable: bool) -> anyhow::Result<()> {
+    run(async move {
+        Ok(core()?
+            .api()
+            .set_album_subscribed(id as u64, enable)
+            .await?)
+    })
+    .await
+}
+
+pub async fn set_artist_followed(id: i64, enable: bool) -> anyhow::Result<()> {
+    run(async move { Ok(core()?.api().set_artist_followed(id as u64, enable).await?) }).await
+}
+
+pub async fn set_playlist_subscribed(id: i64, enable: bool) -> anyhow::Result<()> {
+    run(async move {
+        Ok(core()?
+            .api()
+            .set_playlist_subscribed(id as u64, enable)
+            .await?)
+    })
+    .await
+}

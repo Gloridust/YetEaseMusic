@@ -81,3 +81,29 @@ YetEase 分成两层：**Rust 内核**负责协议、播放、队列、缓存等
 - `ui/nav.dart`：内容区的嵌套 Navigator。侧边栏切换清空栈，页面内跳转压栈。
 - `ui/ui_scaled.dart`：整体界面缩放，同步调整 `devicePixelRatio`，图片按真实像素解码。
 - **Impeller 注意事项**：Linux 上 Flutter 走 Impeller 的 OpenGLES 后端，"圆形 + 渐变 / 阴影"装饰会退化成方块，旋转时还会出伪影。所以圆形元素一律用 `ClipOval` 裁剪，不要依赖 `BoxShape.circle` 配合 `gradient` 或 `boxShadow`。
+
+## 系统集成（0.2 新增）
+
+| 模块 | 位置 | 说明 |
+|---|---|---|
+| 系统媒体控制 | `ncm-core/src/media.rs` | souvlaki：Linux MPRIS（自动启用，没有 D-Bus 会话总线时跳过）、Windows SMTC（界面层传 HWND）、macOS 正在播放。控件放在独立线程，事件经回调交给 `Core` |
+| Android 媒体会话 | `app/lib/android_media.dart` | audio_service：前台服务保活、通知栏与锁屏控件、蓝牙 / 方向盘按键；状态取自 `AppState`，命令转回 Rust |
+| Android 初始化 | `app/rust/src/android.rs`、`YetEaseApplication.kt` | Dart 用 dlopen 加载 Rust 库，不会触发 JNI_OnLoad；应用启动时由 Kotlin 把 JavaVM 与 Context 交给 ndk-context，cpal 的 AAudio 后端依赖它。TLS 在 Android 上用内置 webpki 根证书，不走需要 JNI 的系统证书校验 |
+| 日志 | `ncm-core/src/logging.rs` | 按天滚动写到 `<data>/logs/`、保留 7 天；Dart 未捕获异常与后台线程 panic 写入同一文件；Android 上同时写 logcat（tag `yetease`）；导出时抹掉 `MUSIC_U` 等凭据 |
+| 缓存 | `ncm-core/src/images.rs` | 图片按 URL 的 MD5 分片存放（上限 500MB）；音频缓存上限可设；启动与每首新歌时检查，按修改时间淘汰最旧的 |
+| 桌面歌词 | `app/rust/src/api/desktop_lyrics.rs`、`app/lib/desktop_lyrics.dart` | 同一程序以 `--desktop-lyrics --port=N` 启动的独立透明窗口；主程序在 127.0.0.1 上按行推送 JSON（歌词、进度），窗口回传切歌等命令 |
+| 逐字歌词 | `ncm-core/src/lyrics.rs` | 解析 `lyric/v1` 的 yrc：`[行起始,行时长](字起始,字时长,0)字…`，翻译按时间戳对齐；界面每帧通过同步 FFI 读取精确播放位置做逐字填充 |
+| 终端界面 | `ncm-cli/src/tui.rs` | ratatui；异步加载结果经 mpsc 回到绘制循环 |
+
+## 打包与发布
+
+`.github/workflows/release.yml`：推送 `v*` 标签后在 Ubuntu 22.04 / Windows / macOS / Ubuntu（Android）上并行构建，全部成功后创建 Release。
+提 PR 或手动触发时只构建，产物在 Actions 的 Artifacts 里。Release 说明取自 `doc/release-notes/<标签>.md`，没有时自动生成。
+
+| 产物 | 脚本 |
+|---|---|
+| `.deb` | `app/linux/packaging/build-deb.sh` |
+| Linux 压缩包 | 工作流里直接打包，内含 `install.sh`（`app/linux/packaging/install-local.sh`） |
+| Windows 安装包 | `app/windows/packaging/yetease.iss`（Inno Setup） |
+| macOS dmg | 工作流里用 `hdiutil` 生成 |
+| Android APK | `flutter build apk`（通用 + 分架构） |

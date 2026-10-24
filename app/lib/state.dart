@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart' show Int64List;
 
 import 'package:flutter/material.dart';
 
+import 'src/rust/api/desktop_lyrics.dart' as dl;
 import 'src/rust/api/library.dart' as lib;
 import 'src/rust/api/playback.dart' as pb;
 import 'src/rust/api/types.dart';
@@ -33,6 +35,40 @@ class AppState {
   /// 当前歌曲的红心数与评论数（官方样式的 "100w+" / "1w+"）
   final likeCountText = ValueNotifier<String?>(null);
   final commentCountText = ValueNotifier<String?>(null);
+
+  /// 桌面歌词窗口是否开着
+  final desktopLyrics = ValueNotifier(false);
+  Process? _lyricsProc;
+
+  /// 打开 / 关闭桌面歌词（独立进程，通过本机回环端口接收歌词与进度）
+  Future<void> toggleDesktopLyrics() async {
+    final running = _lyricsProc;
+    if (running != null) {
+      running.kill();
+      _lyricsProc = null;
+      desktopLyrics.value = false;
+      return;
+    }
+    try {
+      final port = await dl.desktopLyricsServe();
+      final p = await Process.start(Platform.resolvedExecutable, ['--desktop-lyrics', '--port=$port']);
+      p.stdout.drain<void>();
+      p.stderr.drain<void>();
+      _lyricsProc = p;
+      desktopLyrics.value = true;
+      p.exitCode.then((_) {
+        if (_lyricsProc == p) {
+          _lyricsProc = null;
+          desktopLyrics.value = false;
+        }
+      });
+    } catch (e) {
+      notify('桌面歌词打开失败：$e');
+    }
+  }
+
+  /// 系统媒体控件请求显示窗口时自增
+  final raiseRequests = ValueNotifier(0);
 
   /// 下载列表或进度变化时自增，下载页据此刷新
   final downloadsTick = ValueNotifier(0);
@@ -75,6 +111,8 @@ class AppState {
         pb.getSettings().then(_applySettings);
       case UiEvent_DownloadsChanged():
         downloadsTick.value++;
+      case UiEvent_Raise():
+        raiseRequests.value++;
       case UiEvent_Notice(:final field0):
         notify(field0);
       case UiEvent_Error(:final field0):
@@ -207,4 +245,16 @@ String shortCount(int n) {
   if (n >= 10000) return '1w+';
   if (n >= 1000) return '999+';
   return n > 0 ? '$n' : '';
+}
+
+/// 把 Rust 侧传来的错误转成给用户看的一句话（去掉 AnyhowException 包装与调用栈）
+String friendlyError(Object e) {
+  var t = e.toString();
+  const prefix = 'AnyhowException(';
+  if (t.startsWith(prefix)) t = t.substring(prefix.length);
+  t = t.split('\n').first.trim();
+  if (t.endsWith(')') && !t.contains('(')) t = t.substring(0, t.length - 1);
+  // 「api error 405: 操作过于频繁」这类只留冒号后的说明
+  final m = RegExp(r'^api error -?\d+: (.+)$').firstMatch(t);
+  return m?.group(1) ?? t;
 }

@@ -25,6 +25,22 @@ static void my_application_activate(GApplication* application) {
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
 
+  // 以 --desktop-lyrics 启动时是桌面歌词窗口：透明、无标题栏、不进任务栏、尽量置顶
+  gboolean lyrics_mode = FALSE;
+  for (gchar** arg = self->dart_entrypoint_arguments; arg != nullptr && *arg != nullptr; arg++) {
+    if (g_strcmp0(*arg, "--desktop-lyrics") == 0) lyrics_mode = TRUE;
+  }
+  if (lyrics_mode) {
+    GdkScreen* rgba_screen = gtk_window_get_screen(window);
+    GdkVisual* visual = gdk_screen_get_rgba_visual(rgba_screen);
+    if (visual != nullptr) gtk_widget_set_visual(GTK_WIDGET(window), visual);
+    gtk_widget_set_app_paintable(GTK_WIDGET(window), TRUE);
+    gtk_window_set_decorated(window, FALSE);
+    gtk_window_set_skip_taskbar_hint(window, TRUE);
+    gtk_window_set_keep_above(window, TRUE);
+    gtk_window_set_title(window, "桌面歌词");
+  }
+
   // Use a header bar when running in GNOME as this is the common style used
   // by applications and is the setup most users will be using (e.g. Ubuntu
   // desktop).
@@ -32,7 +48,7 @@ static void my_application_activate(GApplication* application) {
   // in case the window manager does more exotic layout, e.g. tiling.
   // If running on Wayland assume the header bar will work (may need changing
   // if future cases occur).
-  gboolean use_header_bar = TRUE;
+  gboolean use_header_bar = !lyrics_mode;
 #ifdef GDK_WINDOWING_X11
   GdkScreen* screen = gtk_window_get_screen(window);
   if (GDK_IS_X11_SCREEN(screen)) {
@@ -42,7 +58,9 @@ static void my_application_activate(GApplication* application) {
     }
   }
 #endif
-  if (use_header_bar) {
+  if (lyrics_mode) {
+    // 桌面歌词窗口不需要标题栏
+  } else if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));
     gtk_header_bar_set_title(header_bar, "YetEase Music");
@@ -70,7 +88,7 @@ static void my_application_activate(GApplication* application) {
   GdkRGBA background_color;
   // Background defaults to black, override it here if necessary, e.g. #00000000
   // for transparent.
-  gdk_rgba_parse(&background_color, "#000000");
+  gdk_rgba_parse(&background_color, lyrics_mode ? "#00000000" : "#000000");
   fl_view_set_background_color(view, &background_color);
   gtk_widget_show(GTK_WIDGET(view));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));

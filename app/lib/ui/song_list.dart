@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../src/rust/api/types.dart';
 import '../state.dart';
 import '../theme.dart';
+import 'pages/album_page.dart';
 import 'song_actions.dart';
 import 'widgets.dart';
 
@@ -167,11 +168,9 @@ class SongRow extends StatelessWidget {
                           Row(
                             children: [
                               if (song.vip) const Tag('VIP'),
-                              Expanded(
-                                child: Text(
-                                  song.artists.map((a) => a.name).join(' / '),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                              Flexible(
+                                child: ArtistLinks(
+                                  artists: song.artists,
                                   style: TextStyle(color: playing ? Tokens.accent : p.textSecondary, fontSize: 12),
                                 ),
                               ),
@@ -182,11 +181,13 @@ class SongRow extends StatelessWidget {
                     ),
                   ],
                 ),
-                album: Text(
-                  song.albumName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: p.textSecondary, fontSize: 13),
+                album: Align(
+                  alignment: Alignment.centerLeft,
+                  child: LinkText(
+                    song.albumName,
+                    style: TextStyle(color: p.textSecondary, fontSize: 13),
+                    onTap: song.local || song.albumId <= 0 ? null : () => openAlbum(song.albumId),
+                  ),
                 ),
                 like: Center(child: LikeButton(song: song)),
                 duration: Text(

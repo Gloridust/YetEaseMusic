@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../src/rust/api/library.dart' as lib;
@@ -136,7 +138,11 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
         ),
-        const _Section(title: '关于', child: _Hint('YetEase Music · 开源的网易云音乐第三方客户端。\n直连网易云官方接口，不依赖任何第三方服务器，没有广告。')),
+        const _Section(title: '反馈', child: _FeedbackSection()),
+        _Section(
+          title: '关于',
+          child: _Hint('YetEase Music ${pb.appVersion()} · 开源的网易云音乐第三方客户端。\n直连网易云官方接口，不依赖任何第三方服务器，没有广告。'),
+        ),
       ],
     );
   }
@@ -341,4 +347,48 @@ String _fmt(int bytes) {
   if (bytes >= 1 << 30) return '${(bytes / (1 << 30)).toStringAsFixed(1)} GB';
   if (bytes >= 1 << 20) return '${(bytes / (1 << 20)).toStringAsFixed(0)} MB';
   return '${(bytes / 1024).toStringAsFixed(0)} KB';
+}
+
+/// 反馈：导出脱敏日志，附到 GitHub Issue
+class _FeedbackSection extends StatelessWidget {
+  const _FeedbackSection();
+
+  Future<void> _export() async {
+    try {
+      final path = await pb.exportLogs(extra: '');
+      AppState.I.notify('日志已导出到 $path');
+      _reveal(File(path).parent.path);
+    } catch (e) {
+      AppState.I.notify('导出失败：$e');
+    }
+  }
+
+  static void _reveal(String dir) {
+    final cmd = Platform.isWindows ? 'explorer' : (Platform.isMacOS ? 'open' : 'xdg-open');
+    Process.run(cmd, [dir]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _Hint('遇到问题时导出日志，附在 GitHub Issue 里。导出的日志已自动抹掉登录凭据。'),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            PillButton(label: '导出日志', icon: Icons.ios_share_rounded, primary: true, onTap: _export),
+            PillButton(label: '打开日志目录', icon: Icons.folder_open_rounded, onTap: () async => _reveal(await pb.logDir())),
+            PillButton(
+              label: '提交 Issue',
+              icon: Icons.bug_report_outlined,
+              onTap: () => _reveal('https://github.com/Gloridust/YetEaseMusic/issues/new'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }

@@ -96,6 +96,9 @@ pub struct PlaylistSummary {
     pub subscribed: bool,
     #[serde(default, deserialize_with = "nn", rename = "specialType")]
     pub special_type: i32,
+    /// 排行榜的更新频率，如「每天更新」
+    #[serde(default, rename = "updateFrequency")]
+    pub update_frequency: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
@@ -151,6 +154,10 @@ pub struct Lyrics {
     pub translation: String,
     /// 罗马音 LRC
     pub romaji: String,
+    /// 逐字歌词（网易云 yrc 格式），没有时为空
+    pub yrc: String,
+    /// 与逐字歌词对齐的翻译
+    pub yrc_translation: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -255,4 +262,75 @@ pub struct FollowedUser {
     pub followeds: u64,
     #[serde(default, rename = "userType", deserialize_with = "num")]
     pub user_type: u64,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct AlbumInfo {
+    #[serde(default, deserialize_with = "num")]
+    pub id: u64,
+    #[serde(default, deserialize_with = "nn")]
+    pub name: String,
+    #[serde(default, rename = "picUrl")]
+    pub pic_url: Option<String>,
+    #[serde(default)]
+    pub artist: Option<ArtistRef>,
+    /// 毫秒时间戳
+    #[serde(default, rename = "publishTime", deserialize_with = "num")]
+    pub publish_time: u64,
+    #[serde(default, deserialize_with = "num")]
+    pub size: u64,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub company: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct ArtistInfo {
+    #[serde(default, deserialize_with = "num")]
+    pub id: u64,
+    #[serde(default, deserialize_with = "nn")]
+    pub name: String,
+    #[serde(default, rename = "picUrl")]
+    pub pic_url: Option<String>,
+    #[serde(default, rename = "briefDesc")]
+    pub brief_desc: Option<String>,
+    #[serde(default, rename = "albumSize", deserialize_with = "num")]
+    pub album_size: u64,
+    #[serde(default, rename = "musicSize", deserialize_with = "num")]
+    pub music_size: u64,
+    #[serde(default, deserialize_with = "nn")]
+    pub alias: Vec<String>,
+    /// 当前账号是否已关注
+    #[serde(default, deserialize_with = "nn")]
+    pub followed: bool,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct AlbumDetail {
+    pub album: AlbumInfo,
+    pub songs: Vec<Song>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct ArtistDetail {
+    pub artist: ArtistInfo,
+    pub hot_songs: Vec<Song>,
+}
+
+/// 歌单广场的分类
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct PlaylistCategory {
+    pub name: String,
+    /// 所属大类，如「语种」「风格」
+    pub group: String,
+    pub hot: bool,
+}
+
+/// 逐字歌词里的一个字（词）
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+pub struct LyricWord {
+    pub start_ms: u64,
+    pub duration_ms: u64,
+    pub text: String,
 }

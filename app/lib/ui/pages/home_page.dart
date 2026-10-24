@@ -8,14 +8,14 @@ import '../nav.dart';
 import '../widgets.dart';
 import 'playlist_page.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class _Featured extends StatefulWidget {
+  const _Featured();
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<_Featured> createState() => _FeaturedState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _FeaturedState extends State<_Featured> {
   late Future<List<PlaylistItem>> _future = lib.recommendPlaylists(limit: 30);
 
   @override
@@ -205,6 +205,247 @@ class PlaylistCard extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 13, height: 1.4, color: p.textPrimary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 精选首页：精选 / 歌单广场 / 排行榜，与官方客户端的顶部标签一致
+class HomePage extends StatefulWidget {
+  const HomePage({super.key, this.initialTab = 0});
+
+  final int initialTab;
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  late int _tab = widget.initialTab;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(28, 4, 28, 8),
+          child: UnderlineTabs(
+            tabs: const ['精选', '歌单广场', '排行榜'],
+            index: _tab,
+            onChanged: (i) => setState(() => _tab = i),
+          ),
+        ),
+        Expanded(
+          child: IndexedStack(index: _tab, children: const [_Featured(), _PlaylistSquare(), _Toplists()]),
+        ),
+      ],
+    );
+  }
+}
+
+/// 歌单广场：热门分类 + 无限滚动
+class _PlaylistSquare extends StatefulWidget {
+  const _PlaylistSquare();
+
+  @override
+  State<_PlaylistSquare> createState() => _PlaylistSquareState();
+}
+
+class _PlaylistSquareState extends State<_PlaylistSquare> {
+  List<String> _cats = const ['全部'];
+  String _cat = '全部';
+  final List<PlaylistItem> _lists = [];
+  int _total = 0;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    lib
+        .playlistCategories()
+        .then((c) {
+          if (!mounted) return;
+          setState(() => _cats = ['全部', ...c.where((x) => x.hot).map((x) => x.name)]);
+        })
+        .catchError((_) {});
+    _more();
+  }
+
+  Future<void> _more() async {
+    if (_loading || (_total > 0 && _lists.length >= _total)) return;
+    setState(() => _loading = true);
+    final cat = _cat;
+    try {
+      final (list, total) = await lib.topPlaylists(category: cat, offset: _lists.length);
+      if (!mounted || cat != _cat) return;
+      setState(() {
+        _lists.addAll(list);
+        _total = list.isEmpty ? _lists.length : total;
+      });
+    } catch (e) {
+      AppState.I.notify('加载失败：$e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _select(String c) {
+    setState(() {
+      _cat = c;
+      _lists.clear();
+      _total = 0;
+      _loading = false;
+    });
+    _more();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return NotificationListener<ScrollNotification>(
+      onNotification: (n) {
+        if (n.metrics.extentAfter < 600) _more();
+        return false;
+      },
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(28, 8, 28, 16),
+            sliver: SliverToBoxAdapter(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final c in _cats)
+                    Hover(
+                      onTap: () => _select(c),
+                      builder: (_, h) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: c == _cat ? Tokens.accentSoft : (h ? p.hover : p.field),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(
+                          c,
+                          style: TextStyle(fontSize: 13, color: c == _cat ? Tokens.accent : p.textSecondary),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(28, 0, 28, 12),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 190,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 0.74,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, i) => PlaylistCard(item: _lists[i]),
+                childCount: _lists.length,
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 56,
+              child: Center(
+                child: _loading
+                    ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Tokens.accent),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 排行榜：官方榜单
+class _Toplists extends StatefulWidget {
+  const _Toplists();
+
+  @override
+  State<_Toplists> createState() => _ToplistsState();
+}
+
+class _ToplistsState extends State<_Toplists> {
+  late Future<List<PlaylistItem>> _future = lib.toplists();
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return AsyncView<List<PlaylistItem>>(
+      future: _future,
+      onRetry: () => setState(() => _future = lib.toplists()),
+      builder: (context, list) => CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(28, 8, 28, 28),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 190,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 0.78,
+              ),
+              delegate: SliverChildBuilderDelegate((context, i) {
+                final t = list[i];
+                return Hover(
+                  onTap: () => Nav.push('playlist:${t.id}', PlaylistPage(id: t.id)),
+                  builder: (_, h) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      LayoutBuilder(
+                        builder: (context, c) => Stack(
+                          children: [
+                            AnimatedScale(
+                              scale: h ? 1.03 : 1,
+                              duration: const Duration(milliseconds: 200),
+                              child: Cover(url: t.coverUrl, size: c.maxWidth, radius: Tokens.radiusL),
+                            ),
+                            if (t.updateFrequency != null)
+                              Positioned(
+                                left: 8,
+                                bottom: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black45,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    t.updateFrequency!,
+                                    style: const TextStyle(color: Colors.white, fontSize: 11),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        t.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 13, color: p.textPrimary),
+                      ),
+                    ],
+                  ),
+                );
+              }, childCount: list.length),
+            ),
           ),
         ],
       ),

@@ -3,6 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/desktop_lyrics.dart';
 import 'api/library.dart';
 import 'api/playback.dart';
 import 'api/types.dart';
@@ -27,6 +28,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AnyhowException dco_decode_AnyhowException(dynamic raw);
 
   @protected
+  RustStreamSink<DesktopLyricsEvent>
+  dco_decode_StreamSink_desktop_lyrics_event_Sse(dynamic raw);
+
+  @protected
   RustStreamSink<UiEvent> dco_decode_StreamSink_ui_event_Sse(dynamic raw);
 
   @protected
@@ -36,10 +41,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AccountInfo dco_decode_account_info(dynamic raw);
 
   @protected
+  AlbumCard dco_decode_album_card(dynamic raw);
+
+  @protected
+  AlbumPageInfo dco_decode_album_page_info(dynamic raw);
+
+  @protected
   AppSettings dco_decode_app_settings(dynamic raw);
 
   @protected
+  ArtistCard dco_decode_artist_card(dynamic raw);
+
+  @protected
   ArtistItem dco_decode_artist_item(dynamic raw);
+
+  @protected
+  ArtistPageInfo dco_decode_artist_page_info(dynamic raw);
 
   @protected
   AudioQuality dco_decode_audio_quality(dynamic raw);
@@ -54,16 +71,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int dco_decode_box_autoadd_i_32(dynamic raw);
 
   @protected
+  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
+
+  @protected
   SongItem dco_decode_box_autoadd_song_item(dynamic raw);
 
   @protected
   CacheInfo dco_decode_cache_info(dynamic raw);
 
   @protected
+  CategoryItem dco_decode_category_item(dynamic raw);
+
+  @protected
   CommentItem dco_decode_comment_item(dynamic raw);
 
   @protected
   CommentsInfo dco_decode_comments_info(dynamic raw);
+
+  @protected
+  DesktopLyricsEvent dco_decode_desktop_lyrics_event(dynamic raw);
 
   @protected
   DownloadItem dco_decode_download_item(dynamic raw);
@@ -90,7 +116,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
+  List<AlbumCard> dco_decode_list_album_card(dynamic raw);
+
+  @protected
+  List<ArtistCard> dco_decode_list_artist_card(dynamic raw);
+
+  @protected
   List<ArtistItem> dco_decode_list_artist_item(dynamic raw);
+
+  @protected
+  List<CategoryItem> dco_decode_list_category_item(dynamic raw);
 
   @protected
   List<CommentItem> dco_decode_list_comment_item(dynamic raw);
@@ -106,6 +141,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<LyricItem> dco_decode_list_lyric_item(dynamic raw);
+
+  @protected
+  List<LyricWordItem> dco_decode_list_lyric_word_item(dynamic raw);
 
   @protected
   List<PlaylistItem> dco_decode_list_playlist_item(dynamic raw);
@@ -129,6 +167,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LyricItem dco_decode_lyric_item(dynamic raw);
 
   @protected
+  LyricWordItem dco_decode_lyric_word_item(dynamic raw);
+
+  @protected
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
@@ -136,6 +177,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
+
+  @protected
+  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
 
   @protected
   SongItem? dco_decode_opt_box_autoadd_song_item(dynamic raw);
@@ -165,7 +209,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RecentItem dco_decode_recent_item(dynamic raw);
 
   @protected
+  (List<AlbumCard>, bool) dco_decode_record_list_album_card_bool(dynamic raw);
+
+  @protected
+  (List<AlbumCard>, PlatformInt64) dco_decode_record_list_album_card_i_64(
+    dynamic raw,
+  );
+
+  @protected
+  (List<ArtistCard>, PlatformInt64) dco_decode_record_list_artist_card_i_64(
+    dynamic raw,
+  );
+
+  @protected
   (List<FollowItem>, bool) dco_decode_record_list_follow_item_bool(dynamic raw);
+
+  @protected
+  (List<PlaylistItem>, PlatformInt64) dco_decode_record_list_playlist_item_i_64(
+    dynamic raw,
+  );
 
   @protected
   (List<SongItem>, PlatformInt64) dco_decode_record_list_song_item_i_64(
@@ -197,6 +259,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
   @protected
+  RustStreamSink<DesktopLyricsEvent>
+  sse_decode_StreamSink_desktop_lyrics_event_Sse(SseDeserializer deserializer);
+
+  @protected
   RustStreamSink<UiEvent> sse_decode_StreamSink_ui_event_Sse(
     SseDeserializer deserializer,
   );
@@ -208,10 +274,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AccountInfo sse_decode_account_info(SseDeserializer deserializer);
 
   @protected
+  AlbumCard sse_decode_album_card(SseDeserializer deserializer);
+
+  @protected
+  AlbumPageInfo sse_decode_album_page_info(SseDeserializer deserializer);
+
+  @protected
   AppSettings sse_decode_app_settings(SseDeserializer deserializer);
 
   @protected
+  ArtistCard sse_decode_artist_card(SseDeserializer deserializer);
+
+  @protected
   ArtistItem sse_decode_artist_item(SseDeserializer deserializer);
+
+  @protected
+  ArtistPageInfo sse_decode_artist_page_info(SseDeserializer deserializer);
 
   @protected
   AudioQuality sse_decode_audio_quality(SseDeserializer deserializer);
@@ -226,16 +304,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
 
   @protected
+  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
   SongItem sse_decode_box_autoadd_song_item(SseDeserializer deserializer);
 
   @protected
   CacheInfo sse_decode_cache_info(SseDeserializer deserializer);
 
   @protected
+  CategoryItem sse_decode_category_item(SseDeserializer deserializer);
+
+  @protected
   CommentItem sse_decode_comment_item(SseDeserializer deserializer);
 
   @protected
   CommentsInfo sse_decode_comments_info(SseDeserializer deserializer);
+
+  @protected
+  DesktopLyricsEvent sse_decode_desktop_lyrics_event(
+    SseDeserializer deserializer,
+  );
 
   @protected
   DownloadItem sse_decode_download_item(SseDeserializer deserializer);
@@ -262,7 +351,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
+  List<AlbumCard> sse_decode_list_album_card(SseDeserializer deserializer);
+
+  @protected
+  List<ArtistCard> sse_decode_list_artist_card(SseDeserializer deserializer);
+
+  @protected
   List<ArtistItem> sse_decode_list_artist_item(SseDeserializer deserializer);
+
+  @protected
+  List<CategoryItem> sse_decode_list_category_item(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<CommentItem> sse_decode_list_comment_item(SseDeserializer deserializer);
@@ -282,6 +382,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<LyricItem> sse_decode_list_lyric_item(SseDeserializer deserializer);
+
+  @protected
+  List<LyricWordItem> sse_decode_list_lyric_word_item(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<PlaylistItem> sse_decode_list_playlist_item(
@@ -307,6 +412,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LyricItem sse_decode_lyric_item(SseDeserializer deserializer);
 
   @protected
+  LyricWordItem sse_decode_lyric_word_item(SseDeserializer deserializer);
+
+  @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
@@ -316,6 +424,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
   SongItem? sse_decode_opt_box_autoadd_song_item(SseDeserializer deserializer);
@@ -347,7 +458,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RecentItem sse_decode_recent_item(SseDeserializer deserializer);
 
   @protected
+  (List<AlbumCard>, bool) sse_decode_record_list_album_card_bool(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  (List<AlbumCard>, PlatformInt64) sse_decode_record_list_album_card_i_64(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  (List<ArtistCard>, PlatformInt64) sse_decode_record_list_artist_card_i_64(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   (List<FollowItem>, bool) sse_decode_record_list_follow_item_bool(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  (List<PlaylistItem>, PlatformInt64) sse_decode_record_list_playlist_item_i_64(
     SseDeserializer deserializer,
   );
 
@@ -386,6 +517,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_desktop_lyrics_event_Sse(
+    RustStreamSink<DesktopLyricsEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_StreamSink_ui_event_Sse(
     RustStreamSink<UiEvent> self,
     SseSerializer serializer,
@@ -398,10 +535,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_account_info(AccountInfo self, SseSerializer serializer);
 
   @protected
+  void sse_encode_album_card(AlbumCard self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_album_page_info(AlbumPageInfo self, SseSerializer serializer);
+
+  @protected
   void sse_encode_app_settings(AppSettings self, SseSerializer serializer);
 
   @protected
+  void sse_encode_artist_card(ArtistCard self, SseSerializer serializer);
+
+  @protected
   void sse_encode_artist_item(ArtistItem self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_artist_page_info(
+    ArtistPageInfo self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_audio_quality(AudioQuality self, SseSerializer serializer);
@@ -419,6 +571,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_i_64(
+    PlatformInt64 self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_song_item(
     SongItem self,
     SseSerializer serializer,
@@ -428,10 +586,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_cache_info(CacheInfo self, SseSerializer serializer);
 
   @protected
+  void sse_encode_category_item(CategoryItem self, SseSerializer serializer);
+
+  @protected
   void sse_encode_comment_item(CommentItem self, SseSerializer serializer);
 
   @protected
   void sse_encode_comments_info(CommentsInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_desktop_lyrics_event(
+    DesktopLyricsEvent self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_download_item(DownloadItem self, SseSerializer serializer);
@@ -461,8 +628,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_album_card(
+    List<AlbumCard> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_artist_card(
+    List<ArtistCard> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_artist_item(
     List<ArtistItem> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_category_item(
+    List<CategoryItem> self,
     SseSerializer serializer,
   );
 
@@ -493,6 +678,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_lyric_item(
     List<LyricItem> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_lyric_word_item(
+    List<LyricWordItem> self,
     SseSerializer serializer,
   );
 
@@ -533,6 +724,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_lyric_item(LyricItem self, SseSerializer serializer);
 
   @protected
+  void sse_encode_lyric_word_item(LyricWordItem self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
@@ -543,6 +737,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_i_64(
+    PlatformInt64? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_song_item(
@@ -581,8 +781,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_recent_item(RecentItem self, SseSerializer serializer);
 
   @protected
+  void sse_encode_record_list_album_card_bool(
+    (List<AlbumCard>, bool) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_record_list_album_card_i_64(
+    (List<AlbumCard>, PlatformInt64) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_record_list_artist_card_i_64(
+    (List<ArtistCard>, PlatformInt64) self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_record_list_follow_item_bool(
     (List<FollowItem>, bool) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_record_list_playlist_item_i_64(
+    (List<PlaylistItem>, PlatformInt64) self,
     SseSerializer serializer,
   );
 
