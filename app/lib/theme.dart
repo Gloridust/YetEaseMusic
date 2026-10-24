@@ -9,7 +9,9 @@ class Tokens {
   static const radiusM = 10.0;
   static const radiusL = 14.0;
 
-  static const sidebarWidth = 200.0;
+  static const sidebarWidth = 240.0;
+  static const sidebarMinWidth = 200.0;
+  static const sidebarMaxWidth = 420.0;
   static const playerBarHeight = 68.0;
   static const topBarHeight = 52.0;
 }

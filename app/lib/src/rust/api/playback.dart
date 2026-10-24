@@ -56,6 +56,10 @@ Future<void> setMode({required PlayOrder mode}) =>
 Future<AppSettings> getSettings() =>
     RustLib.instance.api.crateApiPlaybackGetSettings();
 
+/// 桌面端侧栏宽度（拖动结束时保存）
+Future<void> setSidebarWidth({required double width}) =>
+    RustLib.instance.api.crateApiPlaybackSetSidebarWidth(width: width);
+
 /// 关闭主窗口时是否留在托盘里继续播放
 Future<void> setCloseToTray({required bool enable}) =>
     RustLib.instance.api.crateApiPlaybackSetCloseToTray(enable: enable);

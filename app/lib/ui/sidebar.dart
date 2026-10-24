@@ -6,6 +6,7 @@ import '../src/rust/api/types.dart';
 import '../state.dart';
 import '../theme.dart';
 import 'brand.dart';
+import 'heartbeat_icon.dart';
 import 'login_dialog.dart';
 import 'nav.dart';
 import 'pages/downloads_page.dart';
@@ -52,14 +53,18 @@ class _SidebarState extends State<Sidebar> {
                   const AppLogo(size: 30),
                   const SizedBox(width: 10),
                   Flexible(
-                    child: Text(
-                      kAppName,
-                      maxLines: 1,
-                      overflow: TextOverflow.fade,
-                      softWrap: false,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: p.textPrimary),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        kAppName,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: p.textPrimary),
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 10),
                 ],
               ),
             ),
@@ -253,6 +258,8 @@ class NavItem extends StatelessWidget {
                   Expanded(
                     child: Text(
                       label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 14,
                         color: sel ? Colors.white : p.textPrimary,
@@ -299,7 +306,7 @@ class _HeartbeatButton extends StatelessWidget {
         },
         builder: (context, h) => Padding(
           padding: const EdgeInsets.all(6),
-          child: Icon(Icons.monitor_heart_outlined, size: 18, color: h ? Tokens.accent : IconTheme.of(context).color),
+          child: HeartbeatIcon(size: 18, color: h ? Tokens.accent : (IconTheme.of(context).color ?? Tokens.accent)),
         ),
       ),
     );

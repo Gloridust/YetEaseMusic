@@ -72,7 +72,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -308327509;
+  int get rustContentHash => -690210107;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -284,6 +284,8 @@ abstract class RustLibApi extends BaseApi {
   });
 
   Future<void> crateApiPlaybackSetQuality({required AudioQuality quality});
+
+  Future<void> crateApiPlaybackSetSidebarWidth({required double width});
 
   Future<void> crateApiLibrarySetStorageSettings({
     required List<String> localDirs,
@@ -2330,6 +2332,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "set_quality", argNames: ["quality"]);
 
   @override
+  Future<void> crateApiPlaybackSetSidebarWidth({required double width}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(width, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 68,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiPlaybackSetSidebarWidthConstMeta,
+        argValues: [width],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlaybackSetSidebarWidthConstMeta =>
+      const TaskConstMeta(debugName: "set_sidebar_width", argNames: ["width"]);
+
+  @override
   Future<void> crateApiLibrarySetStorageSettings({
     required List<String> localDirs,
     required String downloadDir,
@@ -2343,7 +2373,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 68,
+            funcId: 69,
             port: port_,
           );
         },
@@ -2374,7 +2404,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 69,
+            funcId: 70,
             port: port_,
           );
         },
@@ -2404,7 +2434,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 70,
+            funcId: 71,
             port: port_,
           );
         },
@@ -2431,7 +2461,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 71,
+            funcId: 72,
             port: port_,
           );
         },
@@ -2465,7 +2495,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 72,
+            funcId: 73,
             port: port_,
           );
         },
@@ -2498,7 +2528,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 73,
+            funcId: 74,
             port: port_,
           );
         },
@@ -2525,7 +2555,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 74,
+            funcId: 75,
             port: port_,
           );
         },
@@ -2552,7 +2582,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 75,
+            funcId: 76,
             port: port_,
           );
         },
@@ -2584,7 +2614,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 76,
+            funcId: 77,
             port: port_,
           );
         },
@@ -2614,7 +2644,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 77,
+            funcId: 78,
             port: port_,
           );
         },
@@ -2644,7 +2674,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 78,
+            funcId: 79,
             port: port_,
           );
         },
@@ -2736,8 +2766,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   AppSettings dco_decode_app_settings(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    if (arr.length != 9)
+      throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
     return AppSettings(
       quality: dco_decode_audio_quality(arr[0]),
       volume: dco_decode_f_32(arr[1]),
@@ -2747,6 +2777,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       uiScale: dco_decode_f_32(arr[5]),
       theme: dco_decode_theme_pref(arr[6]),
       closeToTray: dco_decode_bool(arr[7]),
+      sidebarWidth: dco_decode_f_32(arr[8]),
     );
   }
 
@@ -3506,6 +3537,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_uiScale = sse_decode_f_32(deserializer);
     var var_theme = sse_decode_theme_pref(deserializer);
     var var_closeToTray = sse_decode_bool(deserializer);
+    var var_sidebarWidth = sse_decode_f_32(deserializer);
     return AppSettings(
       quality: var_quality,
       volume: var_volume,
@@ -3515,6 +3547,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       uiScale: var_uiScale,
       theme: var_theme,
       closeToTray: var_closeToTray,
+      sidebarWidth: var_sidebarWidth,
     );
   }
 
@@ -4437,6 +4470,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_f_32(self.uiScale, serializer);
     sse_encode_theme_pref(self.theme, serializer);
     sse_encode_bool(self.closeToTray, serializer);
+    sse_encode_f_32(self.sidebarWidth, serializer);
   }
 
   @protected

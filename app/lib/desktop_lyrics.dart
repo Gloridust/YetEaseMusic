@@ -61,6 +61,11 @@ class _LyricsApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.dark).copyWith(scaffoldBackgroundColor: Colors.transparent),
       color: Colors.transparent,
+      builder: (context, child) {
+        // 桌面歌词有自己的字号设置，窗口大小也按它计算，不再叠加系统文字缩放
+        final mq = MediaQuery.of(context);
+        return MediaQuery(data: mq.copyWith(textScaler: TextScaler.noScaling), child: child!);
+      },
       // 必须包一层 Material，否则文字没有默认样式（会显示黄色下划线和等宽字体）
       home: RepaintBoundary(
         key: _shotKey,

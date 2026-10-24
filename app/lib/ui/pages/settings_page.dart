@@ -149,7 +149,7 @@ class SettingsPage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 18),
-                const _Hint('界面缩放（在系统缩放的基础上再调整）'),
+                const _Hint('界面缩放（在系统缩放与系统文字大小的基础上再调整）'),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 10,

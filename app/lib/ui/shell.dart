@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../src/rust/api/playback.dart' as pb;
 import '../state.dart';
 import '../theme.dart';
 import 'login_dialog.dart';
@@ -25,19 +26,63 @@ class Shell extends StatefulWidget {
   State<Shell> createState() => _ShellState();
 }
 
-class _ShellState extends State<Shell> {
+class _ShellState extends State<Shell> with WindowListener {
   final _scaffold = GlobalKey<ScaffoldState>();
+  // 设置在界面显示之前已经读好，首帧就是保存的宽度
+  double _sidebarWidth = (AppState.I.settings.value?.sidebarWidth ?? Tokens.sidebarWidth)
+      .clamp(Tokens.sidebarMinWidth, Tokens.sidebarMaxWidth)
+      .toDouble();
+
+  /// 最大化 / 全屏时窗口贴着屏幕边缘，不需要描边
+  bool _edgeToEdge = false;
 
   @override
   void initState() {
     super.initState();
+    if (Platform.isLinux) {
+      windowManager.addListener(this);
+      _syncWindowState();
+    }
     AppState.I.notices.listen((msg) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(msg), duration: const Duration(seconds: 3)));
+        ..showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            duration: const Duration(seconds: 3),
+            // SnackBar 默认贴底，会盖住播放条中间的按钮；抬到播放条上方
+            margin: const EdgeInsets.only(bottom: Tokens.playerBarHeight + 12),
+          ),
+        );
     });
   }
+
+  @override
+  void dispose() {
+    if (Platform.isLinux) windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  Future<void> _syncWindowState() async {
+    final edge = await windowManager.isMaximized() || await windowManager.isFullScreen();
+    if (mounted && edge != _edgeToEdge) setState(() => _edgeToEdge = edge);
+  }
+
+  @override
+  void onWindowMaximize() => _syncWindowState();
+  @override
+  void onWindowUnmaximize() => _syncWindowState();
+  @override
+  void onWindowEnterFullScreen() => _syncWindowState();
+  @override
+  void onWindowLeaveFullScreen() => _syncWindowState();
+
+  void _setSidebarWidth(double width) {
+    setState(() => _sidebarWidth = width.clamp(Tokens.sidebarMinWidth, Tokens.sidebarMaxWidth).toDouble());
+  }
+
+  void _saveSidebarWidth() => pb.setSidebarWidth(width: _sidebarWidth).ignore();
 
   @override
   Widget build(BuildContext context) {
@@ -45,12 +90,18 @@ class _ShellState extends State<Shell> {
     return LayoutBuilder(
       builder: (context, c) {
         final compact = c.maxWidth < 760;
+        // 窗口变窄时把侧栏收回来，给内容留至少 480 的逻辑宽度
+        final maxSidebarWidth = (c.maxWidth - 480).clamp(Tokens.sidebarMinWidth, Tokens.sidebarMaxWidth).toDouble();
+        final sidebarWidth = _sidebarWidth.clamp(Tokens.sidebarMinWidth, maxSidebarWidth).toDouble();
+        final drawerWidth = _sidebarWidth.clamp(220.0, 320.0).toDouble();
+        // 无边框窗口：如果贴着另一块白色窗口，底部会糊成一片。Linux 上加一圈内描边
+        final borderColor = Theme.of(context).brightness == Brightness.dark
+            ? Colors.white.withValues(alpha: 0.14)
+            : p.textTertiary.withValues(alpha: 0.45);
         return Scaffold(
           key: _scaffold,
           backgroundColor: p.background,
-          drawer: compact
-              ? Drawer(width: Tokens.sidebarWidth, backgroundColor: p.sidebar, child: const Sidebar())
-              : null,
+          drawer: compact ? Drawer(width: drawerWidth, backgroundColor: p.sidebar, child: const Sidebar()) : null,
           endDrawer: const QueuePanel(),
           body: Stack(
             children: [
@@ -58,8 +109,21 @@ class _ShellState extends State<Shell> {
                 children: [
                   Expanded(
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (!compact) const SizedBox(width: Tokens.sidebarWidth, child: Sidebar()),
+                        if (!compact) ...[
+                          SizedBox(width: sidebarWidth, child: const Sidebar()),
+                          _SidebarResizeHandle(
+                            width: sidebarWidth,
+                            maxWidth: maxSidebarWidth,
+                            onChanged: _setSidebarWidth,
+                            onDone: _saveSidebarWidth,
+                            onReset: () {
+                              _setSidebarWidth(Tokens.sidebarWidth);
+                              _saveSidebarWidth();
+                            },
+                          ),
+                        ],
                         Expanded(
                           child: Column(
                             children: [
@@ -102,10 +166,85 @@ class _ShellState extends State<Shell> {
                   ),
                 ),
               ),
+              if (Platform.isLinux && !_edgeToEdge)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(border: Border.all(color: borderColor)),
+                    ),
+                  ),
+                ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+/// 侧栏右缘的拖动条：拖动改宽度，双击恢复默认值。
+class _SidebarResizeHandle extends StatefulWidget {
+  const _SidebarResizeHandle({
+    required this.width,
+    required this.maxWidth,
+    required this.onChanged,
+    required this.onDone,
+    required this.onReset,
+  });
+
+  final double width;
+  final double maxWidth;
+  final ValueChanged<double> onChanged;
+  final VoidCallback onDone;
+  final VoidCallback onReset;
+
+  @override
+  State<_SidebarResizeHandle> createState() => _SidebarResizeHandleState();
+}
+
+class _SidebarResizeHandleState extends State<_SidebarResizeHandle> {
+  bool _hover = false;
+  bool _dragging = false;
+  double _dragWidth = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final active = _hover || _dragging;
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeLeftRight,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragStart: (_) {
+          _dragWidth = widget.width;
+          setState(() => _dragging = true);
+        },
+        onHorizontalDragUpdate: (d) {
+          _dragWidth = (_dragWidth + d.delta.dx).clamp(Tokens.sidebarMinWidth, widget.maxWidth).toDouble();
+          widget.onChanged(_dragWidth);
+        },
+        onHorizontalDragEnd: (_) {
+          setState(() => _dragging = false);
+          widget.onDone();
+        },
+        onHorizontalDragCancel: () {
+          setState(() => _dragging = false);
+          widget.onDone();
+        },
+        onDoubleTap: widget.onReset,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          width: 8,
+          decoration: BoxDecoration(
+            color: p.sidebar,
+            border: Border(
+              right: BorderSide(color: active ? Tokens.accent : p.divider, width: active ? 2 : 1),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
