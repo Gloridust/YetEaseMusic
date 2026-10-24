@@ -136,13 +136,13 @@ class YetEaseApp extends StatelessWidget {
         },
         // 缩放包在 Navigator 外层，弹窗、抽屉、提示条也一起缩放
         builder: (context, child) {
+          // 系统文字缩放并入整体缩放（见 systemTextScale），文字本身不再单独放大
           final mq = MediaQuery.of(context);
           return MediaQuery(
-            // 限制系统文字缩放，避免 4K@200% + 200% 文字时字号叠成 4 倍
-            data: isDesktop ? mq.copyWith(textScaler: clampDesktopTextScaler(mq.textScaler)) : mq,
+            data: mq.copyWith(textScaler: TextScaler.noScaling),
             child: RepaintBoundary(
               key: tourBoundary,
-              child: UiScaled(scale: app.uiScale.value, child: child!),
+              child: UiScaled(scale: app.uiScale.value * systemTextScale(mq.textScaler), child: child!),
             ),
           );
         },

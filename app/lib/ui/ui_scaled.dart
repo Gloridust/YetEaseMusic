@@ -1,14 +1,19 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 
-/// 桌面端系统文字缩放的上限。
+/// 把系统的「文字大小」折算成整体界面缩放的倍数。
 ///
-/// Linux 的 Flutter 引擎会把 GNOME 的 `text-scaling-factor` 叠加到显示器缩放上：
-/// 4K@200% 再遇到 200% 文字缩放时，字号会变成 4 倍，而侧栏、顶栏仍按逻辑尺寸
-/// 排版，文字就会被裁掉。需要更大的界面时，用应用内的「界面缩放」。
-const double kMaxDesktopTextScale = 1.25;
-
-TextScaler clampDesktopTextScaler(TextScaler scaler) =>
-    scaler.clamp(minScaleFactor: 0.8, maxScaleFactor: kMaxDesktopTextScale);
+/// 侧栏、顶栏、播放栏、列表行这些尺寸是按设计稿写死的，只放大文字会装不下而被裁切
+/// （比如 4K@200% 再加 200% 文字缩放，字号是 4 倍）。所以不单独放大文字，而是让整个
+/// 界面按同一比例放大：字号如用户所愿，组件跟着变大，逻辑宽度不够时自动切到紧凑布局。
+/// 安卓的文字缩放可能是非线性的，取正文字号（14）处的倍数。
+double systemTextScale(TextScaler scaler) {
+  final override = double.tryParse(Platform.environment['YETEASE_TEXT_SCALE'] ?? '');
+  if (override != null && override > 0) return override;
+  final s = scaler.scale(14) / 14;
+  return s.isFinite && s > 0 ? s : 1.0;
+}
 
 /// 整体缩放界面：按 1/scale 的逻辑尺寸布局，再整体放大/缩小绘制。
 /// 同步调整 devicePixelRatio，图片按实际像素解码，文字也保持清晰。
@@ -18,12 +23,20 @@ class UiScaled extends StatelessWidget {
   final double scale;
   final Widget child;
 
+  /// 放大后至少保留的逻辑尺寸。窗口太小时少放大一些，避免顶栏、播放栏挤不下
+  static const minLogicalWidth = 360.0;
+  static const minLogicalHeight = 480.0;
+
   @override
   Widget build(BuildContext context) {
     if ((scale - 1).abs() < 0.001) return child;
     final mq = MediaQuery.of(context);
     return LayoutBuilder(
       builder: (context, c) {
+        final fit = [c.maxWidth / minLogicalWidth, c.maxHeight / minLogicalHeight].reduce((a, b) => a < b ? a : b);
+        // 只限制放大；缩小（scale < 1）和本来就放得下的情况不受影响
+        final scale = this.scale > 1 ? this.scale.clamp(1.0, fit < 1 ? 1.0 : fit).toDouble() : this.scale;
+        if ((scale - 1).abs() < 0.001) return child;
         final size = Size(c.maxWidth / scale, c.maxHeight / scale);
         return MediaQuery(
           data: mq.copyWith(
