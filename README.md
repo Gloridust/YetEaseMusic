@@ -104,6 +104,7 @@ YetEase 想把这些空白补上：**一套内核，多个界面，每一端都�
 | 歌曲评论（精彩评论 + 最新评论） | ✅ |
 | 下载管理（自动写入标签与封面）、本地音乐 | ✅ |
 | 系统媒体控制：Linux MPRIS（媒体键、GNOME 顶栏）、Windows SMTC、macOS 正在播放 | ✅ |
+| 系统托盘，关闭窗口后继续在后台播放 | ✅ |
 | 浅色 / 深色主题、界面缩放、海外网络模式 | ✅ |
 | 日志导出（自动脱敏），方便反馈问题 | ✅ |
 | 命令行版与终端界面（`yetease tui`） | ✅ |
@@ -119,7 +120,7 @@ YetEase 想把这些空白补上：**一套内核，多个界面，每一端都�
 
 | 平台 | 状态 | 说明 |
 |---|---|---|
-| Linux（x86_64） | ✅ 可用 | 主力平台，提供 `.deb` 与通用压缩包，Ubuntu 22.04 / Debian 12 / Fedora 35 及以上 |
+| Linux（x86_64） | ✅ 可用 | 主力平台，提供 `.deb`、AppImage 与通用压缩包，Ubuntu 22.04 / Debian 12 / Fedora 35 及以上 |
 | 命令行 / 终端界面 | ✅ 可用 | 不依赖图形界面，服务器、SSH 上都能用 |
 | Windows 10 / 11（含平板） | ✅ 可用 | 安装包与免安装版，由 CI 自动构建 |
 | macOS（Intel / Apple 芯片） | ✅ 可用 | 通用 dmg，由 CI 自动构建；未签名，首次打开需右键选「打开」 |
@@ -132,10 +133,23 @@ YetEase 想把这些空白补上：**一套内核，多个界面，每一端都�
 | 平台 | 文件 |
 |---|---|
 | Ubuntu / Debian | `yetease-music_<版本>_amd64.deb`，双击或 `sudo apt install ./yetease-music_*.deb` |
-| 其他 Linux | `yetease-music-<版本>-linux-x86_64.tar.gz`，解压后运行 `./install.sh` |
+| 任意 Linux（免安装） | `yetease-music-<版本>-x86_64.AppImage`，下载后右键「属性 → 允许作为程序执行」，或 `chmod +x` 后双击运行 |
+| 其他 Linux | `yetease-music-<版本>-linux-x86_64.tar.gz`，解压后运行 `./install.sh`，会添加到应用菜单 |
 | Windows | `yetease-music-<版本>-windows-x64-setup.exe`（另有免安装版 zip） |
 | macOS | `yetease-music-<版本>-macos-universal.dmg` |
 | Android | `yetease-music-<版本>-android-universal.apk`（不确定架构就选它） |
+
+### Flatpak
+
+社区维护者在 [FlatPark](https://flatpark.org/apps/io.github.gloridust.yetease/) 上提供了 Flatpak 包（直接使用本项目发布的官方构建，未做改动），自动更新、沙箱运行：
+
+```bash
+flatpak --user remote-add --if-not-exists flatpark https://dl.flatpark.org/flatpark.flatpakrepo
+flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak --user install flatpark io.github.gloridust.yetease
+```
+
+还没装过 Flatpak？Ubuntu 上先运行 `sudo apt install flatpak`，其他发行版见 [flatpak.org/setup](https://flatpak.org/setup/)。
 
 想自己编译，见 **[doc/building.md](doc/building.md)**。
 

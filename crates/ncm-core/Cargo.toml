@@ -1,6 +1,6 @@
 [package]
 name = "ncm-core"
-version = "0.2.3"
+version = "0.2.4"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -11,8 +11,8 @@ futures-util = "0.3.34"
 hex = "0.4.3"
 lofty = "0.25.4"
 md-5 = "0.11.0"
-ncm-api = { version = "0.2.3", path = "../ncm-api" }
-ncm-player = { version = "0.2.3", path = "../ncm-player" }
+ncm-api = { version = "0.2.4", path = "../ncm-api" }
+ncm-player = { version = "0.2.4", path = "../ncm-player" }
 rand = "0.10.3"
 reqwest = { version = "0.13.5", default-features = false, features = ["rustls-no-provider", "http2", "system-proxy", "stream"] }
 rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
@@ -27,6 +27,15 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
 # 系统媒体控制（安卓走 MediaSession，不用它）
 [target.'cfg(not(target_os = "android"))'.dependencies]
 souvlaki = { version = "0.8.3", default-features = false, features = ["use_zbus"] }
+png = "0.18"
+
+# 系统托盘：Linux 用 StatusNotifierItem（纯 D-Bus，不依赖 appindicator 库），Windows 用通知区域图标
+[target.'cfg(target_os = "linux")'.dependencies]
+ksni = "0.3.7"
+
+[target.'cfg(windows)'.dependencies]
+tray-icon = "0.26.1"
+windows-sys = { version = "0.61", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 webpki-roots = "1.0.11"

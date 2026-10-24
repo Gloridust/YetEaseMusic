@@ -76,6 +76,11 @@ Future<void> main(List<String> args) async {
       await windowManager.show();
       await windowManager.focus();
     });
+    // 关闭窗口时按设置留在托盘（macOS 留在程序坞）继续播放，否则退出
+    await windowManager.setPreventClose(true);
+    windowManager.addListener(_CloseToTray());
+    AppState.I.quitRequests.addListener(quitApp);
+    pb.enableTray().then((ok) => AppState.I.trayAvailable.value = ok).ignore();
     // Linux 的 MPRIS 由内核自动启用；Windows 需要窗口句柄，macOS 不需要
     if (Platform.isWindows) {
       pb.enableMediaControls(hwnd: await windowManager.getId()).ignore();
@@ -85,6 +90,26 @@ Future<void> main(List<String> args) async {
   }
   runApp(const YetEaseApp());
   maybeRunTour();
+}
+
+/// 真正退出：先关掉桌面歌词进程，再销毁主窗口
+Future<void> quitApp() async {
+  AppState.I.stopDesktopLyrics();
+  await windowManager.setPreventClose(false);
+  await windowManager.destroy();
+}
+
+class _CloseToTray with WindowListener {
+  @override
+  void onWindowClose() async {
+    final app = AppState.I;
+    final canHide = app.trayAvailable.value || Platform.isMacOS;
+    if (canHide && (app.settings.value?.closeToTray ?? true)) {
+      await windowManager.hide();
+    } else {
+      await quitApp();
+    }
+  }
 }
 
 class YetEaseApp extends StatelessWidget {

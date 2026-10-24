@@ -86,6 +86,7 @@ YetEase 分成两层：**Rust 内核**负责协议、播放、队列、缓存等
 
 | 模块 | 位置 | 说明 |
 |---|---|---|
+| 系统托盘 | `ncm-core/src/tray.rs` | Linux 用 ksni（StatusNotifierItem，纯 D-Bus，不依赖 appindicator 库；没有托盘宿主时返回不可用，关窗即退出），Windows 用 tray-icon 并在独立线程跑消息循环。菜单事件转成 `MediaAction`，显示窗口 / 退出交给界面。主程序单实例：Linux 由 GApplication 按应用 ID 占名，Windows 用命名互斥量，再次启动时显示已有窗口 |
 | 系统媒体控制 | `ncm-core/src/media.rs` | souvlaki：Linux MPRIS（自动启用，没有 D-Bus 会话总线时跳过）、Windows SMTC（界面层传 HWND）、macOS 正在播放。控件放在独立线程，事件经回调交给 `Core` |
 | Android 媒体会话 | `app/lib/android_media.dart` | audio_service：前台服务保活、通知栏与锁屏控件、蓝牙 / 方向盘按键；状态取自 `AppState`，命令转回 Rust |
 | Android 初始化 | `app/rust/src/android.rs`、`YetEaseApplication.kt` | Dart 用 dlopen 加载 Rust 库，不会触发 JNI_OnLoad；应用启动时由 Kotlin 把 JavaVM 与 Context 交给 ndk-context，cpal 的 AAudio 后端依赖它。TLS 在 Android 上用内置 webpki 根证书，不走需要 JNI 的系统证书校验 |

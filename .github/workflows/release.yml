@@ -73,7 +73,7 @@ jobs:
           mkdir -p "$D"
           cp -a app/build/linux/x64/release/bundle "$D/bundle"
           cp -a app/linux/packaging/icons "$D/icons"
-          cp app/linux/packaging/io.github.gloridust.yetease.desktop "$D/"
+          cp app/linux/packaging/io.github.gloridust.YetEaseMusic.desktop "$D/"
           cp app/linux/packaging/install-local.sh "$D/install.sh"
           cp LICENSE "$D/"
           tar -czf "dist/$D.tar.gz" "$D"
@@ -81,6 +81,12 @@ jobs:
           mkdir -p "$C" && cp target/release/yetease LICENSE "$C/"
           tar -czf "dist/$C.tar.gz" "$C"
           app/linux/packaging/build-deb.sh "$V" app/build/linux/x64/release/bundle target/release/yetease dist
+      - name: 打 AppImage
+        run: |
+          curl -sSfL --retry 3 -o appimagetool https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+          # CI 机器没有 FUSE，让 appimagetool 解包后运行
+          APPIMAGE_EXTRACT_AND_RUN=1 APPIMAGETOOL="$PWD/appimagetool" app/linux/packaging/build-appimage.sh "$V" app/build/linux/x64/release/bundle dist
       - uses: actions/upload-artifact@v4
         with:
           name: linux
@@ -348,6 +354,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist
+          # 只取安装包；冒烟测试的截图与日志也是 artifact，不能混进 Release
+          pattern: "{linux,windows,macos,android}"
           merge-multiple: true
       - name: 发布
         env:

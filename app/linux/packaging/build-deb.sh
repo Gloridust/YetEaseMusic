@@ -13,7 +13,7 @@ BUNDLE="$2"
 CLI="$3"
 OUT="$4"
 HERE="$(cd "$(dirname "$0")" && pwd)"
-APP_ID=io.github.gloridust.yetease
+APP_ID=io.github.gloridust.YetEaseMusic
 PKG=yetease-music
 ARCH=amd64
 

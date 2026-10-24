@@ -240,6 +240,7 @@ pub struct AppSettings {
     pub cn_ip: String,
     pub ui_scale: f32,
     pub theme: ThemePref,
+    pub close_to_tray: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -292,8 +293,10 @@ pub enum UiEvent {
     QueueChanged,
     SettingsChanged,
     DownloadsChanged,
-    /// 系统媒体控件请求把窗口带到前台
+    /// 系统媒体控件或托盘请求把窗口带到前台
     Raise,
+    /// 托盘菜单里选了「退出」
+    Quit,
     Notice(String),
     Error(String),
 }

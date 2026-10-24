@@ -73,6 +73,7 @@ pub fn events(sink: StreamSink<UiEvent>) -> anyhow::Result<()> {
                 CoreEvent::SettingsChanged => UiEvent::SettingsChanged,
                 CoreEvent::DownloadsChanged => UiEvent::DownloadsChanged,
                 CoreEvent::Raise => UiEvent::Raise,
+                CoreEvent::Quit => UiEvent::Quit,
                 CoreEvent::Notice(n) => UiEvent::Notice(n),
             };
             if sink.add(ui).is_err() {
@@ -202,7 +203,28 @@ pub fn get_settings() -> anyhow::Result<AppSettings> {
         cn_ip: s.cn_ip,
         ui_scale: s.ui_scale,
         theme: ThemePref::parse(&s.theme),
+        close_to_tray: s.close_to_tray,
     })
+}
+
+/// 关闭主窗口时是否留在托盘里继续播放
+pub fn set_close_to_tray(enable: bool) -> anyhow::Result<()> {
+    core()?.update_settings(|s| s.close_to_tray = enable);
+    Ok(())
+}
+
+/// 启用系统托盘，返回托盘是否可用（Linux 桌面没有托盘宿主、macOS、安卓都返回 false）
+pub async fn enable_tray() -> anyhow::Result<bool> {
+    #[cfg(not(target_os = "android"))]
+    {
+        run(async move {
+            let c = core()?;
+            Ok(c.enable_tray(include_bytes!("../../../linux/packaging/icons/64.png")).await)
+        })
+        .await
+    }
+    #[cfg(target_os = "android")]
+    Ok(false)
 }
 
 pub fn set_quality(quality: AudioQuality) -> anyhow::Result<()> {

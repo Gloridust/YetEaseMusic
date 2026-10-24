@@ -1,0 +1,58 @@
+# Flathub 清单的模板，交给 flatpak-flutter 生成可离线构建的 io.github.gloridust.YetEaseMusic.yml。
+# 用法见 doc/building.md 的「Flatpak」一节。
+id: io.github.gloridust.YetEaseMusic
+runtime: org.freedesktop.Platform
+runtime-version: '26.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.llvm22
+command: yetease-music
+finish-args:
+  # Flutter / GTK 窗口与 GPU 渲染
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # 播放：cpal 走 ALSA，由运行时转给 PulseAudio / PipeWire
+  - --socket=pulseaudio
+  # 网易云接口、扫码登录、边下边播
+  - --share=network
+  # 本地音乐默认扫描「音乐」目录，下载默认存到 ~/Music/YetEase
+  - --filesystem=xdg-music
+  # MPRIS：媒体键与桌面的正在播放控件
+  - --own-name=org.mpris.MediaPlayer2.yetease
+  # 系统托盘（StatusNotifierItem）
+  - --talk-name=org.kde.StatusNotifierWatcher
+modules:
+  - name: yetease
+    buildsystem: simple
+    build-options:
+      arch:
+        x86_64:
+          env:
+            BUNDLE_PATH: app/build/linux/x64/release/bundle
+        aarch64:
+          env:
+            BUNDLE_PATH: app/build/linux/arm64/release/bundle
+      append-path: /usr/lib/sdk/llvm22/bin:/run/build/yetease/flutter/bin
+      prepend-ld-library-path: /usr/lib/sdk/llvm22/lib
+      env:
+        PUB_CACHE: /run/build/yetease/.pub-cache
+    build-commands:
+      - cd app && flutter build linux --release --no-pub
+      - mkdir -p /app/lib/yetease /app/bin
+      - cp -r $BUNDLE_PATH/. /app/lib/yetease/
+      - ln -s /app/lib/yetease/yetease-music /app/bin/yetease-music
+      - install -Dm644 app/linux/packaging/io.github.gloridust.YetEaseMusic.desktop /app/share/applications/io.github.gloridust.YetEaseMusic.desktop
+      - install -Dm644 app/linux/packaging/io.github.gloridust.YetEaseMusic.metainfo.xml /app/share/metainfo/io.github.gloridust.YetEaseMusic.metainfo.xml
+      - for s in 16 24 32 48 64 128 256 512; do install -Dm644 app/linux/packaging/icons/$s.png /app/share/icons/hicolor/${s}x${s}/apps/io.github.gloridust.YetEaseMusic.png; done
+    modules:
+      - generated/modules/rustup-1.94.0.json
+    sources:
+      - type: git
+        url: https://github.com/Gloridust/YetEaseMusic.git
+        commit: COMMIT
+      - type: git
+        url: https://github.com/flutter/flutter.git
+        tag: 3.47.7
+        dest: flutter

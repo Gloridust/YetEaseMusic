@@ -26,6 +26,8 @@ pub enum MediaAction {
     Volume(f32),
     /// 请求把窗口带到前台
     Raise,
+    /// 退出程序（托盘菜单）
+    Quit,
 }
 
 pub enum Update {

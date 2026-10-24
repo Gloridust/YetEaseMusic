@@ -56,6 +56,13 @@ Future<void> setMode({required PlayOrder mode}) =>
 Future<AppSettings> getSettings() =>
     RustLib.instance.api.crateApiPlaybackGetSettings();
 
+/// 关闭主窗口时是否留在托盘里继续播放
+Future<void> setCloseToTray({required bool enable}) =>
+    RustLib.instance.api.crateApiPlaybackSetCloseToTray(enable: enable);
+
+/// 启用系统托盘，返回托盘是否可用（Linux 桌面没有托盘宿主、macOS、安卓都返回 false）
+Future<bool> enableTray() => RustLib.instance.api.crateApiPlaybackEnableTray();
+
 Future<void> setQuality({required AudioQuality quality}) =>
     RustLib.instance.api.crateApiPlaybackSetQuality(quality: quality);
 

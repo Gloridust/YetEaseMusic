@@ -87,3 +87,31 @@ Flutter 的增量构建偶尔不会重新裁剪图标字体（`MaterialIcons-Reg
 ```bash
 cd app && rm -rf .dart_tool/flutter_build build/linux/x64/release/bundle && flutter build linux --release
 ```
+
+## Flatpak（Flathub）
+
+Flathub 要求开源应用从源码构建，并且构建过程不能联网。清单分两层：
+
+- `app/linux/flatpak/flatpak-flutter.yml` + `foreign.json`：手写的模板，只写构建步骤、权限和源码版本。
+- Flathub 仓库里的 `io.github.gloridust.YetEaseMusic.yml` 与 `generated/`：由 [flatpak-flutter](https://github.com/TheAppgineer/flatpak-flutter) 根据模板生成，把 Flutter SDK、pub 包、Rust 工具链和 crates 全部固定成可离线下载的源。
+
+发新版时：
+
+1. 打标签发版后，把模板里的 `commit` 改成该标签对应的提交，`metainfo.xml` 的 `<releases>` 加上新版本；
+2. 生成离线清单（依赖有变化时才需要重新生成，但每次都跑一遍最省心）：
+
+   ```bash
+   python3 flatpak-flutter.py --app-module yetease --app-pubspec app flatpak-flutter.yml
+   ```
+
+3. 本地按 Flathub 的方式断网构建并安装验证。Builder 本身是 Flatpak 应用，看不到 `/tmp`，工作目录要放在家目录下；它的沙箱里 rofiles-fuse 起不来时加 `--disable-rofiles-fuse`：
+
+   ```bash
+   flatpak run org.flatpak.Builder --repo=repo --force-clean --sandbox --disable-rofiles-fuse --user --install \
+     --install-deps-from=flathub builddir io.github.gloridust.YetEaseMusic.yml
+   flatpak run io.github.gloridust.YetEaseMusic
+   ```
+
+4. 把生成结果提交到 `flathub/io.github.gloridust.YetEaseMusic` 仓库。
+
+注意：本机若设置了 `PUB_HOSTED_URL` 等国内镜像，生成的清单里不能混进镜像地址，提交前检查 `generated/sources/*.json` 里的域名只有 pub.dev、static.crates.io 等官方源。
