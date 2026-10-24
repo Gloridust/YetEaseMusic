@@ -138,6 +138,18 @@ YetEase 想把这些空白补上：**一套内核，多个界面，每一端都�
 | macOS | `yetease-music-<版本>-macos-universal.dmg` |
 | Android | `yetease-music-<版本>-android-universal.apk`（不确定架构就选它） |
 
+### Flatpak
+
+社区维护者在 [FlatPark](https://flatpark.org/apps/io.github.gloridust.yetease/) 上提供了 Flatpak 包（直接使用本项目发布的官方构建，未做改动），自动更新、沙箱运行：
+
+```bash
+flatpak --user remote-add --if-not-exists flatpark https://dl.flatpark.org/flatpark.flatpakrepo
+flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak --user install flatpark io.github.gloridust.yetease
+```
+
+还没装过 Flatpak？Ubuntu 上先运行 `sudo apt install flatpak`，其他发行版见 [flatpak.org/setup](https://flatpak.org/setup/)。
+
 想自己编译，见 **[doc/building.md](doc/building.md)**。
 
 命令行版（deb 里自带，也可以单独下载）：

@@ -138,6 +138,18 @@ Grab the package for your platform from **[Releases](https://github.com/Gloridus
 | macOS | `yetease-music-<version>-macos-universal.dmg` |
 | Android | `yetease-music-<version>-android-universal.apk` (pick this if unsure about your CPU) |
 
+### Flatpak
+
+A community maintainer publishes a Flatpak on [FlatPark](https://flatpark.org/apps/io.github.gloridust.yetease/), repackaging this project's official build unmodified, with automatic updates and sandboxing:
+
+```bash
+flatpak --user remote-add --if-not-exists flatpark https://dl.flatpark.org/flatpark.flatpakrepo
+flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak --user install flatpark io.github.gloridust.yetease
+```
+
+New to Flatpak? On Ubuntu run `sudo apt install flatpak` first; for other distributions see [flatpak.org/setup](https://flatpak.org/setup/).
+
 To build it yourself, see **[doc/building.md](doc/building.md)**.
 
 The CLI (bundled in the .deb, also available separately):
