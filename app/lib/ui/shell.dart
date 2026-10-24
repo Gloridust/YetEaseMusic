@@ -71,6 +71,10 @@ class _ShellState extends State<Shell> {
         final maxSidebarWidth = (c.maxWidth - 480).clamp(Tokens.sidebarMinWidth, Tokens.sidebarMaxWidth).toDouble();
         final sidebarWidth = _sidebarWidth.clamp(Tokens.sidebarMinWidth, maxSidebarWidth).toDouble();
         final drawerWidth = _sidebarWidth.clamp(220.0, 320.0).toDouble();
+        // 无边框窗口：如果贴着另一块白色窗口，底部会糊成一片。Linux 上加一圈内描边
+        final borderColor = Theme.of(context).brightness == Brightness.dark
+            ? Colors.white.withValues(alpha: 0.14)
+            : p.textTertiary.withValues(alpha: 0.45);
         return Scaffold(
           key: _scaffold,
           backgroundColor: p.background,
@@ -139,6 +143,14 @@ class _ShellState extends State<Shell> {
                   ),
                 ),
               ),
+              if (Platform.isLinux)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(border: Border.all(color: borderColor)),
+                    ),
+                  ),
+                ),
             ],
           ),
         );
