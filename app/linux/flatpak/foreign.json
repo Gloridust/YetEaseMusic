@@ -1,0 +1,19 @@
+{
+    "rust_lib_app": {
+        "cargo_locks": [
+            "."
+        ],
+        "extra_pubspecs": [
+            "app/rust_builder/cargokit/build_tool"
+        ],
+        "manifest": {
+            "sources": [
+                {
+                    "type": "patch",
+                    "path": "cargokit/run_build_tool.sh.patch",
+                    "dest": "app/rust_builder/cargokit"
+                }
+            ]
+        }
+    }
+}

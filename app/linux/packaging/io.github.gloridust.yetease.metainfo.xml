@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.gloridust.yetease</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <name>YetEase Music</name>
+  <name xml:lang="zh_CN">网易云音乐Yet</name>
+  <summary>Third-party NetEase Cloud Music client</summary>
+  <summary xml:lang="zh_CN">网易云音乐第三方客户端</summary>
+
+  <developer id="io.github.gloridust">
+    <name>Ethan Zou</name>
+  </developer>
+
+  <description>
+    <p>
+      YetEase Music is a fast, clean third-party client for NetEase Cloud Music. A native Rust core handles
+      networking, decoding, caching and lyrics, and a Flutter interface follows the look and feel of the
+      official desktop and tablet apps.
+    </p>
+    <p xml:lang="zh_CN">
+      网易云音乐Yet 是一个快速、干净、好看的网易云音乐第三方客户端。网络、解码、缓存与歌词由原生 Rust 内核处理，
+      界面用 Flutter 绘制，布局与细节参照官方桌面版和平板版。
+    </p>
+    <p>Features:</p>
+    <p xml:lang="zh_CN">功能：</p>
+    <ul>
+      <li>QR-code login; playlists, likes, daily picks and play history synced with your phone</li>
+      <li xml:lang="zh_CN">扫码登录，歌单、喜欢、每日推荐与听歌记录与手机同步</li>
+      <li>Discover, playlist square, charts, podcasts, albums and artists</li>
+      <li xml:lang="zh_CN">发现音乐、歌单广场、排行榜、播客、专辑与歌手页</li>
+      <li>Stream while downloading, with a size-capped offline cache, up to Hi-Res quality</li>
+      <li xml:lang="zh_CN">边下边播，带容量上限的离线缓存，最高支持 Hi-Res 音质</li>
+      <li>Word-by-word lyrics with translations, and a transparent desktop lyrics overlay</li>
+      <li xml:lang="zh_CN">逐字歌词与翻译，透明桌面歌词</li>
+      <li>Song comments, downloads with embedded tags, and a local music library</li>
+      <li xml:lang="zh_CN">歌曲评论、带标签与封面的下载、本地音乐</li>
+      <li>Media keys and desktop media controls through MPRIS</li>
+      <li xml:lang="zh_CN">通过 MPRIS 支持媒体键与桌面媒体控件</li>
+      <li>Light and dark themes, interface scaling and an overseas network mode</li>
+      <li xml:lang="zh_CN">浅色与深色主题、界面缩放、海外网络模式</li>
+    </ul>
+    <p>
+      The app talks to NetEase's own API directly, with no third-party server in between, and has no ads or
+      telemetry. Only NetEase's own audio sources are used, so VIP tracks follow your account's entitlements.
+    </p>
+    <p xml:lang="zh_CN">
+      应用直接连接网易云官方接口，不经过任何第三方服务器，没有广告，也不收集任何数据。只使用网易云自己的音源，
+      VIP 歌曲按你账号的权益播放。
+    </p>
+    <p>
+      YetEase Music is an unofficial client and is not affiliated with NetEase, Inc. or NetEase Cloud Music.
+    </p>
+    <p xml:lang="zh_CN">
+      本应用是非官方客户端，与网易公司及网易云音乐无关。
+    </p>
+  </description>
+
+  <launchable type="desktop-id">io.github.gloridust.yetease.desktop</launchable>
+  <provides>
+    <binary>yetease-music</binary>
+    <dbus type="user">org.mpris.MediaPlayer2.yetease</dbus>
+  </provides>
+
+  <url type="homepage">https://github.com/Gloridust/YetEaseMusic</url>
+  <url type="bugtracker">https://github.com/Gloridust/YetEaseMusic/issues</url>
+  <url type="vcs-browser">https://github.com/Gloridust/YetEaseMusic</url>
+
+  <categories>
+    <category>AudioVideo</category>
+    <category>Audio</category>
+    <category>Player</category>
+  </categories>
+  <keywords>
+    <keyword>music</keyword>
+    <keyword>netease</keyword>
+    <keyword>cloudmusic</keyword>
+    <keyword>lyrics</keyword>
+    <keyword xml:lang="zh_CN">网易云</keyword>
+    <keyword xml:lang="zh_CN">音乐</keyword>
+  </keywords>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#f3a6a6</color>
+    <color type="primary" scheme_preference="dark">#8c1f28</color>
+  </branding>
+
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Now playing, with a cover-tinted backdrop and synced lyrics</caption>
+      <image>https://raw.githubusercontent.com/Gloridust/YetEaseMusic/v0.2.4/doc/screenshots/flathub/now-playing.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Recommended playlists</caption>
+      <image>https://raw.githubusercontent.com/Gloridust/YetEaseMusic/v0.2.4/doc/screenshots/flathub/home.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>A playlist in dark mode</caption>
+      <image>https://raw.githubusercontent.com/Gloridust/YetEaseMusic/v0.2.4/doc/screenshots/flathub/playlist-dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Search</caption>
+      <image>https://raw.githubusercontent.com/Gloridust/YetEaseMusic/v0.2.4/doc/screenshots/flathub/search.png</image>
+    </screenshot>
+  </screenshots>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="0.2.4" date="2026-10-24">
+      <description>
+        <p>Flatpak packaging metadata. No functional changes for desktop users.</p>
+      </description>
+    </release>
+    <release version="0.2.3" date="2026-10-24">
+      <description>
+        <p>Fixes silent playback on Android and logs crashes in background threads.</p>
+      </description>
+    </release>
+    <release version="0.2.2" date="2026-10-24">
+      <description>
+        <p>Fixes networking on Android.</p>
+      </description>
+    </release>
+    <release version="0.2.1" date="2026-10-24">
+      <description>
+        <p>Fixes a blank screen on Android startup.</p>
+      </description>
+    </release>
+    <release version="0.2.0" date="2026-10-24">
+      <description>
+        <p>Installers for every platform, system media controls, word-by-word and desktop lyrics, album, artist and chart pages, a terminal UI and log export.</p>
+      </description>
+    </release>
+    <release version="0.1.0" date="2026-10-24">
+      <description>
+        <p>First public release.</p>
+      </description>
+    </release>
+  </releases>
+</component>
