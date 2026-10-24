@@ -22,7 +22,8 @@ OPT="$HOME/.local/opt/yetease-music"
 if [[ "${1:-}" == "--uninstall" ]]; then
   rm -rf "$OPT" "$HOME/.local/bin/yetease-music" "$PREFIX/applications/$APP_ID.desktop" "$PREFIX/applications/$OLD_ID.desktop"
   find "$PREFIX/icons/hicolor" \( -name "$APP_ID.png" -o -name "$OLD_ID.png" \) -delete 2>/dev/null || true
-  gtk-update-icon-cache -q "$PREFIX/icons/hicolor" 2>/dev/null || true
+  # 用户目录的 hicolor 没有 index.theme，不加 -t 会静默失败，缓存里留着已删的图标，桌面就显示空白图标
+  gtk-update-icon-cache -q -t -f "$PREFIX/icons/hicolor" 2>/dev/null || true
   update-desktop-database -q "$PREFIX/applications" 2>/dev/null || true
   echo "已卸载"
   exit 0
