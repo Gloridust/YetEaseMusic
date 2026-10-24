@@ -354,6 +354,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist
+          # 只取安装包；冒烟测试的截图与日志也是 artifact，不能混进 Release
+          pattern: "{linux,windows,macos,android}"
           merge-multiple: true
       - name: 发布
         env:
