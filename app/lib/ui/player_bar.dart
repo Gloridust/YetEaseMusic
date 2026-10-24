@@ -45,7 +45,7 @@ class PlayerBar extends StatelessWidget {
                       child: ValueListenableBuilder(
                         valueListenable: app.current,
                         builder: (context, song, _) => song == null
-                            ? const SizedBox.shrink()
+                            ? _IdleInfo(dark: dark, fg: fg, fg2: fg2, narrow: narrow)
                             : _NowPlayingInfo(song: song, dark: dark, fg: fg, fg2: fg2, narrow: narrow),
                       ),
                     ),
@@ -125,6 +125,57 @@ class PlayerBar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 左侧：没有歌曲时的占位，避免播放栏左半边整块空白
+class _IdleInfo extends StatelessWidget {
+  const _IdleInfo({required this.dark, required this.fg, required this.fg2, required this.narrow});
+
+  final bool dark;
+  final Color fg, fg2;
+  final bool narrow;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: dark ? Colors.white.withValues(alpha: 0.08) : p.hover,
+            borderRadius: BorderRadius.circular(Tokens.radiusM),
+          ),
+          child: Icon(Icons.music_note_rounded, size: 22, color: dark ? Colors.white38 : p.textTertiary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '未在播放',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 14, color: fg, fontWeight: FontWeight.w500),
+              ),
+              if (!narrow) ...[
+                const SizedBox(height: 3),
+                Text(
+                  '选择一首歌开始播放',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: fg2),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
