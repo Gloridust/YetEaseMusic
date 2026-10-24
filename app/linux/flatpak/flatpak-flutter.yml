@@ -21,6 +21,8 @@ finish-args:
   - --filesystem=xdg-music
   # MPRIS：媒体键与桌面的正在播放控件
   - --own-name=org.mpris.MediaPlayer2.yetease
+  # 系统托盘（StatusNotifierItem）
+  - --talk-name=org.kde.StatusNotifierWatcher
 modules:
   - name: yetease
     buildsystem: simple

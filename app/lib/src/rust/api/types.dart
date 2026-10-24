@@ -120,6 +120,7 @@ class AppSettings {
   final String cnIp;
   final double uiScale;
   final ThemePref theme;
+  final bool closeToTray;
 
   const AppSettings({
     required this.quality,
@@ -129,6 +130,7 @@ class AppSettings {
     required this.cnIp,
     required this.uiScale,
     required this.theme,
+    required this.closeToTray,
   });
 
   @override
@@ -139,7 +141,8 @@ class AppSettings {
       useCnIp.hashCode ^
       cnIp.hashCode ^
       uiScale.hashCode ^
-      theme.hashCode;
+      theme.hashCode ^
+      closeToTray.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -152,7 +155,8 @@ class AppSettings {
           useCnIp == other.useCnIp &&
           cnIp == other.cnIp &&
           uiScale == other.uiScale &&
-          theme == other.theme;
+          theme == other.theme &&
+          closeToTray == other.closeToTray;
 }
 
 class ArtistCard {
@@ -831,8 +835,11 @@ sealed class UiEvent with _$UiEvent {
   const factory UiEvent.settingsChanged() = UiEvent_SettingsChanged;
   const factory UiEvent.downloadsChanged() = UiEvent_DownloadsChanged;
 
-  /// 系统媒体控件请求把窗口带到前台
+  /// 系统媒体控件或托盘请求把窗口带到前台
   const factory UiEvent.raise() = UiEvent_Raise;
+
+  /// 托盘菜单里选了「退出」
+  const factory UiEvent.quit() = UiEvent_Quit;
   const factory UiEvent.notice(String field0) = UiEvent_Notice;
   const factory UiEvent.error(String field0) = UiEvent_Error;
 }

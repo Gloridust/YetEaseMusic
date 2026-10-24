@@ -67,8 +67,21 @@ class AppState {
     }
   }
 
+  /// 关闭桌面歌词进程（退出程序前调用）
+  void stopDesktopLyrics() {
+    _lyricsProc?.kill();
+    _lyricsProc = null;
+    desktopLyrics.value = false;
+  }
+
   /// 系统媒体控件请求显示窗口时自增
   final raiseRequests = ValueNotifier(0);
+
+  /// 托盘菜单选了「退出」时自增
+  final quitRequests = ValueNotifier(0);
+
+  /// 系统托盘是否可用（Linux 桌面没有托盘宿主时为 false）
+  final trayAvailable = ValueNotifier(false);
 
   /// 下载列表或进度变化时自增，下载页据此刷新
   final downloadsTick = ValueNotifier(0);
@@ -113,6 +126,8 @@ class AppState {
         downloadsTick.value++;
       case UiEvent_Raise():
         raiseRequests.value++;
+      case UiEvent_Quit():
+        quitRequests.value++;
       case UiEvent_Notice(:final field0):
         notify(field0);
       case UiEvent_Error(:final field0):

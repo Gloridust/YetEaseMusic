@@ -7,6 +7,8 @@ pub mod lyrics;
 #[cfg(not(target_os = "android"))]
 pub mod media;
 pub mod queue;
+#[cfg(not(target_os = "android"))]
+pub mod tray;
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, Weak};
@@ -52,6 +54,8 @@ pub struct Settings {
     pub download_dir: String,
     /// 音乐缓存上限（MB），超出后自动淘汰最旧的
     pub cache_limit_mb: u32,
+    /// 关闭主窗口时留在托盘里继续播放（没有托盘时界面会忽略它，直接退出）
+    pub close_to_tray: bool,
 }
 
 impl Default for Settings {
@@ -67,6 +71,7 @@ impl Default for Settings {
             local_dirs: vec![music_dir().to_string_lossy().into_owned()],
             download_dir: music_dir().join("YetEase").to_string_lossy().into_owned(),
             cache_limit_mb: 2048,
+            close_to_tray: true,
         }
     }
 }
@@ -134,8 +139,10 @@ pub enum CoreEvent {
     SettingsChanged,
     /// 下载列表或某个下载任务的进度变了
     DownloadsChanged,
-    /// 系统媒体控件请求把窗口带到前台
+    /// 系统媒体控件或托盘请求把窗口带到前台
     Raise,
+    /// 托盘菜单里选了「退出」
+    Quit,
     /// 面向用户的提示，比如"该歌曲暂无版权"
     Notice(String),
 }
@@ -156,6 +163,8 @@ pub struct Core {
     downloading: Mutex<std::collections::HashMap<u64, (Song, f32)>>,
     #[cfg(not(target_os = "android"))]
     media: Mutex<Option<media::MediaHandle>>,
+    #[cfg(not(target_os = "android"))]
+    tray: Mutex<Option<tray::TrayHandle>>,
 }
 
 impl Core {
@@ -201,6 +210,8 @@ impl Core {
             downloading: Mutex::new(Default::default()),
             #[cfg(not(target_os = "android"))]
             media: Mutex::new(None),
+            #[cfg(not(target_os = "android"))]
+            tray: Mutex::new(None),
         });
         core.prune_caches();
         // Linux 的 MPRIS 不需要窗口句柄，直接启用；其他平台由界面层传入句柄后启用
@@ -700,7 +711,28 @@ impl Core {
             SeekBy(d) => p.seek(p.position_ms().saturating_add_signed(d)),
             Volume(v) => self.update_settings(|s| s.volume = v),
             Raise => self.emit(CoreEvent::Raise),
+            Quit => self.emit(CoreEvent::Quit),
         }
+    }
+
+    /// 启用系统托盘，返回托盘是否可用（桌面没有托盘宿主时为 false）。重复调用无副作用。
+    #[cfg(not(target_os = "android"))]
+    pub async fn enable_tray(self: &Arc<Self>, icon_png: &'static [u8]) -> bool {
+        if self.tray.lock().unwrap().is_some() {
+            return true;
+        }
+        let weak = Arc::downgrade(self);
+        let rt = tokio::runtime::Handle::current();
+        let on_event: tray::OnEvent = Arc::new(move |a| {
+            let Some(core) = weak.upgrade() else { return };
+            rt.spawn(async move { core.handle_media_action(a).await });
+        });
+        let Some(handle) = tray::start(icon_png, on_event).await else {
+            return false;
+        };
+        *self.tray.lock().unwrap() = Some(handle);
+        self.media_playback();
+        true
     }
 
     fn media_metadata(&self, _song: &Song) {
@@ -725,6 +757,11 @@ impl Core {
     }
 
     fn media_playback(&self) {
+        #[cfg(not(target_os = "android"))]
+        if let Some(t) = self.tray.lock().unwrap().as_ref() {
+            let song = self.current_song().map(|s| format!("{} - {}", s.name, s.artist_names()));
+            t.update(song, self.player.state() == PlaybackState::Playing);
+        }
         #[cfg(not(target_os = "android"))]
         if let Some(m) = self.media.lock().unwrap().as_ref() {
             let st = self.player.state();

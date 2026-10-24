@@ -8,6 +8,7 @@ import '../../src/rust/api/types.dart';
 import '../../state.dart';
 import '../../theme.dart';
 import '../login_dialog.dart';
+import '../shell.dart' show isDesktop;
 import '../widgets.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -94,6 +95,34 @@ class SettingsPage extends StatelessWidget {
           ),
         ),
         const _Section(title: '存储', child: _StorageSection()),
+        if (isDesktop)
+          _Section(
+            title: '窗口',
+            child: ListenableBuilder(
+              listenable: Listenable.merge([app.settings, app.trayAvailable]),
+              builder: (context, _) {
+                final s = app.settings.value;
+                if (s == null) return const SizedBox.shrink();
+                final hint = Platform.isMacOS
+                    ? '开启后关闭窗口仍在后台播放，点程序坞图标重新打开。'
+                    : app.trayAvailable.value
+                    ? '开启后关闭窗口仍在后台播放，点托盘图标或从托盘菜单重新打开、退出。'
+                    : '当前桌面没有系统托盘（GNOME 需要安装 AppIndicator 扩展），关闭窗口会直接退出。';
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _Check(
+                      label: Platform.isMacOS ? '关闭窗口后继续播放' : '关闭窗口时最小化到托盘',
+                      value: s.closeToTray,
+                      onChanged: (v) => pb.setCloseToTray(enable: v),
+                    ),
+                    const SizedBox(height: 6),
+                    _Hint(hint),
+                  ],
+                );
+              },
+            ),
+          ),
         _Section(
           title: '外观',
           child: ListenableBuilder(

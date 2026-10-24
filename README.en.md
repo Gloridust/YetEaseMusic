@@ -104,6 +104,7 @@ Protocol, playback, queue and cache live in a shared Rust core; the UI layer onl
 | Song comments (hot + latest) | ✅ |
 | Downloads with embedded tags and cover art, local music library | ✅ |
 | System media controls: Linux MPRIS (media keys, GNOME panel), Windows SMTC, macOS Now Playing | ✅ |
+| System tray; keeps playing after you close the window | ✅ |
 | Light / dark theme, UI scaling, overseas mode | ✅ |
 | Log export (credentials redacted) for bug reports | ✅ |
 | CLI and terminal UI (`yetease tui`) | ✅ |

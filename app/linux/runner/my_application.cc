@@ -10,7 +10,16 @@
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  // 主窗口；关到托盘后再次启动程序时把它显示出来，而不是再开一个
+  GtkWindow* main_window;
 };
+
+static gboolean is_lyrics_mode(char** args) {
+  for (char** arg = args; arg != nullptr && *arg != nullptr; arg++) {
+    if (g_strcmp0(*arg, "--desktop-lyrics") == 0) return TRUE;
+  }
+  return FALSE;
+}
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
@@ -22,14 +31,17 @@ static void first_frame_cb(MyApplication* self, FlView* view) {
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
+  if (self->main_window != nullptr) {
+    gtk_widget_show(GTK_WIDGET(self->main_window));
+    gtk_window_present(self->main_window);
+    return;
+  }
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
 
   // 以 --desktop-lyrics 启动时是桌面歌词窗口：透明、无标题栏、不进任务栏、尽量置顶
-  gboolean lyrics_mode = FALSE;
-  for (gchar** arg = self->dart_entrypoint_arguments; arg != nullptr && *arg != nullptr; arg++) {
-    if (g_strcmp0(*arg, "--desktop-lyrics") == 0) lyrics_mode = TRUE;
-  }
+  gboolean lyrics_mode = is_lyrics_mode(self->dart_entrypoint_arguments);
+  if (!lyrics_mode) self->main_window = window;
   if (lyrics_mode) {
     GdkScreen* rgba_screen = gtk_window_get_screen(window);
     GdkVisual* visual = gdk_screen_get_rgba_visual(rgba_screen);
@@ -112,12 +124,27 @@ static gboolean my_application_local_command_line(GApplication* application,
   // Strip out the first argument as it is the binary name.
   self->dart_entrypoint_arguments = g_strdupv(*arguments + 1);
 
+  // 主程序单实例（按应用 ID 在会话总线上占名）；桌面歌词是另一个进程，不参与
+  gboolean unique = !is_lyrics_mode(self->dart_entrypoint_arguments);
+  g_application_set_flags(application, unique ? static_cast<GApplicationFlags>(0)
+                                              : G_APPLICATION_NON_UNIQUE);
   g_autoptr(GError) error = nullptr;
   if (!g_application_register(application, nullptr, &error)) {
-    g_warning("Failed to register: %s", error->message);
-    *exit_status = 1;
-    return TRUE;
+    if (!unique) {
+      g_warning("Failed to register: %s", error->message);
+      *exit_status = 1;
+      return TRUE;
+    }
+    // 没有会话总线等情况下退回多实例
+    g_clear_error(&error);
+    g_application_set_flags(application, G_APPLICATION_NON_UNIQUE);
+    if (!g_application_register(application, nullptr, &error)) {
+      g_warning("Failed to register: %s", error->message);
+      *exit_status = 1;
+      return TRUE;
+    }
   }
+  // 已有实例在运行：activate 会转发给它，它把窗口显示出来
 
   g_application_activate(application);
   *exit_status = 0;
