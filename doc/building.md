@@ -104,7 +104,7 @@ Flathub 要求开源应用从源码构建，并且构建过程不能联网。清
    python3 flatpak-flutter.py --app-pubspec app flatpak-flutter.yml
    ```
 
-3. 本地按 Flathub 的方式断网构建并安装验证。Builder 本身是 Flatpak 应用，看不到 `/tmp`，工作目录要放在家目录下：
+3. 本地按 Flathub 的方式断网构建并安装验证。Builder 本身是 Flatpak 应用，看不到 `/tmp`，工作目录要放在家目录下；它的沙箱里 rofiles-fuse 起不来时加 `--disable-rofiles-fuse`：
 
    ```bash
    flatpak run org.flatpak.Builder --repo=repo --force-clean --sandbox --disable-rofiles-fuse --user --install \
