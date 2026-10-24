@@ -117,6 +117,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.2.5" date="2026-10-24">
+      <description>
+        <p>System tray: closing the window keeps the music playing; reopen or quit from the tray. Starting the app again brings back the existing window.</p>
+      </description>
+    </release>
     <release version="0.2.4" date="2026-10-24">
       <description>
         <p>Flatpak packaging metadata. No functional changes for desktop users.</p>
