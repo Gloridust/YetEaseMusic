@@ -119,7 +119,7 @@ Protocol, playback, queue and cache live in a shared Rust core; the UI layer onl
 
 | Platform | Status | Notes |
 |---|---|---|
-| Linux (x86_64) | ✅ available | Primary target; `.deb` and a generic tarball for Ubuntu 22.04 / Debian 12 / Fedora 35 and later |
+| Linux (x86_64) | ✅ available | Primary target; `.deb`, AppImage and a generic tarball for Ubuntu 22.04 / Debian 12 / Fedora 35 and later |
 | CLI / terminal UI | ✅ available | No GUI needed; works on servers and over SSH |
 | Windows 10 / 11 (incl. tablets) | ✅ available | Installer and portable zip, built by CI |
 | macOS (Intel / Apple silicon) | ✅ available | Universal dmg built by CI; unsigned, so right-click → Open the first time |
@@ -132,7 +132,8 @@ Grab the package for your platform from **[Releases](https://github.com/Gloridus
 | Platform | File |
 |---|---|
 | Ubuntu / Debian | `yetease-music_<version>_amd64.deb` – double-click, or `sudo apt install ./yetease-music_*.deb` |
-| Other Linux | `yetease-music-<version>-linux-x86_64.tar.gz` – extract and run `./install.sh` |
+| Any Linux (no install) | `yetease-music-<version>-x86_64.AppImage` – make it executable (`chmod +x`, or Properties → Allow executing) and run it |
+| Other Linux | `yetease-music-<version>-linux-x86_64.tar.gz` – extract and run `./install.sh` to add it to your app menu |
 | Windows | `yetease-music-<version>-windows-x64-setup.exe` (a portable zip is also provided) |
 | macOS | `yetease-music-<version>-macos-universal.dmg` |
 | Android | `yetease-music-<version>-android-universal.apk` (pick this if unsure about your CPU) |
