@@ -88,7 +88,8 @@ YetEase 分成两层：**Rust 内核**负责协议、播放、队列、缓存等
 |---|---|---|
 | 系统媒体控制 | `ncm-core/src/media.rs` | souvlaki：Linux MPRIS（自动启用，没有 D-Bus 会话总线时跳过）、Windows SMTC（界面层传 HWND）、macOS 正在播放。控件放在独立线程，事件经回调交给 `Core` |
 | Android 媒体会话 | `app/lib/android_media.dart` | audio_service：前台服务保活、通知栏与锁屏控件、蓝牙 / 方向盘按键；状态取自 `AppState`，命令转回 Rust |
-| 日志 | `ncm-core/src/logging.rs` | 按天滚动写到 `<data>/logs/`、保留 7 天；Dart 未捕获异常经 `log_message` 写入同一文件；导出时抹掉 `MUSIC_U` 等凭据 |
+| Android 初始化 | `app/rust/src/android.rs`、`YetEaseApplication.kt` | Dart 用 dlopen 加载 Rust 库，不会触发 JNI_OnLoad；应用启动时由 Kotlin 把 JavaVM 与 Context 交给 ndk-context，cpal 的 AAudio 后端依赖它。TLS 在 Android 上用内置 webpki 根证书，不走需要 JNI 的系统证书校验 |
+| 日志 | `ncm-core/src/logging.rs` | 按天滚动写到 `<data>/logs/`、保留 7 天；Dart 未捕获异常与后台线程 panic 写入同一文件；Android 上同时写 logcat（tag `yetease`）；导出时抹掉 `MUSIC_U` 等凭据 |
 | 缓存 | `ncm-core/src/images.rs` | 图片按 URL 的 MD5 分片存放（上限 500MB）；音频缓存上限可设；启动与每首新歌时检查，按修改时间淘汰最旧的 |
 | 桌面歌词 | `app/rust/src/api/desktop_lyrics.rs`、`app/lib/desktop_lyrics.dart` | 同一程序以 `--desktop-lyrics --port=N` 启动的独立透明窗口；主程序在 127.0.0.1 上按行推送 JSON（歌词、进度），窗口回传切歌等命令 |
 | 逐字歌词 | `ncm-core/src/lyrics.rs` | 解析 `lyric/v1` 的 yrc：`[行起始,行时长](字起始,字时长,0)字…`，翻译按时间戳对齐；界面每帧通过同步 FFI 读取精确播放位置做逐字填充 |
