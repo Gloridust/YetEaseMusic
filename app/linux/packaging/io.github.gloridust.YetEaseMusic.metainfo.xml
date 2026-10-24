@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.gloridust.yetease</id>
+  <id>io.github.gloridust.YetEaseMusic</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
 
@@ -57,7 +57,7 @@
     </p>
   </description>
 
-  <launchable type="desktop-id">io.github.gloridust.yetease.desktop</launchable>
+  <launchable type="desktop-id">io.github.gloridust.YetEaseMusic.desktop</launchable>
   <provides>
     <binary>yetease-music</binary>
     <dbus type="user">org.mpris.MediaPlayer2.yetease</dbus>

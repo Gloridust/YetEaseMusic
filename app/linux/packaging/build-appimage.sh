@@ -8,7 +8,7 @@ VERSION="$1"
 BUNDLE="$2"
 OUT="$3"
 HERE="$(cd "$(dirname "$0")" && pwd)"
-APP_ID=io.github.gloridust.yetease
+APP_ID=io.github.gloridust.YetEaseMusic
 TOOL="${APPIMAGETOOL:-appimagetool}"
 NAME="yetease-music-$VERSION-x86_64.AppImage"
 

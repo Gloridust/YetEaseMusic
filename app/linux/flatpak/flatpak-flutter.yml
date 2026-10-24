@@ -1,6 +1,6 @@
-# Flathub 清单的模板，交给 flatpak-flutter 生成可离线构建的 io.github.gloridust.yetease.yml。
+# Flathub 清单的模板，交给 flatpak-flutter 生成可离线构建的 io.github.gloridust.YetEaseMusic.yml。
 # 用法见 doc/building.md 的「Flatpak」一节。
-id: io.github.gloridust.yetease
+id: io.github.gloridust.YetEaseMusic
 runtime: org.freedesktop.Platform
 runtime-version: '26.08'
 sdk: org.freedesktop.Sdk
@@ -41,9 +41,9 @@ modules:
       - mkdir -p /app/lib/yetease /app/bin
       - cp -r $BUNDLE_PATH/. /app/lib/yetease/
       - ln -s /app/lib/yetease/yetease-music /app/bin/yetease-music
-      - install -Dm644 app/linux/packaging/io.github.gloridust.yetease.desktop /app/share/applications/io.github.gloridust.yetease.desktop
-      - install -Dm644 app/linux/packaging/io.github.gloridust.yetease.metainfo.xml /app/share/metainfo/io.github.gloridust.yetease.metainfo.xml
-      - for s in 16 24 32 48 64 128 256 512; do install -Dm644 app/linux/packaging/icons/$s.png /app/share/icons/hicolor/${s}x${s}/apps/io.github.gloridust.yetease.png; done
+      - install -Dm644 app/linux/packaging/io.github.gloridust.YetEaseMusic.desktop /app/share/applications/io.github.gloridust.YetEaseMusic.desktop
+      - install -Dm644 app/linux/packaging/io.github.gloridust.YetEaseMusic.metainfo.xml /app/share/metainfo/io.github.gloridust.YetEaseMusic.metainfo.xml
+      - for s in 16 24 32 48 64 128 256 512; do install -Dm644 app/linux/packaging/icons/$s.png /app/share/icons/hicolor/${s}x${s}/apps/io.github.gloridust.YetEaseMusic.png; done
     modules:
       - generated/modules/rustup-1.94.0.json
     sources:

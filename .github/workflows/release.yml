@@ -73,7 +73,7 @@ jobs:
           mkdir -p "$D"
           cp -a app/build/linux/x64/release/bundle "$D/bundle"
           cp -a app/linux/packaging/icons "$D/icons"
-          cp app/linux/packaging/io.github.gloridust.yetease.desktop "$D/"
+          cp app/linux/packaging/io.github.gloridust.YetEaseMusic.desktop "$D/"
           cp app/linux/packaging/install-local.sh "$D/install.sh"
           cp LICENSE "$D/"
           tar -czf "dist/$D.tar.gz" "$D"

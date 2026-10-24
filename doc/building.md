@@ -93,7 +93,7 @@ cd app && rm -rf .dart_tool/flutter_build build/linux/x64/release/bundle && flut
 Flathub 要求开源应用从源码构建，并且构建过程不能联网。清单分两层：
 
 - `app/linux/flatpak/flatpak-flutter.yml` + `foreign.json`：手写的模板，只写构建步骤、权限和源码版本。
-- Flathub 仓库里的 `io.github.gloridust.yetease.yml` 与 `generated/`：由 [flatpak-flutter](https://github.com/TheAppgineer/flatpak-flutter) 根据模板生成，把 Flutter SDK、pub 包、Rust 工具链和 crates 全部固定成可离线下载的源。
+- Flathub 仓库里的 `io.github.gloridust.YetEaseMusic.yml` 与 `generated/`：由 [flatpak-flutter](https://github.com/TheAppgineer/flatpak-flutter) 根据模板生成，把 Flutter SDK、pub 包、Rust 工具链和 crates 全部固定成可离线下载的源。
 
 发新版时：
 
@@ -108,10 +108,10 @@ Flathub 要求开源应用从源码构建，并且构建过程不能联网。清
 
    ```bash
    flatpak run org.flatpak.Builder --repo=repo --force-clean --sandbox --disable-rofiles-fuse --user --install \
-     --install-deps-from=flathub builddir io.github.gloridust.yetease.yml
-   flatpak run io.github.gloridust.yetease
+     --install-deps-from=flathub builddir io.github.gloridust.YetEaseMusic.yml
+   flatpak run io.github.gloridust.YetEaseMusic
    ```
 
-4. 把生成结果提交到 `flathub/io.github.gloridust.yetease` 仓库。
+4. 把生成结果提交到 `flathub/io.github.gloridust.YetEaseMusic` 仓库。
 
 注意：本机若设置了 `PUB_HOSTED_URL` 等国内镜像，生成的清单里不能混进镜像地址，提交前检查 `generated/sources/*.json` 里的域名只有 pub.dev、static.crates.io 等官方源。
