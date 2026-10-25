@@ -35,6 +35,7 @@ for f in "$HERE"/icons/*.png; do
   s="$(basename "$f" .png)"
   install -Dm644 "$f" "$APPDIR/usr/share/icons/hicolor/${s}x${s}/apps/$APP_ID.png"
 done
+install -Dm644 "$HERE/icons/scalable.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/$APP_ID.svg"
 
 mkdir -p "$OUT"
 # metainfo 里的截图要联网校验，打包时跳过（Flathub 构建时会校验）

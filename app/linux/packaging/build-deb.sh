@@ -30,6 +30,8 @@ for f in "$HERE"/icons/*.png; do
   s="$(basename "$f" .png)"
   install -D -m 0644 "$f" "$ROOT/usr/share/icons/hicolor/${s}x${s}/apps/$APP_ID.png"
 done
+# 矢量图标：高分屏、任意缩放下都清晰
+install -D -m 0644 "$HERE/icons/scalable.svg" "$ROOT/usr/share/icons/hicolor/scalable/apps/$APP_ID.svg"
 cp "$HERE/../../../LICENSE" "$ROOT/usr/share/doc/$PKG/copyright"
 
 SIZE_KB="$(du -sk --exclude=DEBIAN "$ROOT" | cut -f1)"

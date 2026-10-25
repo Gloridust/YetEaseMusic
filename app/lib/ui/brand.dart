@@ -7,10 +7,9 @@ final String kAppName = Platform.localeName.toLowerCase().startsWith('zh') ? '�
 
 /// 品牌色：与网易云的红保持同一色系
 const kBrandRed = Color(0xFFEC4141);
-const kBrandRedDeep = Color(0xFFD72D3C);
 
-/// 应用图标：红色圆底 + 白色螺旋音符（外圈开口圆弧、内圈符头、穿出缺口向右卷起的符干）。
-/// 图形与 doc/logo.svg 一致；改动时两处一起改。
+/// 应用图标：扁平的红色圆角方形 + 白色蜗牛线条（外圈是壳，触须分叉成 Y）。
+/// 图形与 tools/icons/generate.sh 一致；改动时两处一起改，再运行该脚本重新生成各平台图标。
 class AppLogo extends StatelessWidget {
   const AppLogo({super.key, this.size = 32});
 
@@ -25,44 +24,38 @@ class LogoPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final s = size.width / 100;
-    final rect = Offset.zero & size;
-    // 底：偏左上的径向渐变，让红色有体积感
-    canvas.drawOval(
-      rect,
-      Paint()
-        ..shader = const RadialGradient(
-          center: Alignment(-0.35, -0.45),
-          radius: 1.05,
-          colors: [Color(0xFFFF6A6A), kBrandRed, kBrandRedDeep],
-          stops: [0.0, 0.55, 1.0],
-        ).createShader(rect),
-    );
+    final w = size.width;
+    canvas.drawRRect(RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(w * 0.2)), Paint()..color = kBrandRed);
 
+    // 图形按 0–100 的坐标画，缩放后放在中心（与生成脚本里主体 88、图形缩放 0.96 的比例相同）
+    canvas.save();
+    canvas.translate(w / 2, w / 2);
+    canvas.scale(w / 100 * 0.96 / 0.88);
+    canvas.translate(-49, -51.5);
     final stroke = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 7.2 * s
+      // 侧栏里只有 30 左右，线条比大图标略粗才清楚
+      ..strokeWidth = w <= 40 ? 8.5 : 7.2
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     const deg = 3.141592653589793 / 180;
-    // 外圈：右上方留出缺口，符干从缺口穿出
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(48 * s, 55 * s), radius: 27 * s),
-      -40 * deg,
-      300 * deg,
-      false,
-      stroke,
-    );
-    // 内圈符头
-    canvas.drawCircle(Offset(48.5 * s, 57 * s), 10.5 * s, stroke);
-    // 符干：从内圈右缘向上，穿过外圈缺口后向右卷起
-    final stem = Path()
-      ..moveTo(59 * s, 57 * s)
-      ..lineTo(59 * s, 24 * s)
-      ..cubicTo(59 * s, 17 * s, 66 * s, 15 * s, 71 * s, 18.5 * s)
-      ..cubicTo(74.5 * s, 21 * s, 75.5 * s, 25 * s, 74.5 * s, 28.5 * s);
-    canvas.drawPath(stem, stroke);
+    // 壳：右上方留出缺口，触须从缺口伸出
+    canvas.drawArc(Rect.fromCircle(center: const Offset(48, 55), radius: 27), -35 * deg, 275 * deg, false, stroke);
+    canvas.drawCircle(const Offset(48.5, 57), 10.5, stroke);
+    // 颈部向上，在顶端分叉成 Y 字形的两根触须
+    final antennae = Path()
+      ..moveTo(59, 57)
+      ..lineTo(59, 35)
+      ..cubicTo(57, 28, 51, 22, 46, 17)
+      ..moveTo(59, 35)
+      ..cubicTo(61, 28, 67, 22, 72, 17);
+    canvas.drawPath(antennae, stroke);
+    final dot = Paint()..color = Colors.white;
+    final r = stroke.strokeWidth * 0.667;
+    canvas.drawCircle(const Offset(46, 17), r, dot);
+    canvas.drawCircle(const Offset(72, 17), r, dot);
+    canvas.restore();
   }
 
   @override

@@ -25,7 +25,6 @@ Future<void> main(List<String> args) async {
   if (args.isEmpty && route.startsWith('/?')) args = Uri.parse(route).queryParametersAll['arg'] ?? const [];
   // 桌面歌词是同一个程序的另一个进程，只显示歌词，不启动播放内核
   if (args.contains('--desktop-lyrics')) return runDesktopLyrics(args);
-  await maybeExportIcons();
   await RustLib.init();
   // 未捕获的异常写进日志文件，方便导出反馈
   FlutterError.onError = (d) {

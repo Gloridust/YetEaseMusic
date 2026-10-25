@@ -7,7 +7,6 @@ import 'package:window_manager/window_manager.dart';
 
 import 'src/rust/api/library.dart' as lib;
 import 'state.dart';
-import 'ui/brand.dart';
 import 'ui/login_dialog.dart';
 import 'ui/nav.dart';
 import 'ui/pages/album_page.dart';
@@ -23,21 +22,6 @@ import 'ui/pages/settings_page.dart';
 
 /// 开发用：设置 YETEASE_TOUR=<输出目录> 后自动走一遍主要页面并截图（界面回归检查、README 配图）。
 final tourBoundary = GlobalKey();
-
-/// 开发用：设置 YETEASE_EXPORT_ICONS=<目录> 后把应用图标导出成各尺寸 PNG 并退出
-Future<void> maybeExportIcons() async {
-  final dir = Platform.environment['YETEASE_EXPORT_ICONS'];
-  if (dir == null) return;
-  for (final size in const [16, 24, 32, 48, 64, 72, 96, 128, 144, 192, 256, 512, 1024]) {
-    final rec = ui.PictureRecorder();
-    const LogoPainter().paint(Canvas(rec), Size.square(size.toDouble()));
-    final img = await rec.endRecording().toImage(size, size);
-    final png = await img.toByteData(format: ui.ImageByteFormat.png);
-    await File('$dir/icon-$size.png').writeAsBytes(png!.buffer.asUint8List());
-  }
-  debugPrint('icons exported');
-  exit(0);
-}
 
 Future<void> maybeRunTour() async {
   final dir = Platform.environment['YETEASE_TOUR'];
