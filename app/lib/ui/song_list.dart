@@ -7,7 +7,7 @@ import 'pages/album_page.dart';
 import 'song_actions.dart';
 import 'widgets.dart';
 
-const _rowHeight = 54.0;
+const _rowHeight = 64.0;
 
 /// 列表表头：# / 标题 / 专辑 / 喜欢 / 时长
 class SongListHeader extends StatelessWidget {
@@ -19,9 +19,9 @@ class SongListHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final style = TextStyle(color: p.textTertiary, fontSize: 13);
+    final style = TextStyle(color: p.textSecondary, fontSize: 13);
     return Container(
-      height: 36,
+      height: 40,
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: p.divider)),
       ),
@@ -55,7 +55,7 @@ class _Columns extends StatelessWidget {
         final wide = c.maxWidth > 640;
         return Row(
           children: [
-            SizedBox(width: 46, child: index),
+            SizedBox(width: 52, child: index),
             Expanded(flex: 5, child: title),
             if (wide) ...[const SizedBox(width: 16), Expanded(flex: 3, child: album)],
             SizedBox(width: 56, child: like),
@@ -117,11 +117,11 @@ class SongRow extends StatelessWidget {
           child: Hover(
             onTap: touch ? _play : null,
             onDoubleTap: touch ? null : _play,
-            builder: (context, h) => AnimatedContainer(
-              duration: const Duration(milliseconds: 100),
+            // 悬停时整行变成白色圆角卡片（深色主题是浅一级的底色），即时切换
+            builder: (context, h) => Container(
               decoration: BoxDecoration(
-                color: h ? p.hover.withValues(alpha: 0.7) : Colors.transparent,
-                borderRadius: BorderRadius.circular(Tokens.radiusM),
+                color: h ? p.rowHover : null,
+                borderRadius: BorderRadius.circular(Tokens.radiusRow),
               ),
               child: _Columns(
                 index: Center(
@@ -140,8 +140,8 @@ class SongRow extends StatelessWidget {
                 ),
                 title: Row(
                   children: [
-                    Cover(url: song.coverUrl, size: 38, radius: Tokens.radiusS),
-                    const SizedBox(width: 12),
+                    Cover(url: song.coverUrl, size: 48, radius: Tokens.radiusM),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -152,7 +152,7 @@ class SongRow extends StatelessWidget {
                               children: [
                                 TextSpan(
                                   text: song.name,
-                                  style: TextStyle(color: titleColor, fontSize: 14),
+                                  style: TextStyle(color: titleColor, fontSize: 14, fontWeight: FontWeight.w500),
                                 ),
                                 if (song.subtitle != null)
                                   TextSpan(
@@ -164,14 +164,14 @@ class SongRow extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 5),
                           Row(
                             children: [
                               if (song.vip) const Tag('VIP'),
                               Flexible(
                                 child: ArtistLinks(
                                   artists: song.artists,
-                                  style: TextStyle(color: playing ? Tokens.accent : p.textSecondary, fontSize: 12),
+                                  style: TextStyle(color: playing ? Tokens.accent : p.textSecondary, fontSize: 13),
                                 ),
                               ),
                             ],

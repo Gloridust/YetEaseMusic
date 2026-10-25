@@ -20,7 +20,7 @@ class SettingsPage extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(32, 12, 32, 40),
       children: [
-        const Text('设置', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+        const Text('设置', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
         const SizedBox(height: 24),
         _Section(
           title: '账号',
@@ -239,7 +239,7 @@ class _Choice extends StatelessWidget {
         duration: const Duration(milliseconds: 120),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? Tokens.accentSoft : (h ? p.hover : p.field),
+          color: selected ? Tokens.accentSoft : (h ? p.hoverStrong : p.field),
           border: Border.all(color: selected ? Tokens.accent : Colors.transparent),
           borderRadius: BorderRadius.circular(Tokens.radiusM),
         ),

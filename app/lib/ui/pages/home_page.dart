@@ -26,7 +26,7 @@ class _FeaturedState extends State<_Featured> {
       builder: (context, list) => CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(28, 4, 28, 0),
+            padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, 0),
             sliver: SliverToBoxAdapter(
               child: ValueListenableBuilder(
                 valueListenable: AppState.I.account,
@@ -35,11 +35,11 @@ class _FeaturedState extends State<_Featured> {
             ),
           ),
           const SliverPadding(
-            padding: EdgeInsets.fromLTRB(28, 20, 28, 14),
+            padding: EdgeInsets.fromLTRB(Tokens.pageGutter, 20, Tokens.pageGutter, 14),
             sliver: SliverToBoxAdapter(child: _SectionTitle('推荐歌单')),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
+            padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 0, Tokens.pageGutter, Tokens.pageGutter),
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 190,
@@ -65,7 +65,7 @@ class _SectionTitle extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) => Text(text, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700));
+  Widget build(BuildContext context) => Text(text, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600));
 }
 
 /// 每日推荐入口
@@ -82,7 +82,7 @@ class _DailyCard extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         child: Container(
           height: 112,
-          padding: const EdgeInsets.symmetric(horizontal: 28),
+          padding: const EdgeInsets.symmetric(horizontal: Tokens.pageGutter),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(Tokens.radiusL),
             gradient: const LinearGradient(
@@ -146,12 +146,7 @@ class PlaylistCard extends StatelessWidget {
           LayoutBuilder(
             builder: (context, c) => Stack(
               children: [
-                AnimatedScale(
-                  scale: h ? 1.03 : 1,
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOutCubic,
-                  child: Cover(url: item.coverUrl, size: c.maxWidth, radius: Tokens.radiusL),
-                ),
+                CardCover(url: item.coverUrl, size: c.maxWidth, hovered: h),
                 if (item.playCount > 0)
                   Positioned(
                     right: 10,
@@ -177,7 +172,8 @@ class PlaylistCard extends StatelessWidget {
                   bottom: 10,
                   child: AnimatedOpacity(
                     opacity: h ? 1 : 0,
-                    duration: const Duration(milliseconds: 160),
+                    duration: const Duration(milliseconds: 200),
+                    curve: Tokens.easeInOut,
                     child: Hover(
                       onTap: () async {
                         final d = await lib.playlistDetail(id: item.id);
@@ -231,7 +227,7 @@ class _HomePageState extends State<HomePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(28, 4, 28, 8),
+          padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, 8),
           child: UnderlineTabs(
             tabs: const ['精选', '歌单广场', '排行榜'],
             index: _tab,
@@ -313,7 +309,7 @@ class _PlaylistSquareState extends State<_PlaylistSquare> {
       child: CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(28, 8, 28, 16),
+            padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 8, Tokens.pageGutter, 16),
             sliver: SliverToBoxAdapter(
               child: Wrap(
                 spacing: 8,
@@ -325,7 +321,7 @@ class _PlaylistSquareState extends State<_PlaylistSquare> {
                       builder: (_, h) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                         decoration: BoxDecoration(
-                          color: c == _cat ? Tokens.accentSoft : (h ? p.hover : p.field),
+                          color: c == _cat ? Tokens.accentSoft : (h ? p.hoverStrong : p.field),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Text(
@@ -339,7 +335,7 @@ class _PlaylistSquareState extends State<_PlaylistSquare> {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(28, 0, 28, 12),
+            padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 0, Tokens.pageGutter, 12),
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 190,
@@ -392,7 +388,7 @@ class _ToplistsState extends State<_Toplists> {
       builder: (context, list) => CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(28, 8, 28, 28),
+            padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 8, Tokens.pageGutter, Tokens.pageGutter),
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 190,
@@ -410,11 +406,7 @@ class _ToplistsState extends State<_Toplists> {
                       LayoutBuilder(
                         builder: (context, c) => Stack(
                           children: [
-                            AnimatedScale(
-                              scale: h ? 1.03 : 1,
-                              duration: const Duration(milliseconds: 200),
-                              child: Cover(url: t.coverUrl, size: c.maxWidth, radius: Tokens.radiusL),
-                            ),
+                            CardCover(url: t.coverUrl, size: c.maxWidth, hovered: h),
                             if (t.updateFrequency != null)
                               Positioned(
                                 left: 8,

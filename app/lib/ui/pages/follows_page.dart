@@ -55,7 +55,7 @@ class _FollowsPageState extends State<FollowsPage> with AccountAware {
             const SliverFillRemaining(hasScrollBody: false, child: EmptyState(text: '还没有关注任何人'))
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
+              padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 0, Tokens.pageGutter, Tokens.pageGutter),
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 340,
@@ -70,7 +70,7 @@ class _FollowsPageState extends State<FollowsPage> with AccountAware {
                     builder: (_, h) => Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: h ? p.hover : p.surface,
+                        color: h ? Color.alphaBlend(p.hover, p.surface) : p.surface,
                         borderRadius: BorderRadius.circular(Tokens.radiusM),
                       ),
                       child: Row(
@@ -137,7 +137,7 @@ class _UserPageState extends State<UserPage> {
         return CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(28, 8, 28, 20),
+              padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 8, Tokens.pageGutter, 20),
               sliver: SliverToBoxAdapter(
                 child: Row(
                   children: [
@@ -167,13 +167,13 @@ class _UserPageState extends State<UserPage> {
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(28, 0, 28, 12),
+              padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 0, Tokens.pageGutter, 12),
               sliver: SliverToBoxAdapter(
-                child: Text('创建的歌单 ${own.length}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                child: Text('创建的歌单 ${own.length}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
+              padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 0, Tokens.pageGutter, Tokens.pageGutter),
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 190,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../src/rust/api/library.dart' as lib;
 import '../../src/rust/api/types.dart';
 import '../../state.dart';
+import '../../theme.dart';
 import '../login_dialog.dart';
 import '../song_list.dart';
 import '../widgets.dart';
@@ -53,11 +54,11 @@ class _RecentPageState extends State<RecentPage> with AccountAware {
               const SliverFillRemaining(hasScrollBody: false, child: EmptyState(text: '最近没有播放记录'))
             else ...[
               const SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: 28),
+                padding: EdgeInsets.symmetric(horizontal: Tokens.pageGutter),
                 sliver: SliverToBoxAdapter(child: SongListHeader(lastLabel: '播放时间')),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(28, 4, 28, 28),
+                padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, Tokens.pageGutter),
                 sliver: SliverSongList(songs: songs, lastColumn: times),
               ),
             ],

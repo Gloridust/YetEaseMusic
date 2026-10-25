@@ -42,7 +42,7 @@ class _AlbumPageState extends State<AlbumPage> {
         return CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(28, 8, 28, 16),
+              padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 8, Tokens.pageGutter, 16),
               sliver: SliverToBoxAdapter(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +75,7 @@ class _AlbumPageState extends State<AlbumPage> {
                               a.name,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700),
+                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 8),
                             Wrap(
@@ -127,16 +127,16 @@ class _AlbumPageState extends State<AlbumPage> {
               ),
             ),
             const SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: 28),
+              padding: EdgeInsets.symmetric(horizontal: Tokens.pageGutter),
               sliver: SliverToBoxAdapter(child: SongListHeader()),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(28, 4, 28, 16),
+              padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, 16),
               sliver: SliverSongList(songs: d.songs),
             ),
             if (a.description != null)
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(28, 8, 28, 32),
+                padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 8, Tokens.pageGutter, 32),
                 sliver: SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,7 +210,7 @@ class _ArtistPageState extends State<ArtistPage> {
           child: CustomScrollView(
             slivers: [
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(28, 8, 28, 16),
+                padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 8, Tokens.pageGutter, 16),
                 sliver: SliverToBoxAdapter(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,7 +268,7 @@ class _ArtistPageState extends State<ArtistPage> {
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(28, 0, 28, 12),
+                padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 0, Tokens.pageGutter, 12),
                 sliver: SliverToBoxAdapter(
                   child: UnderlineTabs(
                     tabs: const ['热门 50 首', '专辑'],
@@ -282,16 +282,16 @@ class _ArtistPageState extends State<ArtistPage> {
               ),
               if (_tab == 0) ...[
                 const SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: 28),
+                  padding: EdgeInsets.symmetric(horizontal: Tokens.pageGutter),
                   sliver: SliverToBoxAdapter(child: SongListHeader()),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(28, 4, 28, 28),
+                  padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, Tokens.pageGutter),
                   sliver: SliverSongList(songs: d.hotSongs),
                 ),
               ] else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(28, 4, 28, 28),
+                  padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, Tokens.pageGutter),
                   sliver: AlbumGrid(albums: _albums),
                 ),
             ],

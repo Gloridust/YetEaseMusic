@@ -58,9 +58,9 @@ class _Title extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SliverPadding(
-    padding: const EdgeInsets.fromLTRB(28, 4, 28, 12),
+    padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, 12),
     sliver: SliverToBoxAdapter(
-      child: Text(text, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+      child: Text(text, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
     ),
   );
 }
@@ -74,7 +74,7 @@ class _RadioGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(28, 0, 28, 20),
+      padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 0, Tokens.pageGutter, 20),
       sliver: SliverGrid(
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 180,
@@ -148,7 +148,7 @@ class _RadioPageState extends State<RadioPage> {
         return CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(28, 8, 28, 16),
+              padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 8, Tokens.pageGutter, 16),
               sliver: SliverToBoxAdapter(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,11 +196,11 @@ class _RadioPageState extends State<RadioPage> {
               ),
             ),
             const SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: 28),
+              padding: EdgeInsets.symmetric(horizontal: Tokens.pageGutter),
               sliver: SliverToBoxAdapter(child: SongListHeader()),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(28, 4, 28, 28),
+              padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, Tokens.pageGutter),
               sliver: SliverSongList(songs: programs),
             ),
           ],
