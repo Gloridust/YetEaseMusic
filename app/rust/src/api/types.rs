@@ -242,6 +242,8 @@ pub struct AppSettings {
     pub theme: ThemePref,
     pub close_to_tray: bool,
     pub sidebar_width: f32,
+    pub auto_check_update: bool,
+    pub skipped_version: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

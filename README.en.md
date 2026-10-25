@@ -107,6 +107,7 @@ Protocol, playback, queue and cache live in a shared Rust core; the UI layer onl
 | System tray; keeps playing after you close the window | ✅ |
 | Light / dark theme, UI scaling, overseas mode | ✅ |
 | Log export (credentials redacted) for bug reports | ✅ |
+| In-app update check, changelog and one-click update (keeps your install method and location) | ✅ |
 | CLI and terminal UI (`yetease tui`) | ✅ |
 | Save albums, follow artists, save playlists¹ | ✅ |
 | Android background playback, notification / lock-screen controls, Bluetooth and steering-wheel keys² | ✅ |
@@ -138,6 +139,8 @@ Grab the package for your platform from **[Releases](https://github.com/Gloridus
 | Windows | `yetease-music-<version>-windows-x64-setup.exe` (a portable zip is also provided) |
 | macOS | `yetease-music-<version>-macos-universal.dmg` |
 | Android | `yetease-music-<version>-android-universal.apk` (pick this if unsure about your CPU) |
+
+Once installed, you don't need to come back here: the app checks for new versions at startup (turn it off or check manually under *Settings → About*), then downloads, verifies and updates in place using the same install method – a deb upgrades as a deb, an AppImage is replaced where it is, the tarball install goes back to the same folder, and the Windows installer upgrades silently. macOS downloads and opens the dmg; Android hands the apk to the system installer.
 
 ### Flatpak
 

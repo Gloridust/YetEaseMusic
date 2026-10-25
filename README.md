@@ -107,6 +107,7 @@ YetEase 想把这些空白补上：**一套内核，多个界面，每一端都�
 | 系统托盘，关闭窗口后继续在后台播放 | ✅ |
 | 浅色 / 深色主题、界面缩放、海外网络模式 | ✅ |
 | 日志导出（自动脱敏），方便反馈问题 | ✅ |
+| 应用内检查更新、查看更新日志、一键更新（保持原安装方式与路径） | ✅ |
 | 命令行版与终端界面（`yetease tui`） | ✅ |
 | 收藏专辑、关注歌手、收藏歌单¹ | ✅ |
 | Android 后台播放、通知栏 / 锁屏控件、蓝牙与方向盘按键² | ✅ |
@@ -138,6 +139,8 @@ YetEase 想把这些空白补上：**一套内核，多个界面，每一端都�
 | Windows | `yetease-music-<版本>-windows-x64-setup.exe`（另有免安装版 zip） |
 | macOS | `yetease-music-<版本>-macos-universal.dmg` |
 | Android | `yetease-music-<版本>-android-universal.apk`（不确定架构就选它） |
+
+装好之后不用再来这里下载：应用会在启动时检查新版本（可在 *设置 → 关于* 里关闭或手动检查），一键下载、校验并按原来的安装方式更新——deb 用 deb 升级，AppImage 原地替换，压缩包装回原目录，Windows 安装版静默升级。macOS 会下载并打开 dmg，Android 会调起系统安装器。
 
 ### Flatpak
 

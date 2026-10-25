@@ -117,6 +117,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.2.8" date="2026-10-26">
+      <description>
+        <p>In-app updates: check for new versions, read the changelog, and update with one click while keeping the same install method and location.</p>
+      </description>
+    </release>
     <release version="0.2.7" date="2026-10-26">
       <description>
         <p>A new flat app icon, and an interface aligned with the new official NetEase web player: a unified colour palette with the official red gradient, official sidebar and song row sizing, instant hover feedback, and a gradient search box.</p>

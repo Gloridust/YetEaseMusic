@@ -19,6 +19,7 @@ import 'ui/pages/recent_page.dart';
 import 'ui/pages/playlist_page.dart';
 import 'ui/pages/search_page.dart';
 import 'ui/pages/settings_page.dart';
+import 'ui/update_dialog.dart';
 
 /// 开发用：设置 YETEASE_TOUR=<输出目录> 后自动走一遍主要页面并截图（界面回归检查、README 配图）。
 final tourBoundary = GlobalKey();
@@ -103,6 +104,12 @@ Future<void> maybeRunTour() async {
   Nav.root('settings', const SettingsPage());
   await wait(2);
   await shot('settings');
+
+  // 更新对话框（配合 YETEASE_PRETEND_VERSION 可看到「发现新版本」的样子）
+  checkForUpdates().ignore();
+  await wait(6);
+  await shot('update');
+  Nav.key.currentState?.pop();
 
   // 窄窗口（接近手机 / 车机竖屏）下的自适应布局
   Nav.root('home', const HomePage());

@@ -5,10 +5,13 @@ import 'package:flutter/material.dart';
 import '../../src/rust/api/library.dart' as lib;
 import '../../src/rust/api/playback.dart' as pb;
 import '../../src/rust/api/types.dart';
+import '../../src/rust/api/update.dart' as up;
 import '../../state.dart';
+import '../../system.dart';
 import '../../theme.dart';
 import '../login_dialog.dart';
 import '../shell.dart' show isDesktop;
+import '../update_dialog.dart';
 import '../widgets.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -170,7 +173,36 @@ class SettingsPage extends StatelessWidget {
         const _Section(title: '反馈', child: _FeedbackSection()),
         _Section(
           title: '关于',
-          child: _Hint('YetEase Music ${pb.appVersion()} · 开源的网易云音乐第三方客户端。\n直连网易云官方接口，不依赖任何第三方服务器，没有广告。'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _Hint('YetEase Music ${pb.appVersion()} · 开源的网易云音乐第三方客户端。\n直连网易云官方接口，不依赖任何第三方服务器，没有广告。'),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  PillButton(label: '检查更新', icon: Icons.system_update_alt_rounded, onTap: checkForUpdates),
+                  PillButton(
+                    label: '项目主页',
+                    icon: Icons.open_in_new_rounded,
+                    onTap: () => openExternal('https://github.com/Gloridust/YetEaseMusic'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ValueListenableBuilder(
+                valueListenable: app.settings,
+                builder: (context, s, _) => s == null
+                    ? const SizedBox.shrink()
+                    : _Check(
+                        label: '启动时自动检查更新',
+                        value: s.autoCheckUpdate,
+                        onChanged: (v) => up.setAutoCheckUpdate(enable: v),
+                      ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -413,7 +445,7 @@ class _FeedbackSection extends StatelessWidget {
             PillButton(
               label: '提交 Issue',
               icon: Icons.bug_report_outlined,
-              onTap: () => _reveal('https://github.com/Gloridust/YetEaseMusic/issues/new'),
+              onTap: () => openExternal('https://github.com/Gloridust/YetEaseMusic/issues/new'),
             ),
           ],
         ),

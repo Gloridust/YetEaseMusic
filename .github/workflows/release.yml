@@ -198,6 +198,24 @@ jobs:
             yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$ndk" > /dev/null && break
             echo "第 $i 次安装失败，重试"; sleep 15
           done
+      - name: 准备发布签名
+        # 仓库配置了签名密钥（tools/android/create-release-key.sh）时用它签名，各版本签名一致才能覆盖安装；
+        # 没有配置（比如别人 fork 的仓库）时退回 debug 签名
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::warning::没有配置 ANDROID_KEYSTORE_BASE64，APK 使用 debug 签名，用户无法覆盖安装新版本"
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          {
+            echo "storeFile=$RUNNER_TEMP/release.jks"
+            echo "storePassword=$KEYSTORE_PASSWORD"
+            echo "keyAlias=yetease"
+            echo "keyPassword=$KEYSTORE_PASSWORD"
+          } > app/android/key.properties
       - name: 构建 APK
         working-directory: app
         run: |

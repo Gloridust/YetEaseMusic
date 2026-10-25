@@ -17,6 +17,7 @@ import 'theme.dart';
 import 'ui/brand.dart';
 import 'ui/shell.dart';
 import 'ui/ui_scaled.dart';
+import 'ui/update_dialog.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -89,6 +90,12 @@ Future<void> main(List<String> args) async {
   }
   runApp(const YetEaseApp());
   maybeRunTour();
+  // 启动后稍等再检查更新，不和首屏加载抢网络。测试启动（--autoplay、截图巡览）时不检查
+  if (AppState.I.settings.value?.autoCheckUpdate ?? false) {
+    if (autoplay == null && Platform.environment['YETEASE_TOUR'] == null) {
+      Future.delayed(const Duration(seconds: 6), () => checkForUpdates(manual: false));
+    }
+  }
 }
 
 /// 真正退出：先关掉桌面歌词进程，再销毁主窗口
