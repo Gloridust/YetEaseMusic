@@ -141,12 +141,12 @@ Grab the package for your platform from **[Releases](https://github.com/Gloridus
 
 ### Flatpak
 
-A community maintainer publishes a Flatpak on [FlatPark](https://flatpark.org/apps/io.github.gloridust.yetease/), repackaging this project's official build unmodified, with automatic updates and sandboxing:
+A community maintainer publishes a Flatpak on [FlatPark](https://flatpark.org/apps/io.github.gloridust.YetEaseMusic/), repackaging this project's official build unmodified, with automatic updates and sandboxing:
 
 ```bash
-flatpak --user remote-add --if-not-exists flatpark https://dl.flatpark.org/flatpark.flatpakrepo
 flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak --user install flatpark io.github.gloridust.yetease
+flatpak --user remote-add --if-not-exists flatpark https://dl.flatpark.org/flatpark.flatpakrepo
+flatpak --user install flatpark io.github.gloridust.YetEaseMusic
 ```
 
 New to Flatpak? On Ubuntu run `sudo apt install flatpak` first; for other distributions see [flatpak.org/setup](https://flatpak.org/setup/).
