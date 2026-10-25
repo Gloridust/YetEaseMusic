@@ -65,7 +65,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
         return CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(28, 8, 28, 16),
+              padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 8, Tokens.pageGutter, 16),
               sliver: SliverToBoxAdapter(
                 child: _Header(d: d, onFilter: (v) => setState(() => _filter = v)),
               ),
@@ -74,11 +74,11 @@ class _PlaylistPageState extends State<PlaylistPage> {
               SliverFillRemaining(hasScrollBody: false, child: EmptyState(text: q.isEmpty ? '空空如也' : '没有匹配的歌曲'))
             else ...[
               const SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: 28),
+                padding: EdgeInsets.symmetric(horizontal: Tokens.pageGutter),
                 sliver: SliverToBoxAdapter(child: SongListHeader()),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(28, 4, 28, 28),
+                padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, Tokens.pageGutter),
                 sliver: SliverSongList(songs: tracks),
               ),
             ],
@@ -136,7 +136,7 @@ class _Header extends StatelessWidget {
                           s.name,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, height: 1.25),
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, height: 1.25),
                         ),
                         const SizedBox(height: 10),
                         Text(
@@ -191,8 +191,14 @@ class _Header extends StatelessWidget {
                                 confirmOff: '网易云要求人机验证，第三方客户端无法重新收藏歌单。取消后如需恢复，只能在手机 App 中重新收藏。',
                               ),
                             ],
-                            const Spacer(),
-                            _FilterField(onChanged: onFilter),
+                            const SizedBox(width: 12),
+                            // 空间不够时搜索框先缩短，不挤出按钮
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: _FilterField(onChanged: onFilter),
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -216,9 +222,8 @@ class _FilterField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return SizedBox(
-      width: 180,
-      height: 32,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 180, maxHeight: 36),
       child: TextField(
         onChanged: onChanged,
         style: const TextStyle(fontSize: 13),
@@ -230,7 +235,7 @@ class _FilterField extends StatelessWidget {
           fillColor: p.field,
           isDense: true,
           contentPadding: EdgeInsets.zero,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(Tokens.radiusM), borderSide: BorderSide.none),
         ),
       ),
     );

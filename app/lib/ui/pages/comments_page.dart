@@ -71,7 +71,7 @@ class _CommentsPageState extends State<CommentsPage> {
       child: CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(28, 8, 28, 16),
+            padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 8, Tokens.pageGutter, 16),
             sliver: SliverToBoxAdapter(
               child: Row(
                 children: [
@@ -127,7 +127,7 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SliverPadding(
-    padding: const EdgeInsets.fromLTRB(28, 12, 28, 4),
+    padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 12, Tokens.pageGutter, 4),
     sliver: SliverToBoxAdapter(
       child: Text(text, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
     ),
@@ -143,7 +143,7 @@ class _CommentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 28),
+      margin: const EdgeInsets.symmetric(horizontal: Tokens.pageGutter),
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: p.divider)),

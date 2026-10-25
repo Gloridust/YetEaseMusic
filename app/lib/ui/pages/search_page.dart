@@ -30,7 +30,7 @@ class _SearchPageState extends State<SearchPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(28, 4, 28, 4),
+          padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, 4),
           child: Text.rich(
             TextSpan(
               children: [
@@ -47,7 +47,7 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(28, 8, 28, 8),
+          padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 8, Tokens.pageGutter, 8),
           child: UnderlineTabs(
             tabs: const ['单曲', '歌单', '专辑', '歌手'],
             index: _tab,
@@ -69,11 +69,11 @@ class _SearchPageState extends State<SearchPage> {
                 ),
                 sliver: (items) => [
                   const SliverPadding(
-                    padding: EdgeInsets.symmetric(horizontal: 28),
+                    padding: EdgeInsets.symmetric(horizontal: Tokens.pageGutter),
                     sliver: SliverToBoxAdapter(child: SongListHeader()),
                   ),
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(28, 4, 28, 0),
+                    padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, 0),
                     sliver: SliverSongList(songs: items),
                   ),
                 ],
@@ -83,7 +83,7 @@ class _SearchPageState extends State<SearchPage> {
                 load: (offset) => lib.searchPlaylists(keywords: k, offset: offset),
                 sliver: (items) => [
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    padding: const EdgeInsets.symmetric(horizontal: Tokens.pageGutter),
                     sliver: SliverGrid(
                       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                         maxCrossAxisExtent: 190,
@@ -104,7 +104,7 @@ class _SearchPageState extends State<SearchPage> {
                 load: (offset) => lib.searchAlbums(keywords: k, offset: offset),
                 sliver: (items) => [
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    padding: const EdgeInsets.symmetric(horizontal: Tokens.pageGutter),
                     sliver: AlbumGrid(albums: items),
                   ),
                 ],
@@ -114,7 +114,7 @@ class _SearchPageState extends State<SearchPage> {
                 load: (offset) => lib.searchArtists(keywords: k, offset: offset),
                 sliver: (items) => [
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    padding: const EdgeInsets.symmetric(horizontal: Tokens.pageGutter),
                     sliver: SliverGrid(
                       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                         maxCrossAxisExtent: 160,
@@ -232,7 +232,7 @@ class _PagedState<T> extends State<_Paged<T>> {
       child: CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(28, 4, 28, 12),
+            padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, 12),
             sliver: SliverToBoxAdapter(
               child: Row(
                 children: [

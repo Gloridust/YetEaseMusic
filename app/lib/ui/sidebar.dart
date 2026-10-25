@@ -49,8 +49,8 @@ class _SidebarState extends State<Sidebar> {
               height: Tokens.topBarHeight + 8,
               child: Row(
                 children: [
-                  const SizedBox(width: 22),
-                  const AppLogo(size: 30),
+                  const SizedBox(width: 24),
+                  const AppLogo(size: 28),
                   const SizedBox(width: 10),
                   Flexible(
                     child: FittedBox(
@@ -79,9 +79,8 @@ class _SidebarState extends State<Sidebar> {
                 final subs = lists.where((l) => l.subscribed).toList();
                 final loggedIn = app.account.value != null;
                 return ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  padding: const EdgeInsets.fromLTRB(24, 18, 16, 0),
                   children: [
-                    const SizedBox(height: 6),
                     NavItem(
                       icon: Icons.library_music_rounded,
                       label: '精选',
@@ -160,13 +159,14 @@ class _SidebarState extends State<Sidebar> {
   }
 }
 
+/// 分组之间的细线：上下各留 14
 class _Divider extends StatelessWidget {
   const _Divider();
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-    child: Divider(height: 1, color: context.palette.divider),
+    padding: const EdgeInsets.only(top: 10, bottom: 14),
+    child: Divider(height: 1, thickness: 1, color: context.palette.divider),
   );
 }
 
@@ -184,22 +184,23 @@ class _GroupHeader extends StatelessWidget {
     return Hover(
       onTap: onToggle,
       builder: (_, h) => SizedBox(
-        height: 34,
+        height: 36,
         child: Row(
           children: [
             const SizedBox(width: 10),
             Text(
               title,
-              style: TextStyle(color: p.textTertiary, fontSize: 13, fontWeight: FontWeight.w600),
+              style: TextStyle(color: h ? p.textPrimary : p.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
             ),
             const SizedBox(width: 2),
             AnimatedRotation(
               turns: open ? 0 : -0.25,
-              duration: const Duration(milliseconds: 160),
-              child: Icon(Icons.expand_more_rounded, size: 16, color: h ? p.textSecondary : p.textTertiary),
+              duration: const Duration(milliseconds: 200),
+              curve: Tokens.easeInOut,
+              child: Icon(Icons.expand_more_rounded, size: 16, color: h ? p.textPrimary : p.textSecondary),
             ),
             const Spacer(),
-            if (onAdd != null) IconBtn(Icons.add_rounded, size: 18, box: 26, tooltip: '新建歌单', onTap: onAdd),
+            if (onAdd != null) IconBtn(Icons.add_rounded, size: 16, box: 24, tooltip: '新建歌单', onTap: onAdd),
             const SizedBox(width: 4),
           ],
         ),
@@ -235,26 +236,27 @@ class NavItem extends StatelessWidget {
       valueListenable: Nav.location,
       builder: (context, loc, _) {
         final sel = loc == route;
+        // 悬停底色即时出现、即时消失，不做渐变（渐变在快速划过时会拖出残影）
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
+          padding: const EdgeInsets.only(bottom: 4),
           child: Hover(
             onTap: () {
               if (onTap != null) return onTap!();
               Scaffold.maybeOf(context)?.closeDrawer();
               Nav.root(route, page!());
             },
-            builder: (_, h) => AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
-              height: 40,
-              padding: const EdgeInsets.only(left: 14, right: 6),
+            builder: (_, h) => Container(
+              height: 36,
+              padding: const EdgeInsets.only(left: 8, right: 4),
               decoration: BoxDecoration(
-                color: sel ? Tokens.accent : (h ? p.hover : Colors.transparent),
+                color: sel ? null : (h ? p.hover : null),
+                gradient: sel ? Tokens.accentGradient : null,
                 borderRadius: BorderRadius.circular(Tokens.radiusM),
               ),
               child: Row(
                 children: [
-                  Icon(icon, size: 19, color: sel ? Colors.white : p.textSecondary),
-                  const SizedBox(width: 12),
+                  Icon(icon, size: 20, color: sel ? Colors.white : p.textSecondary),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       label,
@@ -262,8 +264,9 @@ class NavItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 14,
-                        color: sel ? Colors.white : p.textPrimary,
-                        fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
+                        height: 18 / 14,
+                        color: sel ? Colors.white : p.textPrimary.withValues(alpha: 0.8),
+                        fontWeight: sel ? FontWeight.w500 : FontWeight.w400,
                       ),
                     ),
                   ),
@@ -332,23 +335,28 @@ class PlaylistNavItem extends StatelessWidget {
             Nav.root(route, PlaylistPage(id: item.id));
           },
           builder: (_, h) => Container(
-            height: 38,
-            margin: const EdgeInsets.symmetric(vertical: 1),
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            height: 42,
+            margin: const EdgeInsets.symmetric(vertical: 2),
+            padding: const EdgeInsets.only(left: 8, right: 8),
             decoration: BoxDecoration(
-              color: sel ? Tokens.accentSoft : (h ? p.hover : Colors.transparent),
+              color: sel ? null : (h ? p.hover : null),
+              gradient: sel ? Tokens.accentGradient : null,
               borderRadius: BorderRadius.circular(Tokens.radiusM),
             ),
             child: Row(
               children: [
-                Cover(url: item.coverUrl, size: 26, radius: Tokens.radiusS),
-                const SizedBox(width: 10),
+                Cover(url: item.coverUrl, size: 32, radius: 4),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     item.name,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, color: sel ? Tokens.accent : p.textPrimary),
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 16 / 12,
+                      color: sel ? Colors.white : p.textPrimary.withValues(alpha: 0.8),
+                    ),
                   ),
                 ),
               ],

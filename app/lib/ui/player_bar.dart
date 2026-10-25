@@ -39,7 +39,7 @@ class PlayerBar extends StatelessWidget {
                 final narrow = c.maxWidth < 760;
                 return Row(
                   children: [
-                    const SizedBox(width: 16),
+                    SizedBox(width: narrow ? 16 : 30),
                     Expanded(
                       flex: 3,
                       child: ValueListenableBuilder(
@@ -114,7 +114,7 @@ class PlayerBar extends StatelessWidget {
                             ),
                           ] else
                             IconBtn(Icons.queue_music_rounded, color: fg2, onTap: onQueue),
-                          const SizedBox(width: 16),
+                          SizedBox(width: narrow ? 16 : 30),
                         ],
                       ),
                     ),
@@ -219,12 +219,12 @@ class _NowPlayingInfo extends StatelessWidget {
                 song.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 15, color: fg, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: 16, color: fg, fontWeight: FontWeight.w500),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 5),
               ArtistLinks(
                 artists: song.artists,
-                style: TextStyle(fontSize: 12.5, color: fg2),
+                style: TextStyle(fontSize: 13, color: fg2),
               ),
             ],
           ),
@@ -547,26 +547,30 @@ class _PlayButton extends StatelessWidget {
       valueListenable: app.playerState,
       builder: (context, st, _) => Hover(
         onTap: pb.toggle,
-        builder: (_, h) => AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: dark
-                ? Colors.white.withValues(alpha: h ? 0.22 : 0.14)
-                : (h ? const Color(0xFFE0303F) : Tokens.accent),
-            shape: BoxShape.circle,
+        // 红色渐变圆钮，悬停时轻微放大
+        builder: (_, h) => AnimatedScale(
+          scale: h ? 1.05 : 1,
+          duration: const Duration(milliseconds: 150),
+          curve: Tokens.easeInOut,
+          child: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: dark ? Colors.white.withValues(alpha: h ? 0.22 : 0.14) : null,
+              gradient: dark ? null : Tokens.accentGradient,
+              shape: BoxShape.circle,
+            ),
+            child: st == PlayerState.loading
+                ? const Padding(
+                    padding: EdgeInsets.all(15),
+                    child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
+                  )
+                : Icon(
+                    st == PlayerState.playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 26,
+                  ),
           ),
-          child: st == PlayerState.loading
-              ? const Padding(
-                  padding: EdgeInsets.all(15),
-                  child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
-                )
-              : Icon(
-                  st == PlayerState.playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
         ),
       ),
     );

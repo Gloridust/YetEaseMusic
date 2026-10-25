@@ -53,7 +53,7 @@ class _DownloadsPageState extends State<DownloadsPage> {
                   ),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(28, 0, 28, 12),
+                  padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 0, Tokens.pageGutter, 12),
                   sliver: SliverToBoxAdapter(
                     child: Row(
                       children: [
@@ -77,11 +77,11 @@ class _DownloadsPageState extends State<DownloadsPage> {
                     )
                   else ...[
                     const SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: 28),
+                      padding: EdgeInsets.symmetric(horizontal: Tokens.pageGutter),
                       sliver: SliverToBoxAdapter(child: SongListHeader(lastLabel: '大小')),
                     ),
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(28, 4, 28, 28),
+                      padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 4, Tokens.pageGutter, Tokens.pageGutter),
                       sliver: SliverSongList(songs: songs, lastColumn: list.map((d) => _size(d.size)).toList()),
                     ),
                   ],
@@ -89,7 +89,7 @@ class _DownloadsPageState extends State<DownloadsPage> {
                   const SliverFillRemaining(hasScrollBody: false, child: EmptyState(text: '没有进行中的下载'))
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
+                    padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 0, Tokens.pageGutter, Tokens.pageGutter),
                     sliver: SliverList.builder(
                       itemCount: active.length,
                       itemBuilder: (context, i) => _ProgressRow(item: active[i]),

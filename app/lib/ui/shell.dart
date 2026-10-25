@@ -316,29 +316,42 @@ class _TopBarState extends State<TopBar> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 300),
-                  child: SizedBox(
-                    height: 34,
-                    child: TextField(
-                      controller: _search,
-                      focusNode: _focus,
-                      onSubmitted: _submit,
-                      textInputAction: TextInputAction.search,
-                      style: const TextStyle(fontSize: 13),
-                      decoration: InputDecoration(
-                        hintText: '搜索音乐、歌手、歌单',
-                        hintStyle: TextStyle(color: p.textTertiary, fontSize: 13),
-                        prefixIcon: Icon(Icons.search_rounded, size: 18, color: p.textTertiary),
-                        filled: true,
-                        fillColor: p.surface,
-                        contentPadding: EdgeInsets.zero,
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(Tokens.radiusM),
-                          borderSide: BorderSide(color: p.divider),
+                  constraints: const BoxConstraints(maxWidth: 258),
+                  // 淡淡的粉—紫—蓝渐变底 + 细边框
+                  child: ListenableBuilder(
+                    listenable: _focus,
+                    builder: (context, _) => Container(
+                      height: 36,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.centerRight,
+                          end: Alignment.centerLeft,
+                          colors: [Color(0x14F574BA), Color(0x14BD8CFF), Color(0x144E8CEA)],
+                          stops: [0.07, 0.49, 0.99],
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(Tokens.radiusM),
-                          borderSide: BorderSide(color: Tokens.accent.withValues(alpha: 0.5)),
+                        border: Border.all(
+                          color: _focus.hasFocus ? Tokens.accent.withValues(alpha: 0.4) : p.hoverStrong,
+                        ),
+                        borderRadius: BorderRadius.circular(Tokens.radiusM),
+                      ),
+                      child: TextField(
+                        controller: _search,
+                        focusNode: _focus,
+                        onSubmitted: _submit,
+                        textInputAction: TextInputAction.search,
+                        style: TextStyle(fontSize: 14, color: p.textPrimary),
+                        cursorColor: p.textPrimary,
+                        decoration: InputDecoration(
+                          hintText: '搜索音乐、歌手、歌单',
+                          hintStyle: TextStyle(color: p.textPrimary.withValues(alpha: 0.4), fontSize: 14),
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.only(left: 16, right: 8),
+                            child: Icon(Icons.search_rounded, size: 18, color: p.textPrimary.withValues(alpha: 0.4)),
+                          ),
+                          prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                          isCollapsed: true,
+                          contentPadding: const EdgeInsets.only(right: 12, top: 9, bottom: 9),
+                          border: InputBorder.none,
                         ),
                       ),
                     ),
@@ -401,14 +414,14 @@ class _OutlinedIcon extends StatelessWidget {
     return Hover(
       onTap: onTap,
       builder: (_, h) => Container(
-        width: 34,
-        height: 34,
+        width: 28,
+        height: 36,
         decoration: BoxDecoration(
-          color: h && onTap != null ? p.hover : p.surface,
-          border: Border.all(color: p.divider),
+          color: h && onTap != null ? p.hover : null,
+          border: Border.all(color: p.hoverStrong),
           borderRadius: BorderRadius.circular(Tokens.radiusM),
         ),
-        child: Icon(icon, color: onTap == null ? p.textTertiary : p.textPrimary),
+        child: Icon(icon, size: 20, color: onTap == null ? p.textTertiary : p.textPrimary.withValues(alpha: 0.8)),
       ),
     );
   }

@@ -48,6 +48,26 @@ class Cover extends StatelessWidget {
   }
 }
 
+/// 卡片封面：悬停时浮起一层阴影（300ms 过渡），不缩放
+class CardCover extends StatelessWidget {
+  const CardCover({super.key, required this.url, required this.size, required this.hovered});
+
+  final String? url;
+  final double size;
+  final bool hovered;
+
+  @override
+  Widget build(BuildContext context) => AnimatedContainer(
+    duration: const Duration(milliseconds: 300),
+    curve: Tokens.easeInOut,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(Tokens.radiusRow),
+      boxShadow: [if (hovered) const BoxShadow(color: Color(0x40000000), blurRadius: 14, offset: Offset(0, 4))],
+    ),
+    child: Cover(url: url, size: size, radius: Tokens.radiusRow),
+  );
+}
+
 /// 悬停状态构建器（桌面端大量用到）
 class Hover extends StatefulWidget {
   const Hover({super.key, required this.builder, this.onTap, this.cursor = SystemMouseCursors.click, this.onDoubleTap});
@@ -95,8 +115,7 @@ class IconBtn extends StatelessWidget {
     final p = context.palette;
     final btn = Hover(
       onTap: onTap,
-      builder: (_, h) => AnimatedContainer(
-        duration: const Duration(milliseconds: 120),
+      builder: (_, h) => Container(
         width: box,
         height: box,
         decoration: BoxDecoration(
@@ -124,13 +143,22 @@ class PillButton extends StatelessWidget {
     return Hover(
       onTap: onTap,
       builder: (_, h) {
-        final bg = primary ? (h ? const Color(0xFFE0303F) : Tokens.accent) : (h ? p.hover : p.field);
-        final fg = primary ? Colors.white : p.textPrimary;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
-          height: 34,
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(Tokens.radiusM)),
+        final fg = primary ? Colors.white : p.textPrimary.withValues(alpha: 0.9);
+        return Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          // 主按钮是红色渐变，悬停时整体压暗一点；次按钮是浅灰底
+          foregroundDecoration: primary && h
+              ? BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(Tokens.radiusM),
+                )
+              : null,
+          decoration: BoxDecoration(
+            color: primary ? null : (h ? p.hoverStrong : p.field),
+            gradient: primary ? Tokens.accentGradient : null,
+            borderRadius: BorderRadius.circular(Tokens.radiusM),
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -258,16 +286,20 @@ class UnderlineTabs extends StatelessWidget {
                     tabs[i],
                     style: TextStyle(
                       fontSize: i == index ? 20 : 18,
-                      fontWeight: i == index ? FontWeight.w700 : FontWeight.w400,
+                      fontWeight: i == index ? FontWeight.w600 : FontWeight.w400,
                       color: i == index ? p.textPrimary : (h ? p.textPrimary : p.textSecondary),
                     ),
                   ),
                   const SizedBox(height: 6),
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
-                    width: i == index ? 18 : 0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Tokens.easeInOut,
+                    width: i == index ? 16 : 0,
                     height: 3,
-                    decoration: BoxDecoration(color: Tokens.accent, borderRadius: BorderRadius.circular(2)),
+                    decoration: BoxDecoration(
+                      gradient: Tokens.accentGradient,
+                      borderRadius: BorderRadius.circular(1.5),
+                    ),
                   ),
                 ],
               ),
@@ -290,11 +322,11 @@ class PageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 8, 28, 16),
+      padding: const EdgeInsets.fromLTRB(Tokens.pageGutter, 8, Tokens.pageGutter, 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+          Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
           if (subtitle != null) ...[
             const SizedBox(width: 10),
             Padding(
