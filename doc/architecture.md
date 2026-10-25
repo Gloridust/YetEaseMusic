@@ -99,7 +99,7 @@ YetEase 分成两层：**Rust 内核**负责协议、播放、队列、缓存等
 ## 打包与发布
 
 `.github/workflows/release.yml`：推送 `v*` 标签后在 Ubuntu 22.04 / Windows / macOS / Ubuntu（Android）上并行构建，全部成功后创建 Release。
-提 PR 或手动触发时只构建，产物在 Actions 的 Artifacts 里。Release 说明取自 `doc/release-notes/<标签>.md`，没有时自动生成。
+提 PR 或手动触发时只构建、不发布（还会跑各平台冒烟测试），产物在 Actions 的 Artifacts 里；只改文档（`*.md`、`doc/`、`LICENSE`）的 PR 不触发构建。Release 说明取自 `doc/release-notes/<标签>.md`，没有时自动生成。
 
 | 产物 | 脚本 |
 |---|---|
