@@ -117,6 +117,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.2.7" date="2026-10-26">
+      <description>
+        <p>A new flat app icon, and an interface aligned with the new official NetEase web player: a unified colour palette with the official red gradient, official sidebar and song row sizing, instant hover feedback, and a gradient search box.</p>
+      </description>
+    </release>
     <release version="0.2.6" date="2026-10-24">
       <description>
         <p>The system text size now scales the whole interface, so large text no longer gets clipped. The sidebar can be resized by dragging, and the player bar shows a placeholder when nothing is playing.</p>
