@@ -122,6 +122,8 @@ class AppSettings {
   final ThemePref theme;
   final bool closeToTray;
   final double sidebarWidth;
+  final bool autoCheckUpdate;
+  final String skippedVersion;
 
   const AppSettings({
     required this.quality,
@@ -133,6 +135,8 @@ class AppSettings {
     required this.theme,
     required this.closeToTray,
     required this.sidebarWidth,
+    required this.autoCheckUpdate,
+    required this.skippedVersion,
   });
 
   @override
@@ -145,7 +149,9 @@ class AppSettings {
       uiScale.hashCode ^
       theme.hashCode ^
       closeToTray.hashCode ^
-      sidebarWidth.hashCode;
+      sidebarWidth.hashCode ^
+      autoCheckUpdate.hashCode ^
+      skippedVersion.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -160,7 +166,9 @@ class AppSettings {
           uiScale == other.uiScale &&
           theme == other.theme &&
           closeToTray == other.closeToTray &&
-          sidebarWidth == other.sidebarWidth;
+          sidebarWidth == other.sidebarWidth &&
+          autoCheckUpdate == other.autoCheckUpdate &&
+          skippedVersion == other.skippedVersion;
 }
 
 class ArtistCard {

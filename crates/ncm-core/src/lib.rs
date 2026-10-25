@@ -9,6 +9,7 @@ pub mod media;
 pub mod queue;
 #[cfg(not(target_os = "android"))]
 pub mod tray;
+pub mod update;
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, Weak};
@@ -29,6 +30,8 @@ pub enum Error {
     Api(#[from] ncm_api::Error),
     #[error("io: {0}")]
     Io(#[from] std::io::Error),
+    #[error("网络错误：{0}")]
+    Http(#[from] reqwest::Error),
     #[error("{0}")]
     Other(String),
 }
@@ -58,6 +61,10 @@ pub struct Settings {
     pub close_to_tray: bool,
     /// 桌面端侧栏宽度（逻辑像素，界面层负责限定范围）
     pub sidebar_width: f32,
+    /// 启动时检查新版本
+    pub auto_check_update: bool,
+    /// 用户选择跳过的版本，自动检查时不再提示它
+    pub skipped_version: String,
 }
 
 impl Default for Settings {
@@ -75,6 +82,8 @@ impl Default for Settings {
             cache_limit_mb: 2048,
             close_to_tray: true,
             sidebar_width: 240.0,
+            auto_check_update: true,
+            skipped_version: String::new(),
         }
     }
 }

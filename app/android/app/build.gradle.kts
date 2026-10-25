@@ -1,3 +1,12 @@
+import java.util.Properties
+
+// 发布签名：有 android/key.properties 时用它（CI 从仓库 Secret 生成，见 tools/android/create-release-key.sh），
+// 否则退回 debug 签名。签名必须每次一致，用户才能覆盖安装新版本
+val releaseKey = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -30,11 +39,20 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (!releaseKey.isEmpty) {
+            create("release") {
+                storeFile = file(releaseKey.getProperty("storeFile"))
+                storePassword = releaseKey.getProperty("storePassword")
+                keyAlias = releaseKey.getProperty("keyAlias")
+                keyPassword = releaseKey.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (releaseKey.isEmpty) "debug" else "release")
         }
     }
 }
@@ -47,4 +65,9 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // FileProvider：应用内更新把 apk 交给系统安装器
+    implementation("androidx.core:core:1.13.1")
 }

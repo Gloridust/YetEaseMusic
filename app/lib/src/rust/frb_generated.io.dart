@@ -7,6 +7,7 @@ import 'api/desktop_lyrics.dart';
 import 'api/library.dart';
 import 'api/playback.dart';
 import 'api/types.dart';
+import 'api/update.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -95,6 +96,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DownloadItem dco_decode_download_item(dynamic raw);
 
   @protected
+  DownloadProgress dco_decode_download_progress(dynamic raw);
+
+  @protected
   DownloadingItem dco_decode_downloading_item(dynamic raw);
 
   @protected
@@ -159,6 +163,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<RecentItem> dco_decode_list_recent_item(dynamic raw);
+
+  @protected
+  List<ReleaseNote> dco_decode_list_release_note(dynamic raw);
 
   @protected
   List<SongItem> dco_decode_list_song_item(dynamic raw);
@@ -238,6 +245,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   (String, String) dco_decode_record_string_string(dynamic raw);
 
   @protected
+  ReleaseNote dco_decode_release_note(dynamic raw);
+
+  @protected
   SongItem dco_decode_song_item(dynamic raw);
 
   @protected
@@ -254,6 +264,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void dco_decode_unit(dynamic raw);
+
+  @protected
+  UpdateInfo dco_decode_update_info(dynamic raw);
+
+  @protected
+  UpdateMethod dco_decode_update_method(dynamic raw);
 
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
@@ -330,6 +346,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DownloadItem sse_decode_download_item(SseDeserializer deserializer);
 
   @protected
+  DownloadProgress sse_decode_download_progress(SseDeserializer deserializer);
+
+  @protected
   DownloadingItem sse_decode_downloading_item(SseDeserializer deserializer);
 
   @protected
@@ -404,6 +423,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<RecentItem> sse_decode_list_recent_item(SseDeserializer deserializer);
+
+  @protected
+  List<ReleaseNote> sse_decode_list_release_note(SseDeserializer deserializer);
 
   @protected
   List<SongItem> sse_decode_list_song_item(SseDeserializer deserializer);
@@ -493,6 +515,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  ReleaseNote sse_decode_release_note(SseDeserializer deserializer);
+
+  @protected
   SongItem sse_decode_song_item(SseDeserializer deserializer);
 
   @protected
@@ -509,6 +534,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_decode_unit(SseDeserializer deserializer);
+
+  @protected
+  UpdateInfo sse_decode_update_info(SseDeserializer deserializer);
+
+  @protected
+  UpdateMethod sse_decode_update_method(SseDeserializer deserializer);
 
   @protected
   void sse_encode_AnyhowException(
@@ -602,6 +633,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_download_item(DownloadItem self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_download_progress(
+    DownloadProgress self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_downloading_item(
@@ -718,6 +755,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_release_note(
+    List<ReleaseNote> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_song_item(List<SongItem> self, SseSerializer serializer);
 
   @protected
@@ -823,6 +866,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_release_note(ReleaseNote self, SseSerializer serializer);
+
+  @protected
   void sse_encode_song_item(SongItem self, SseSerializer serializer);
 
   @protected
@@ -842,6 +888,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_update_info(UpdateInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_update_method(UpdateMethod self, SseSerializer serializer);
 }
 
 // Section: wire_class

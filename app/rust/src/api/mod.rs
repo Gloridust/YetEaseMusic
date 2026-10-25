@@ -4,3 +4,4 @@ pub mod desktop_lyrics;
 pub mod library;
 pub mod playback;
 pub mod types;
+pub mod update;

@@ -205,6 +205,8 @@ pub fn get_settings() -> anyhow::Result<AppSettings> {
         theme: ThemePref::parse(&s.theme),
         close_to_tray: s.close_to_tray,
         sidebar_width: s.sidebar_width,
+        auto_check_update: s.auto_check_update,
+        skipped_version: s.skipped_version,
     })
 }
 
