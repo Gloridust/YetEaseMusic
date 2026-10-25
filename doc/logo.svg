@@ -1,17 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 100 100">
-  <!-- 与 app/lib/ui/brand.dart 的 LogoPainter 保持一致 -->
-  <defs>
-    <radialGradient id="bg" cx="0.325" cy="0.275" r="0.525">
-      <stop offset="0" stop-color="#FF6A6A"/>
-      <stop offset="0.55" stop-color="#EC4141"/>
-      <stop offset="1" stop-color="#D72D3C"/>
-    </radialGradient>
-  </defs>
-  <circle cx="50" cy="50" r="50" fill="url(#bg)"/>
+  <rect x="6" y="6" width="88" height="88" rx="18" fill="#EC4141"/>
+  <g transform="translate(50 50) scale(0.96) translate(-49 -51.5)">
   <g fill="none" stroke="#fff" stroke-width="7.2" stroke-linecap="round" stroke-linejoin="round">
-    <!-- 外圈：从 -40° 顺时针画 300°，缺口在右上 -->
-    <path d="M68.68 37.64 A27 27 0 1 1 43.31 28.41"/>
+    <!-- 壳：右上方留出缺口，触须从缺口伸出 -->
+    <path d="M70.12 39.51 A27 27 0 1 1 34.5 31.62"/>
     <circle cx="48.5" cy="57" r="10.5"/>
-    <path d="M59 57 L59 24 C59 17 66 15 71 18.5 C74.5 21 75.5 25 74.5 28.5"/>
+    <!-- 颈部向上，在顶端分叉成 Y 字形的两根触须 -->
+    <path d="M59 57 L59 35 M59 35 C57 28 51 22 46 17 M59 35 C61 28 67 22 72 17"/>
+  </g>
+  <g fill="#fff"><circle cx="46" cy="17" r="4.8024"/><circle cx="72" cy="17" r="4.8024"/></g>
   </g>
 </svg>
