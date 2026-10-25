@@ -1,15 +1,20 @@
 # 跨平台构建与发布。
 # - 推送 v* 标签：四个平台全部构建成功后创建 Release 并上传安装包
-# - 手动触发或提 PR：只构建，产物在 Actions 页面的 Artifacts 里下载
+# - 手动触发或提 PR：只构建，不发布（release 一步会显示为跳过），产物在 Actions 页面的 Artifacts 里下载
+# - 只改文档的 PR（*.md、doc/、LICENSE）不触发构建
 # - 每个平台构建完都会用同一份产物跑冒烟测试（Windows / macOS 真机截图巡览，Android 模拟器前后台播放）
-name: Release
+name: Build & Release
 
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
-  # PR 上只构建不发布，用来提前发现各平台的编译问题
+  # PR 上只构建不发布，用来提前发现各平台的编译问题；纯文档改动跳过
   pull_request:
+    paths-ignore:
+      - "**.md"
+      - "doc/**"
+      - "LICENSE"
 
 permissions:
   contents: write
