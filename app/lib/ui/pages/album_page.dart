@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../src/rust/api/library.dart' as lib;
 import '../../src/rust/api/types.dart';
@@ -384,65 +385,103 @@ class LinkText extends StatelessWidget {
 }
 
 /// 歌手名列表，每个名字单独可点；放不下时整体省略（合唱歌曲可能有几十位歌手）
+///
+/// 不给每个名字挂 TextSpan 的 recognizer / onEnter：悬停换样式会重建 TextSpan，鼠标跟踪把新旧 span
+/// 当成不同对象，反复触发移出、移入，每帧都在重建，点击识别器在按下与抬起之间就被换掉了，鼠标点不动（#17）。
+/// 改为整段文字共用一个鼠标区域和点击识别器，按坐标算出指针下是哪位歌手。
 class ArtistLinks extends StatefulWidget {
-  const ArtistLinks({super.key, required this.artists, this.style});
+  const ArtistLinks({super.key, required this.artists, this.style, this.onOpen = openArtist});
 
   final List<ArtistItem> artists;
   final TextStyle? style;
+
+  /// 点击某位歌手（参数是歌手 id），默认打开歌手页
+  final void Function(int id) onOpen;
 
   @override
   State<ArtistLinks> createState() => _ArtistLinksState();
 }
 
 class _ArtistLinksState extends State<ArtistLinks> {
-  final List<TapGestureRecognizer> _taps = [];
+  final _text = GlobalKey();
   int? _hover;
 
-  @override
-  void dispose() {
-    for (final t in _taps) {
-      t.dispose();
+  /// 每位歌手名在整段文字中的 [起, 止)
+  List<(int, int)> _ranges = const [];
+
+  /// 指针（文字内坐标）下的可点歌手下标
+  int? _artistAt(Offset local) {
+    final box = _text.currentContext?.findRenderObject();
+    if (box is! RenderParagraph) return null;
+    for (final (i, (start, end)) in _ranges.indexed) {
+      if (widget.artists[i].id <= 0) continue;
+      final boxes = box.getBoxesForSelection(TextSelection(baseOffset: start, extentOffset: end));
+      if (boxes.any((b) => b.toRect().contains(local))) return i;
     }
-    super.dispose();
+    return null;
+  }
+
+  void _setHover(int? i) {
+    if (i != _hover) setState(() => _hover = i);
   }
 
   @override
   Widget build(BuildContext context) {
-    for (final t in _taps) {
-      t.dispose();
-    }
-    _taps.clear();
     final base = widget.style ?? TextStyle(color: context.palette.textSecondary, fontSize: 13);
     final hoverColor = base.color == Colors.white60 ? Colors.white : Tokens.accent;
     final spans = <InlineSpan>[];
-    for (var i = 0; i < widget.artists.length; i++) {
-      final a = widget.artists[i];
-      if (i > 0) spans.add(const TextSpan(text: ' / '));
-      if (a.id <= 0) {
-        spans.add(TextSpan(text: a.name));
-        continue;
+    final ranges = <(int, int)>[];
+    var offset = 0;
+    for (final (i, a) in widget.artists.indexed) {
+      if (i > 0) {
+        spans.add(const TextSpan(text: ' / '));
+        offset += 3;
       }
-      final tap = TapGestureRecognizer()..onTap = () => openArtist(a.id);
-      _taps.add(tap);
+      ranges.add((offset, offset + a.name.length));
+      offset += a.name.length;
       spans.add(
         TextSpan(
           text: a.name,
-          recognizer: tap,
-          mouseCursor: SystemMouseCursors.click,
-          onEnter: (_) => setState(() => _hover = i),
-          onExit: (_) => setState(() => _hover = null),
           style: _hover == i
               ? TextStyle(color: hoverColor, decoration: TextDecoration.underline, decorationColor: hoverColor)
               : null,
         ),
       );
     }
-    return Text.rich(
-      TextSpan(style: base, children: spans),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
+    _ranges = ranges;
+    return MouseRegion(
+      cursor: _hover == null ? MouseCursor.defer : SystemMouseCursors.click,
+      onHover: (e) => _setHover(_artistAt(e.localPosition)),
+      onExit: (_) => _setHover(null),
+      child: RawGestureDetector(
+        gestures: {
+          _LinkTapRecognizer: GestureRecognizerFactoryWithHandlers<_LinkTapRecognizer>(
+            () => _LinkTapRecognizer((p) => _artistAt(p) != null),
+            (r) => r.onTapUp = (d) {
+              final i = _artistAt(d.localPosition);
+              if (i != null) widget.onOpen(widget.artists[i].id);
+            },
+          ),
+        },
+        child: Text.rich(
+          key: _text,
+          TextSpan(style: base, children: spans),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
     );
   }
+}
+
+/// 只在按下位置正好落在歌手名上时参与手势竞争，点在其他地方不影响外层（整行单击 / 双击播放）
+class _LinkTapRecognizer extends TapGestureRecognizer {
+  _LinkTapRecognizer(this._hitsLink);
+
+  final bool Function(Offset local) _hitsLink;
+
+  @override
+  bool isPointerAllowed(PointerDownEvent event) => _hitsLink(event.localPosition) && super.isPointerAllowed(event);
 }
 
 /// 收藏 / 关注按钮：乐观更新，失败时回滚并提示
