@@ -117,6 +117,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.2.10" date="2026-10-30">
+      <description>
+        <p>Memory no longer keeps growing when the app runs for days: the player stops redrawing while paused or while the now-playing page is closed, and NVIDIA on Wayland now uses the older egl-wayland library.</p>
+      </description>
+    </release>
     <release version="0.2.9" date="2026-10-27">
       <description>
         <p>Artist names in song lists can be clicked again to open the artist page.</p>
