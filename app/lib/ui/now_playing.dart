@@ -710,7 +710,7 @@ class _SimilarListState extends State<_SimilarList> {
 }
 
 /// 逐字高亮：已唱过的字为白色，正在唱的字从左到右渐变填充。
-/// 只有当前行才挂 Ticker，用同步 FFI 每帧读取精确播放位置。
+/// 只有当前行才挂 Ticker，播放时用同步 FFI 每帧读取精确播放位置；暂停时停表，不再每帧重画。
 class KaraokeLine extends StatefulWidget {
   const KaraokeLine({super.key, required this.words});
 
@@ -721,21 +721,41 @@ class KaraokeLine extends StatefulWidget {
 }
 
 class _KaraokeLineState extends State<KaraokeLine> with SingleTickerProviderStateMixin {
-  late final Ticker _ticker = createTicker((_) {
+  late final Ticker _ticker = createTicker((_) => _readPosition());
+  int _pos = 0;
+
+  void _readPosition() {
     final p = pb.positionMs();
     if (p != _pos) setState(() => _pos = p);
-  });
-  int _pos = 0;
+  }
 
   @override
   void initState() {
     super.initState();
     _pos = pb.positionMs();
-    _ticker.start();
+    AppState.I.playerState.addListener(_sync);
+    // 暂停时拖动进度条，位置变了也要跟着刷新
+    AppState.I.position.addListener(_onPosition);
+    _sync();
+  }
+
+  void _sync() {
+    if (AppState.I.isPlaying) {
+      if (!_ticker.isActive) _ticker.start();
+    } else {
+      _ticker.stop();
+      _readPosition();
+    }
+  }
+
+  void _onPosition() {
+    if (!_ticker.isActive) _readPosition();
   }
 
   @override
   void dispose() {
+    AppState.I.playerState.removeListener(_sync);
+    AppState.I.position.removeListener(_onPosition);
     _ticker.dispose();
     super.dispose();
   }
