@@ -2698,7 +2698,7 @@ dependencies = [
 
 [[package]]
 name = "ncm-api"
-version = "0.2.9"
+version = "0.2.10"
 dependencies = [
  "aes",
  "base64 0.23.1",
@@ -2721,7 +2721,7 @@ dependencies = [
 
 [[package]]
 name = "ncm-cli"
-version = "0.2.9"
+version = "0.2.10"
 dependencies = [
  "anyhow",
  "clap",
@@ -2734,7 +2734,7 @@ dependencies = [
 
 [[package]]
 name = "ncm-core"
-version = "0.2.9"
+version = "0.2.10"
 dependencies = [
  "directories",
  "futures-util",
@@ -2764,7 +2764,7 @@ dependencies = [
 
 [[package]]
 name = "ncm-player"
-version = "0.2.9"
+version = "0.2.10"
 dependencies = [
  "cpal",
  "crossbeam-channel",
@@ -3826,7 +3826,7 @@ checksum = "9278fb35b3e730abe136e9b395b5b81b96d06b9f5478a50f0c8430a2237b22de"
 
 [[package]]
 name = "rust_lib_app"
-version = "0.2.9"
+version = "0.2.10"
 dependencies = [
  "anyhow",
  "directories",

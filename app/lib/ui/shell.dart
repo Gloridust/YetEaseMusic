@@ -158,10 +158,14 @@ class _ShellState extends State<Shell> with WindowListener {
                   curve: open ? Curves.easeOutCubic : Curves.easeInCubic,
                   child: IgnorePointer(
                     ignoring: !open,
-                    child: AnimatedOpacity(
-                      opacity: open ? 1 : 0,
-                      duration: const Duration(milliseconds: 300),
-                      child: NowPlaying(onQueue: () => _scaffold.currentState?.openEndDrawer()),
+                    // 收起后播放页仍挂在树上（保留歌词滚动位置），停掉里面的动画，免得看不见时还每帧重画
+                    child: TickerMode(
+                      enabled: open,
+                      child: AnimatedOpacity(
+                        opacity: open ? 1 : 0,
+                        duration: const Duration(milliseconds: 300),
+                        child: NowPlaying(onQueue: () => _scaffold.currentState?.openEndDrawer()),
+                      ),
                     ),
                   ),
                 ),

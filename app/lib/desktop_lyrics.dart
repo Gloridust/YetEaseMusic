@@ -112,14 +112,21 @@ class _LyricsWindowState extends State<_LyricsWindow> with SingleTickerProviderS
             _title = '$title - $artist';
           });
         case dl.DesktopLyricsEvent_Position(:final ms, :final playing):
+          final changed = ms != _posMs || playing != _playing;
           _posMs = ms;
           _playing = playing;
           _posAt = DateTime.now();
+          // 只在播放时逐帧插值；暂停后停表，位置变了（比如拖动进度）才刷新
+          if (playing) {
+            if (!_ticker.isActive) _ticker.start();
+          } else {
+            _ticker.stop();
+            if (changed) setState(() {});
+          }
         case dl.DesktopLyricsEvent_Closed():
           exit(0);
       }
     });
-    _ticker.start();
   }
 
   @override
