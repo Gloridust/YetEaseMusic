@@ -282,7 +282,7 @@ class _PlaylistSquareState extends State<_PlaylistSquare> {
         _total = list.isEmpty ? _lists.length : total;
       });
     } catch (e) {
-      AppState.I.notify('加载失败：$e');
+      AppState.I.notify('加载失败：${friendlyError(e)}');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

@@ -189,7 +189,7 @@ class _ArtistPageState extends State<ArtistPage> {
         _albumsMore = more && list.isNotEmpty;
       });
     } catch (e) {
-      AppState.I.notify('专辑加载失败：$e');
+      AppState.I.notify('专辑加载失败：${friendlyError(e)}');
     } finally {
       if (mounted) setState(() => _albumsLoading = false);
     }

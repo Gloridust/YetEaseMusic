@@ -161,11 +161,12 @@ pub async fn fetch_releases() -> Result<Vec<Release>> {
         .header("Accept", "application/vnd.github+json")
         .timeout(std::time::Duration::from_secs(20))
         .send()
-        .await?;
+        .await
+        .map_err(|e| net_error(&e))?;
     if !resp.status().is_success() {
         return Err(Error::Other(format!("GitHub 返回 {}", resp.status())));
     }
-    let list: Vec<GhRelease> = resp.json().await?;
+    let list: Vec<GhRelease> = resp.json().await.map_err(|e| net_error(&e))?;
     let mut out: Vec<Release> = list
         .into_iter()
         .filter(|r| !r.draft && !r.prerelease)
@@ -241,6 +242,48 @@ pub fn pick_asset<'a>(kind: &InstallKind, release: &'a Release) -> Option<&'a As
         .find_map(|n| release.assets.iter().find(|a| &a.name == n))
 }
 
+/// 发起 GET，非 2xx 也算失败；错误转成给用户看的说法
+async fn get_ok(url: &str) -> Result<reqwest::Response> {
+    http_client()
+        .get(url)
+        .send()
+        .await
+        .and_then(|r| r.error_for_status())
+        .map_err(|e| net_error(&e))
+}
+
+/// 把 reqwest 错误转成给用户看的一句话（完整错误写日志）
+fn net_error(e: &reqwest::Error) -> Error {
+    tracing::warn!("更新网络错误：{e:?}");
+    let chain = {
+        let mut s = e.to_string();
+        let mut src = std::error::Error::source(e);
+        while let Some(x) = src {
+            s.push_str(&x.to_string());
+            src = x.source();
+        }
+        s.to_ascii_lowercase()
+    };
+    let msg = if let Some(status) = e.status() {
+        match status.as_u16() {
+            403 | 429 => "GitHub 暂时限制了访问，请稍后再试".to_owned(),
+            404 => "没有找到安装包，可能这个版本还在发布中，请稍后再试".to_owned(),
+            code => format!("GitHub 返回错误（{code}），请稍后再试"),
+        }
+    } else if chain.contains("dns") || chain.contains("resolve") || chain.contains("lookup") {
+        "无法连接 GitHub（域名解析失败），请检查网络后重试".to_owned()
+    } else if e.is_timeout() {
+        "连接 GitHub 超时，请检查网络后重试".to_owned()
+    } else if e.is_connect() {
+        "无法连接 GitHub，请检查网络或代理后重试".to_owned()
+    } else if e.is_decode() {
+        "GitHub 返回的数据无法解析，请稍后再试".to_owned()
+    } else {
+        "网络连接失败，请检查网络后重试".to_owned()
+    };
+    Error::Other(msg)
+}
+
 /// 下载进度，界面轮询读取
 #[derive(Default)]
 pub struct Progress {
@@ -265,13 +308,11 @@ pub async fn download(
 
     let expected = match release.assets.iter().find(|a| a.name == "SHA256SUMS") {
         Some(sums) => {
-            let text = http_client()
-                .get(&sums.url)
-                .send()
+            let text = get_ok(&sums.url)
                 .await?
-                .error_for_status()?
                 .text()
-                .await?;
+                .await
+                .map_err(|e| net_error(&e))?;
             text.lines().find_map(|l| {
                 let (hash, name) = l.split_once(char::is_whitespace)?;
                 (name.trim().trim_start_matches('*') == asset.name)
@@ -281,11 +322,7 @@ pub async fn download(
         None => None,
     };
 
-    let resp = http_client()
-        .get(&asset.url)
-        .send()
-        .await?
-        .error_for_status()?;
+    let resp = get_ok(&asset.url).await?;
     if let Some(len) = resp.content_length() {
         progress.total.store(len, Ordering::Relaxed);
     }
@@ -298,7 +335,7 @@ pub async fn download(
             let _ = tokio::fs::remove_file(&part).await;
             return Err(Error::Other("已取消".into()));
         }
-        let chunk = chunk?;
+        let chunk = chunk.map_err(|_| Error::Other("下载中断，请检查网络后重试".into()))?;
         hasher.update(&chunk);
         file.write_all(&chunk).await?;
         progress
@@ -352,7 +389,10 @@ pub fn apply(kind: &InstallKind, file: &Path) -> Result<Applied> {
                 Some(0) => Ok(Applied::Restart(exe)),
                 // 126：用户关掉了授权框；127：没有授权（比如没有可用的授权代理）
                 Some(126) => Err(Error::Other("没有获得管理员授权，更新已取消".into())),
-                Some(127) => Err(Error::Other(format!("无法获得管理员授权：{}", tail(&out.stderr)))),
+                Some(127) => Err(Error::Other(format!(
+                    "无法获得管理员授权：{}",
+                    tail(&out.stderr)
+                ))),
                 _ => Err(Error::Other(format!("安装失败：{}", tail(&out.stderr)))),
             }
         }
@@ -570,9 +610,14 @@ mod tests {
         let kind = InstallKind::AppImage(target.clone());
         let asset = pick_asset(&kind, r).expect("AppImage asset");
         let progress = Progress::default();
-        let file = download(r, asset, &dir.join("dl"), &progress).await.expect("download");
+        let file = download(r, asset, &dir.join("dl"), &progress)
+            .await
+            .expect("download");
         assert_eq!(progress.received.load(Ordering::Relaxed), asset.size);
-        assert_eq!(apply(&kind, &file).unwrap(), Applied::Restart(target.clone()));
+        assert_eq!(
+            apply(&kind, &file).unwrap(),
+            Applied::Restart(target.clone())
+        );
         let meta = std::fs::metadata(&target).unwrap();
         assert_eq!(meta.len(), asset.size);
         assert_ne!(meta.permissions().mode() & 0o111, 0);

@@ -304,7 +304,7 @@ class _HeartbeatButton extends StatelessWidget {
             );
             AppState.I.notify('已开启心动模式');
           } catch (e) {
-            AppState.I.notify('心动模式开启失败：$e');
+            AppState.I.notify('心动模式开启失败：${friendlyError(e)}');
           }
         },
         builder: (context, h) => Padding(
@@ -430,7 +430,7 @@ Future<void> showCreatePlaylistDialog(BuildContext context) async {
                             final pl = await lib.createPlaylist(name: n, private: private);
                             if (context.mounted) Navigator.of(context).pop(pl);
                           } catch (e) {
-                            AppState.I.notify('创建失败：$e');
+                            AppState.I.notify('创建失败：${friendlyError(e)}');
                           }
                         },
                       ),

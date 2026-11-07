@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../main.dart' show quitApp;
@@ -30,7 +31,7 @@ Future<void> checkForUpdates({bool manual = true}) async {
       builder: (_) => UpdateDialog(info: info, automatic: !manual),
     );
   } catch (e) {
-    if (manual) AppState.I.notify('检查更新失败：$e');
+    if (manual) AppState.I.notify('检查更新失败：${friendlyError(e)}');
   } finally {
     _checking = false;
   }
@@ -53,6 +54,9 @@ class UpdateDialog extends StatefulWidget {
 class _UpdateDialogState extends State<UpdateDialog> {
   _Stage _stage = _Stage.idle;
   String? _error;
+
+  /// 原始错误（含调用栈），只在「复制详情」时用
+  String? _errorDetail;
   double? _progress;
   Timer? _poll;
 
@@ -68,6 +72,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
     setState(() {
       _stage = _Stage.downloading;
       _error = null;
+      _errorDetail = null;
       _progress = null;
     });
     _poll = Timer.periodic(const Duration(milliseconds: 200), (_) {
@@ -103,13 +108,14 @@ class _UpdateDialogState extends State<UpdateDialog> {
     } catch (e) {
       _poll?.cancel();
       if (!mounted) return;
-      final msg = e.toString();
+      final msg = friendlyError(e);
       if (msg.contains('已取消')) {
         setState(() => _stage = _Stage.idle);
       } else {
         setState(() {
           _stage = _Stage.failed;
           _error = msg;
+          _errorDetail = e.toString();
         });
       }
     }
@@ -137,101 +143,105 @@ class _UpdateDialogState extends State<UpdateDialog> {
     final p = context.palette;
     final size = MediaQuery.sizeOf(context);
     final busy = _stage == _Stage.downloading || _stage == _Stage.installing;
-    return Dialog(
-      backgroundColor: p.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Tokens.radiusL)),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 480, maxHeight: (size.height * 0.8).clamp(320, 640)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 22, 24, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                info.hasUpdate ? '发现新版本 ${info.latestVersion}' : '已是最新版本',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                info.hasUpdate
-                    ? '当前版本 ${info.currentVersion}${info.downloadSize > 0 ? ' · 安装包 ${_mb(info.downloadSize)}' : ''}'
-                    : '当前版本 ${info.currentVersion}，以下是这个版本的更新内容',
-                style: TextStyle(fontSize: 13, color: p.textSecondary),
-              ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: Container(
-                  decoration: BoxDecoration(color: p.field, borderRadius: BorderRadius.circular(Tokens.radiusM)),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                    child: ReleaseNotesView(notes: info.notes),
+    // 下载、安装中不能关（Esc / 返回键也拦住），其余状态随时可以关
+    return PopScope(
+      canPop: !busy,
+      child: Dialog(
+        backgroundColor: p.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Tokens.radiusL)),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 480, maxHeight: (size.height * 0.8).clamp(320, 640)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 22, 24, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  info.hasUpdate ? '发现新版本 ${info.latestVersion}' : '已是最新版本',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  info.hasUpdate
+                      ? '当前版本 ${info.currentVersion}${info.downloadSize > 0 ? ' · 安装包 ${_mb(info.downloadSize)}' : ''}'
+                      : '当前版本 ${info.currentVersion}，以下是这个版本的更新内容',
+                  style: TextStyle(fontSize: 13, color: p.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: Container(
+                    decoration: BoxDecoration(color: p.field, borderRadius: BorderRadius.circular(Tokens.radiusM)),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                      child: ReleaseNotesView(notes: info.notes),
+                    ),
                   ),
                 ),
-              ),
-              if (info.hasUpdate) ...[
-                const SizedBox(height: 14),
-                if (_stage == _Stage.downloading || _stage == _Stage.installing) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: LinearProgressIndicator(
-                      value: _stage == _Stage.installing ? null : _progress,
-                      minHeight: 4,
-                      color: Tokens.accent,
-                      backgroundColor: p.hoverStrong,
+                if (info.hasUpdate) ...[
+                  const SizedBox(height: 14),
+                  if (_stage == _Stage.downloading || _stage == _Stage.installing) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: LinearProgressIndicator(
+                        value: _stage == _Stage.installing ? null : _progress,
+                        minHeight: 4,
+                        color: Tokens.accent,
+                        backgroundColor: p.hoverStrong,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _stage == _Stage.installing
-                        ? '正在安装…'
-                        : '正在下载${_progress == null ? '…' : ' ${(_progress! * 100).toStringAsFixed(0)}%'}',
-                    style: TextStyle(fontSize: 13, color: p.textSecondary),
-                  ),
-                ] else if (_stage == _Stage.failed)
-                  Text(_error ?? '更新失败', style: const TextStyle(fontSize: 13, color: Tokens.accent))
-                else if (_stage == _Stage.opened)
-                  Text(
-                    '已打开安装包。把 YetEase Music 拖进「应用程序」替换旧版本，然后退出并重新打开本应用。',
-                    style: TextStyle(fontSize: 13, color: p.textSecondary, height: 1.5),
-                  )
-                else if (_methodHint != null)
-                  Text(_methodHint!, style: TextStyle(fontSize: 13, color: p.textSecondary, height: 1.5)),
-              ],
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  if (info.hasUpdate && widget.automatic && !busy)
-                    _TextButton(
-                      label: '跳过此版本',
-                      onTap: () {
-                        up.skipUpdateVersion(version: info.latestVersion);
-                        Navigator.of(context).pop();
-                      },
+                    const SizedBox(height: 8),
+                    Text(
+                      _stage == _Stage.installing
+                          ? '正在安装…'
+                          : '正在下载${_progress == null ? '…' : ' ${(_progress! * 100).toStringAsFixed(0)}%'}',
+                      style: TextStyle(fontSize: 13, color: p.textSecondary),
                     ),
-                  const Spacer(),
-                  if (busy)
-                    PillButton(label: '取消', onTap: _stage == _Stage.downloading ? up.cancelUpdateDownload : null)
-                  else ...[
-                    PillButton(label: info.hasUpdate ? '稍后' : '关闭', onTap: () => Navigator.of(context).pop()),
-                    if (info.hasUpdate) ...[
-                      const SizedBox(width: 10),
-                      if (_stage == _Stage.opened)
-                        PillButton(label: '退出应用', primary: true, onTap: quitApp)
-                      else
-                        PillButton(
-                          label: _stage == _Stage.failed ? '重试' : _primaryLabel,
-                          primary: true,
-                          onTap: switch (info.method) {
-                            up.UpdateMethod.flatpak || up.UpdateMethod.manual => () => openExternal(info.pageUrl),
-                            _ => _start,
-                          },
-                        ),
+                  ] else if (_stage == _Stage.failed)
+                    _ErrorLine(message: _error ?? '更新失败', detail: _errorDetail)
+                  else if (_stage == _Stage.opened)
+                    Text(
+                      '已打开安装包。把 YetEase Music 拖进「应用程序」替换旧版本，然后退出并重新打开本应用。',
+                      style: TextStyle(fontSize: 13, color: p.textSecondary, height: 1.5),
+                    )
+                  else if (_methodHint != null)
+                    Text(_methodHint!, style: TextStyle(fontSize: 13, color: p.textSecondary, height: 1.5)),
+                ],
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    if (info.hasUpdate && widget.automatic && !busy)
+                      _TextButton(
+                        label: '跳过此版本',
+                        onTap: () {
+                          up.skipUpdateVersion(version: info.latestVersion);
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    const Spacer(),
+                    if (busy)
+                      PillButton(label: '取消', onTap: _stage == _Stage.downloading ? up.cancelUpdateDownload : null)
+                    else ...[
+                      PillButton(label: info.hasUpdate ? '稍后' : '关闭', onTap: () => Navigator.of(context).pop()),
+                      if (info.hasUpdate) ...[
+                        const SizedBox(width: 10),
+                        if (_stage == _Stage.opened)
+                          PillButton(label: '退出应用', primary: true, onTap: quitApp)
+                        else
+                          PillButton(
+                            label: _stage == _Stage.failed ? '重试' : _primaryLabel,
+                            primary: true,
+                            onTap: switch (info.method) {
+                              up.UpdateMethod.flatpak || up.UpdateMethod.manual => () => openExternal(info.pageUrl),
+                              _ => _start,
+                            },
+                          ),
+                      ],
                     ],
                   ],
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -239,6 +249,41 @@ class _UpdateDialogState extends State<UpdateDialog> {
   }
 
   static String _mb(int bytes) => '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
+}
+
+/// 出错提示：最多三行，原始错误可以复制出来反馈
+class _ErrorLine extends StatelessWidget {
+  const _ErrorLine({required this.message, this.detail});
+
+  final String message;
+  final String? detail;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text(
+            message,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 13, color: Tokens.accent, height: 1.5),
+          ),
+        ),
+        if (detail != null && detail != message) ...[
+          const SizedBox(width: 12),
+          _TextButton(
+            label: '复制详情',
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: detail!));
+              AppState.I.notify('已复制错误详情');
+            },
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 class _TextButton extends StatelessWidget {

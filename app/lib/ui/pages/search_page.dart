@@ -217,7 +217,7 @@ class _PagedState<T> extends State<_Paged<T>> {
       if (_error != null) {
         return EmptyState(
           icon: Icons.wifi_off_rounded,
-          text: '搜索失败：$_error',
+          text: '搜索失败：${friendlyError(_error!)}',
           action: PillButton(label: '重试', onTap: _more),
         );
       }

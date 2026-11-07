@@ -117,6 +117,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.2.11" date="2026-11-07">
+      <description>
+        <p>Errors are now shown as one short sentence instead of a raw error chain and stack trace, and the update dialog can always be closed after a failed download.</p>
+      </description>
+    </release>
     <release version="0.2.10" date="2026-10-30">
       <description>
         <p>Memory no longer keeps growing when the app runs for days: the player stops redrawing while paused or while the now-playing page is closed, and NVIDIA on Wayland now uses the older egl-wayland library.</p>

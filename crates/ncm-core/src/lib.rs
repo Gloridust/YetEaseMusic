@@ -771,7 +771,9 @@ impl Core {
     fn media_playback(&self) {
         #[cfg(not(target_os = "android"))]
         if let Some(t) = self.tray.lock().unwrap().as_ref() {
-            let song = self.current_song().map(|s| format!("{} - {}", s.name, s.artist_names()));
+            let song = self
+                .current_song()
+                .map(|s| format!("{} - {}", s.name, s.artist_names()));
             t.update(song, self.player.state() == PlaybackState::Playing);
         }
         #[cfg(not(target_os = "android"))]
