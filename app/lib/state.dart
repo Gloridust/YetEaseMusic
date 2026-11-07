@@ -63,7 +63,7 @@ class AppState {
         }
       });
     } catch (e) {
-      notify('桌面歌词打开失败：$e');
+      notify('桌面歌词打开失败：${friendlyError(e)}');
     }
   }
 
@@ -131,7 +131,7 @@ class AppState {
       case UiEvent_Notice(:final field0):
         notify(field0);
       case UiEvent_Error(:final field0):
-        notify('播放出错：$field0');
+        notify('播放出错：${friendlyError(field0)}');
     }
   }
 
@@ -232,7 +232,7 @@ class AppState {
       await lib.likeSong(id: s.id, like: !liked);
     } catch (e) {
       likedIds.value = before;
-      notify('操作失败：$e');
+      notify('操作失败：${friendlyError(e)}');
     }
   }
 
@@ -262,14 +262,30 @@ String shortCount(int n) {
   return n > 0 ? '$n' : '';
 }
 
-/// 把 Rust 侧传来的错误转成给用户看的一句话（去掉 AnyhowException 包装与调用栈）
+/// 把 Rust 侧传来的错误转成给用户看的一句话：去掉 AnyhowException 包装、Caused by 链和调用栈，
+/// 网络错误换成说人话的提示。原始内容写在日志里，需要时用 `e.toString()` 拿
 String friendlyError(Object e) {
-  var t = e.toString();
+  final full = e.toString();
+  final lower = full.toLowerCase();
+  if (lower.contains('error sending request') || lower.contains('error decoding response')) {
+    if (lower.contains('dns error') || lower.contains('lookup address') || lower.contains('name resolution')) {
+      return '无法解析服务器地址，请检查网络';
+    }
+    if (lower.contains('timed out') || lower.contains('timeout')) return '网络连接超时，请稍后重试';
+    if (lower.contains('connection refused') || lower.contains('tunnel') || lower.contains('proxy')) {
+      return '无法连接服务器，请检查网络或代理设置';
+    }
+    if (lower.contains('certificate') || lower.contains('tls')) return '安全连接失败，请检查系统时间或代理设置';
+    if (lower.contains('error decoding response')) return '服务器返回的数据无法识别，请稍后重试';
+    return '网络连接失败，请检查网络后重试';
+  }
+  var t = full;
   const prefix = 'AnyhowException(';
   if (t.startsWith(prefix)) t = t.substring(prefix.length);
   t = t.split('\n').first.trim();
   if (t.endsWith(')') && !t.contains('(')) t = t.substring(0, t.length - 1);
   // 「api error 405: 操作过于频繁」这类只留冒号后的说明
   final m = RegExp(r'^api error -?\d+: (.+)$').firstMatch(t);
-  return m?.group(1) ?? t;
+  t = m?.group(1) ?? t;
+  return t.length > 120 ? '${t.substring(0, 120)}…' : t;
 }

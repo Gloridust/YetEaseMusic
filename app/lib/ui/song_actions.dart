@@ -77,7 +77,7 @@ void downloadSongs(List<SongItem> songs) {
   if (online.isEmpty) return;
   AppState.I.notify(online.length == 1 ? '开始下载《${online.first.name}》' : '开始下载 ${online.length} 首歌曲');
   lib.downloadSongs(ids: Int64List.fromList(online.map((s) => s.id).toList())).catchError((e) {
-    AppState.I.notify('下载失败：$e');
+    AppState.I.notify('下载失败：${friendlyError(e)}');
   });
 }
 
@@ -197,6 +197,6 @@ Future<void> showCollectDialog(BuildContext context, List<SongItem> songs) async
     app.notify('已收藏到「${picked.specialType == 5 ? '我喜欢的音乐' : picked.name}」');
     app.refreshAccount();
   } catch (e) {
-    app.notify('收藏失败：$e');
+    app.notify('收藏失败：${friendlyError(e)}');
   }
 }

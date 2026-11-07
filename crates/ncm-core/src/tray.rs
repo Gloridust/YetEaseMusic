@@ -53,7 +53,10 @@ fn decode_rgba(png_bytes: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
     buf.truncate(info.buffer_size());
     let rgba = match info.color_type {
         png::ColorType::Rgba => buf,
-        png::ColorType::GrayscaleAlpha => buf.chunks_exact(2).flat_map(|p| [p[0], p[0], p[0], p[1]]).collect(),
+        png::ColorType::GrayscaleAlpha => buf
+            .chunks_exact(2)
+            .flat_map(|p| [p[0], p[0], p[0], p[1]])
+            .collect(),
         _ => return None,
     };
     Some((info.width, info.height, rgba))
@@ -140,8 +143,15 @@ mod imp {
         // StatusNotifierItem 的图标是 ARGB32、网络字节序
         let icon = decode_rgba(icon_png)
             .map(|(w, h, rgba)| {
-                let data = rgba.chunks_exact(4).flat_map(|p| [p[3], p[0], p[1], p[2]]).collect();
-                vec![ksni::Icon { width: w as i32, height: h as i32, data }]
+                let data = rgba
+                    .chunks_exact(4)
+                    .flat_map(|p| [p[3], p[0], p[1], p[2]])
+                    .collect();
+                vec![ksni::Icon {
+                    width: w as i32,
+                    height: h as i32,
+                    data,
+                }]
             })
             .unwrap_or_default();
         let tray = Tray {
@@ -167,7 +177,9 @@ mod imp {
     use std::time::Duration;
     use tray_icon::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem};
     use tray_icon::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-    use windows_sys::Win32::UI::WindowsAndMessaging::{DispatchMessageW, MSG, PM_REMOVE, PeekMessageW, TranslateMessage};
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        DispatchMessageW, MSG, PM_REMOVE, PeekMessageW, TranslateMessage,
+    };
 
     pub struct Handle(Sender<(Option<String>, bool)>);
 
@@ -193,9 +205,12 @@ mod imp {
                 let sep1 = PredefinedMenuItem::separator();
                 let sep2 = PredefinedMenuItem::separator();
                 let built = menu.append_items(&[&show, &sep1, &toggle, &prev, &next, &sep2, &quit]);
-                let icon = decode_rgba(icon_png).and_then(|(w, h, rgba)| tray_icon::Icon::from_rgba(rgba, w, h).ok());
+                let icon = decode_rgba(icon_png)
+                    .and_then(|(w, h, rgba)| tray_icon::Icon::from_rgba(rgba, w, h).ok());
                 let tray = built.ok().and_then(|_| {
-                    let mut b = TrayIconBuilder::new().with_menu(Box::new(menu)).with_tooltip(APP_NAME);
+                    let mut b = TrayIconBuilder::new()
+                        .with_menu(Box::new(menu))
+                        .with_tooltip(APP_NAME);
                     if let Some(icon) = icon {
                         b = b.with_icon(icon);
                     }

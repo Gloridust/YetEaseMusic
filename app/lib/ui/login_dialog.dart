@@ -63,7 +63,7 @@ class _LoginDialogState extends State<_LoginDialog> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _status = '生成失败：$e';
+          _status = '生成失败：${friendlyError(e)}';
           _dead = true;
         });
       }
@@ -99,7 +99,7 @@ class _LoginDialogState extends State<_LoginDialog> {
         case QrState_Failed(:final message):
           _timer?.cancel();
           setState(() {
-            _status = '登录失败：$message';
+            _status = '登录失败：${friendlyError(message)}';
             _dead = true;
           });
       }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../src/rust/api/library.dart' as lib;
 import '../../src/rust/api/types.dart';
+import '../../state.dart';
 import '../../theme.dart';
 import '../widgets.dart';
 
@@ -57,7 +58,7 @@ class _CommentsPageState extends State<CommentsPage> {
       if (_error != null) {
         return EmptyState(
           icon: Icons.wifi_off_rounded,
-          text: '评论加载失败：$_error',
+          text: '评论加载失败：${friendlyError(_error!)}',
           action: PillButton(label: '重试', onTap: _load),
         );
       }

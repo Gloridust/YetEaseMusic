@@ -212,7 +212,7 @@ class AsyncView<T> extends StatelessWidget {
         if (snap.hasError) {
           return EmptyState(
             icon: Icons.wifi_off_rounded,
-            text: '加载失败：${snap.error}',
+            text: '加载失败：${friendlyError(snap.error!)}',
             action: onRetry == null ? null : PillButton(label: '重试', onTap: onRetry),
           );
         }

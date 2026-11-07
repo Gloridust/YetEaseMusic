@@ -420,7 +420,7 @@ class _FeedbackSection extends StatelessWidget {
       AppState.I.notify('日志已导出到 $path');
       _reveal(File(path).parent.path);
     } catch (e) {
-      AppState.I.notify('导出失败：$e');
+      AppState.I.notify('导出失败：${friendlyError(e)}');
     }
   }
 
