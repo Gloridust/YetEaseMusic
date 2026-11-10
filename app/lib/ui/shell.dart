@@ -102,7 +102,11 @@ class _ShellState extends State<Shell> with WindowListener {
         return ValueListenableBuilder(
           valueListenable: AppState.I.nowPlayingOpen,
           builder: (context, open, child) => AnnotatedRegion<SystemUiOverlayStyle>(
-            value: _systemBarsStyle(dark: open || Theme.of(context).brightness == Brightness.dark),
+            value: _systemBarsStyle(
+              dark: open || Theme.of(context).brightness == Brightness.dark,
+              // 导航栏下面是播放条；播放页打开时是深色背景
+              navBar: open ? const Color(0xFF15151A) : p.surface,
+            ),
             child: child!,
           ),
           child: Scaffold(
@@ -204,10 +208,13 @@ class _ShellState extends State<Shell> with WindowListener {
   }
 }
 
-/// 状态栏、导航栏透明，图标颜色跟着背景深浅走（播放页总是深色背景）
-SystemUiOverlayStyle _systemBarsStyle({required bool dark}) => SystemUiOverlayStyle(
+/// 状态栏透明，图标颜色跟着背景深浅走（播放页总是深色背景）。
+/// 导航栏涂成它下面那块的颜色：系统没让应用画到导航栏下面时（老系统、三键导航），
+/// 透明的导航栏会露出窗口底色，那是跟系统深浅色走的，和应用自己的主题可能对不上。
+SystemUiOverlayStyle _systemBarsStyle({required bool dark, required Color navBar}) => SystemUiOverlayStyle(
   statusBarColor: Colors.transparent,
-  systemNavigationBarColor: Colors.transparent,
+  systemNavigationBarColor: navBar,
+  systemNavigationBarDividerColor: navBar,
   systemNavigationBarContrastEnforced: false,
   statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
   statusBarBrightness: dark ? Brightness.dark : Brightness.light,

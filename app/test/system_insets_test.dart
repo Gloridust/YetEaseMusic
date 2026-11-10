@@ -1,4 +1,4 @@
-// 安卓全屏绘制（#21）：顶栏不能落进状态栏，播放条不能落进手势条
+// 安卓全屏绘制（#21）：播放条不能落进手势条。顶栏、抽屉、播放页的 SafeArea 在 Shell 里，单测里起不来（首页要调 Rust），靠截图检查
 import 'package:app/theme.dart';
 import 'package:app/ui/player_bar.dart';
 import 'package:flutter/material.dart';
