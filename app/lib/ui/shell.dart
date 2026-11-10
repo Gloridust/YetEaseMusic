@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../src/rust/api/playback.dart' as pb;
@@ -98,93 +99,127 @@ class _ShellState extends State<Shell> with WindowListener {
         final borderColor = Theme.of(context).brightness == Brightness.dark
             ? Colors.white.withValues(alpha: 0.14)
             : p.textTertiary.withValues(alpha: 0.45);
-        return Scaffold(
-          key: _scaffold,
-          backgroundColor: p.background,
-          drawer: compact ? Drawer(width: drawerWidth, backgroundColor: p.sidebar, child: const Sidebar()) : null,
-          endDrawer: const QueuePanel(),
-          body: Stack(
-            children: [
-              Column(
-                children: [
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (!compact) ...[
-                          SizedBox(width: sidebarWidth, child: const Sidebar()),
-                          _SidebarResizeHandle(
-                            width: sidebarWidth,
-                            maxWidth: maxSidebarWidth,
-                            onChanged: _setSidebarWidth,
-                            onDone: _saveSidebarWidth,
-                            onReset: () {
-                              _setSidebarWidth(Tokens.sidebarWidth);
-                              _saveSidebarWidth();
-                            },
-                          ),
-                        ],
-                        Expanded(
-                          child: Column(
-                            children: [
-                              TopBar(onMenu: compact ? () => _scaffold.currentState?.openDrawer() : null),
-                              Expanded(
-                                child: ClipRect(
-                                  child: Navigator(
-                                    key: Nav.key,
-                                    observers: [NavObserver()],
-                                    onGenerateRoute: (_) => PageRouteBuilder(
-                                      settings: const RouteSettings(name: 'home'),
-                                      pageBuilder: (_, _, _) => const HomePage(),
-                                    ),
-                                  ),
-                                ),
+        return ValueListenableBuilder(
+          valueListenable: AppState.I.nowPlayingOpen,
+          builder: (context, open, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+            value: _systemBarsStyle(
+              dark: open || Theme.of(context).brightness == Brightness.dark,
+              // 导航栏下面是播放条；播放页打开时是深色背景
+              navBar: open ? const Color(0xFF15151A) : p.surface,
+            ),
+            child: child!,
+          ),
+          child: Scaffold(
+            key: _scaffold,
+            backgroundColor: p.background,
+            drawer: compact
+                ? Drawer(
+                    width: drawerWidth,
+                    backgroundColor: p.sidebar,
+                    child: const SafeArea(right: false, child: Sidebar()),
+                  )
+                : null,
+            endDrawer: const QueuePanel(),
+            body: Stack(
+              children: [
+                Column(
+                  children: [
+                    Expanded(
+                      // 安卓全屏绘制：顶栏和侧栏避开状态栏、刘海，否则按钮落在状态栏里点不到
+                      child: SafeArea(
+                        bottom: false,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (!compact) ...[
+                              SizedBox(width: sidebarWidth, child: const Sidebar()),
+                              _SidebarResizeHandle(
+                                width: sidebarWidth,
+                                maxWidth: maxSidebarWidth,
+                                onChanged: _setSidebarWidth,
+                                onDone: _saveSidebarWidth,
+                                onReset: () {
+                                  _setSidebarWidth(Tokens.sidebarWidth);
+                                  _saveSidebarWidth();
+                                },
                               ),
                             ],
-                          ),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  TopBar(onMenu: compact ? () => _scaffold.currentState?.openDrawer() : null),
+                                  Expanded(
+                                    child: ClipRect(
+                                      child: Navigator(
+                                        key: Nav.key,
+                                        observers: [NavObserver()],
+                                        onGenerateRoute: (_) => PageRouteBuilder(
+                                          settings: const RouteSettings(name: 'home'),
+                                          pageBuilder: (_, _, _) => const HomePage(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  PlayerBar(onQueue: () => _scaffold.currentState?.openEndDrawer()),
-                ],
-              ),
-              // 播放页从底部滑入，盖住整个窗口
-              ValueListenableBuilder(
-                valueListenable: AppState.I.nowPlayingOpen,
-                builder: (context, open, _) => AnimatedSlide(
-                  offset: open ? Offset.zero : const Offset(0, 1),
-                  duration: const Duration(milliseconds: 380),
-                  curve: open ? Curves.easeOutCubic : Curves.easeInCubic,
-                  child: IgnorePointer(
-                    ignoring: !open,
-                    // 收起后播放页仍挂在树上（保留歌词滚动位置），停掉里面的动画，免得看不见时还每帧重画
-                    child: TickerMode(
-                      enabled: open,
-                      child: AnimatedOpacity(
-                        opacity: open ? 1 : 0,
-                        duration: const Duration(milliseconds: 300),
-                        child: NowPlaying(onQueue: () => _scaffold.currentState?.openEndDrawer()),
+                    PlayerBar(onQueue: () => _scaffold.currentState?.openEndDrawer()),
+                  ],
+                ),
+                // 播放页从底部滑入，盖住整个窗口
+                ValueListenableBuilder(
+                  valueListenable: AppState.I.nowPlayingOpen,
+                  builder: (context, open, _) => AnimatedSlide(
+                    offset: open ? Offset.zero : const Offset(0, 1),
+                    duration: const Duration(milliseconds: 380),
+                    curve: open ? Curves.easeOutCubic : Curves.easeInCubic,
+                    child: IgnorePointer(
+                      ignoring: !open,
+                      // 收起后播放页仍挂在树上（保留歌词滚动位置），停掉里面的动画，免得看不见时还每帧重画
+                      child: TickerMode(
+                        enabled: open,
+                        child: AnimatedOpacity(
+                          opacity: open ? 1 : 0,
+                          duration: const Duration(milliseconds: 300),
+                          child: NowPlaying(onQueue: () => _scaffold.currentState?.openEndDrawer()),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              if (Platform.isLinux && !_edgeToEdge)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(border: Border.all(color: borderColor)),
+                if (Platform.isLinux && !_edgeToEdge)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(border: Border.all(color: borderColor)),
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       },
     );
   }
 }
+
+/// 状态栏透明，图标颜色跟着背景深浅走（播放页总是深色背景）。
+/// 导航栏涂成它下面那块的颜色：系统没让应用画到导航栏下面时（老系统、三键导航），
+/// 透明的导航栏会露出窗口底色，那是跟系统深浅色走的，和应用自己的主题可能对不上。
+SystemUiOverlayStyle _systemBarsStyle({required bool dark, required Color navBar}) => SystemUiOverlayStyle(
+  statusBarColor: Colors.transparent,
+  systemNavigationBarColor: navBar,
+  systemNavigationBarDividerColor: navBar,
+  systemNavigationBarContrastEnforced: false,
+  statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+  statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+  systemNavigationBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+);
 
 /// 侧栏右缘的拖动条：拖动改宽度，双击恢复默认值。
 class _SidebarResizeHandle extends StatefulWidget {

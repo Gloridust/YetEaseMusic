@@ -27,8 +27,11 @@ class PlayerBar extends StatelessWidget {
     final app = AppState.I;
     final fg = dark ? Colors.white : p.textPrimary;
     final fg2 = dark ? Colors.white60 : p.textSecondary;
+    // 安卓全屏绘制时播放条贴着屏幕底边：底色铺到手势条下面，按钮抬到手势条上方
+    final inset = MediaQuery.paddingOf(context);
     return Container(
-      height: Tokens.playerBarHeight + 4,
+      height: Tokens.playerBarHeight + 4 + inset.bottom,
+      padding: EdgeInsets.only(left: inset.left, right: inset.right, bottom: inset.bottom),
       color: dark ? Colors.transparent : p.surface,
       child: Column(
         children: [

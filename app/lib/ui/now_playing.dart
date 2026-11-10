@@ -28,82 +28,85 @@ class NowPlaying extends StatelessWidget {
       valueListenable: app.current,
       builder: (context, song, _) => _Backdrop(
         url: song?.coverUrl,
-        child: Column(
-          children: [
-            WindowDragArea(
-              child: SizedBox(
-                height: 72,
-                child: Row(
-                  children: [
-                    const SizedBox(width: 24),
-                    IconBtn(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 30,
-                      color: Colors.white70,
-                      tooltip: '收起',
-                      onTap: () => app.nowPlayingOpen.value = false,
-                    ),
-                    const Spacer(),
-                    if (isDesktop) const WindowButtons(color: Colors.white70),
-                    const SizedBox(width: 16),
-                  ],
+        // 背景铺满全屏，内容避开状态栏和手势条
+        child: SafeArea(
+          child: Column(
+            children: [
+              WindowDragArea(
+                child: SizedBox(
+                  height: 72,
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 24),
+                      IconBtn(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 30,
+                        color: Colors.white70,
+                        tooltip: '收起',
+                        onTap: () => app.nowPlayingOpen.value = false,
+                      ),
+                      const Spacer(),
+                      if (isDesktop) const WindowButtons(color: Colors.white70),
+                      const SizedBox(width: 16),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: song == null
-                  ? const Center(
-                      child: Text('没有正在播放的歌曲', style: TextStyle(color: Colors.white54, fontSize: 16)),
-                    )
-                  : LayoutBuilder(
-                      builder: (context, c) {
-                        final wide = c.maxWidth > 900;
-                        final disc = math
-                            .min(c.maxHeight * 0.78, wide ? c.maxWidth * 0.36 : c.maxWidth * 0.7)
-                            .clamp(200.0, 560.0);
-                        if (!wide) {
-                          return Column(
+              Expanded(
+                child: song == null
+                    ? const Center(
+                        child: Text('没有正在播放的歌曲', style: TextStyle(color: Colors.white54, fontSize: 16)),
+                      )
+                    : LayoutBuilder(
+                        builder: (context, c) {
+                          final wide = c.maxWidth > 900;
+                          final disc = math
+                              .min(c.maxHeight * 0.78, wide ? c.maxWidth * 0.36 : c.maxWidth * 0.7)
+                              .clamp(200.0, 560.0);
+                          if (!wide) {
+                            return Column(
+                              children: [
+                                Expanded(
+                                  flex: 5,
+                                  child: Center(
+                                    child: Vinyl(song: song, size: disc * 0.8),
+                                  ),
+                                ),
+                                _SongInfo(song: song),
+                                Expanded(flex: 4, child: _LyricsOrSimilar(song: song)),
+                              ],
+                            );
+                          }
+                          return Row(
                             children: [
                               Expanded(
                                 flex: 5,
                                 child: Center(
-                                  child: Vinyl(song: song, size: disc * 0.8),
+                                  child: Vinyl(song: song, size: disc),
                                 ),
                               ),
-                              _SongInfo(song: song),
-                              Expanded(flex: 4, child: _LyricsOrSimilar(song: song)),
+                              Expanded(
+                                flex: 5,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 72, top: 24),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _SongInfo(song: song),
+                                      const SizedBox(height: 28),
+                                      Expanded(child: _LyricsOrSimilar(song: song)),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ],
                           );
-                        }
-                        return Row(
-                          children: [
-                            Expanded(
-                              flex: 5,
-                              child: Center(
-                                child: Vinyl(song: song, size: disc),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 5,
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 72, top: 24),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _SongInfo(song: song),
-                                    const SizedBox(height: 28),
-                                    Expanded(child: _LyricsOrSimilar(song: song)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-            ),
-            PlayerBar(dark: true, onQueue: onQueue),
-          ],
+                        },
+                      ),
+              ),
+              PlayerBar(dark: true, onQueue: onQueue),
+            ],
+          ),
         ),
       ),
     );
