@@ -431,6 +431,8 @@ impl Core {
                 (*f, self.queue.lock().unwrap().songs.len())
             };
             if skip < len.min(5) {
+                // 失败后稍等再跳，避免一秒内连发多轮请求触发服务端风控
+                tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
                 Box::pin(self.next()).await;
             } else {
                 self.player.stop();

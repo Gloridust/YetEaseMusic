@@ -253,7 +253,8 @@ impl Client {
             .request(
                 "/api/song/enhance/player/url/v1",
                 json!({ "ids": format!("[{id}]"), "level": quality.level(), "encodeType": "flac" }),
-                Crypto::Eapi,
+                // 走 weapi（网页端）而不是 eapi（桌面端加密），eapi 更容易触发 -460 风控
+                Crypto::Weapi,
             )
             .await?;
         let mut list: Vec<SongUrl> = field(&v, &["data"])?;
