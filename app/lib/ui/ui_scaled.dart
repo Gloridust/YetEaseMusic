@@ -46,15 +46,18 @@ class UiScaled extends StatelessWidget {
             viewPadding: mq.viewPadding / scale,
             viewInsets: mq.viewInsets / scale,
           ),
-          child: Transform.scale(
-            scale: scale,
+          // OverflowBox 必须在 Transform 外面：命中测试时 Transform 把坐标换算回逻辑尺寸，
+          // 再交给它的子节点按自身大小判断。要是 OverflowBox 在里面，它自己的大小仍是窗口大小，
+          // 缩小（scale < 1）时换算后的坐标超出这个范围，右侧和底部就点不到了（#21）
+          child: OverflowBox(
             alignment: Alignment.topLeft,
-            child: OverflowBox(
+            minWidth: size.width,
+            maxWidth: size.width,
+            minHeight: size.height,
+            maxHeight: size.height,
+            child: Transform.scale(
+              scale: scale,
               alignment: Alignment.topLeft,
-              minWidth: size.width,
-              maxWidth: size.width,
-              minHeight: size.height,
-              maxHeight: size.height,
               child: child,
             ),
           ),
