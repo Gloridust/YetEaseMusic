@@ -18,7 +18,10 @@ const EAPI_DOMAIN: &str = "https://interfacepc.music.163.com";
 
 const UA_WEAPI: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0";
 const UA_LINUXAPI: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36";
-const UA_API_IPHONE: &str = "NeteaseMusic 9.0.90/5038 (iPhone; iOS 16.2; zh_CN)";
+/// eapi / api 通道用 PC 客户端 UA，必须和 `ensure_fingerprint` 里的 `os=pc` / Windows `osver`
+/// 对得上：UA 写 iPhone、头里写 pc 时，`song/enhance/player/url/v1` 会被风控返回 -460
+/// “检测到您的网络环境存在风险”。对照 api-enhanced `userAgentMap.api.pc`。
+const UA_API_PC: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Chrome/91.0.4472.164 NeteaseMusicDesktop/3.1.17.204416";
 
 /// 这些业务码在 api-enhanced 里也按成功处理（主要是扫码登录的中间状态）。
 const OK_CODES: &[i64] = &[200, 201, 302, 400, 502, 800, 801, 802, 803];
@@ -243,7 +246,7 @@ impl Client {
                         format!("{EAPI_DOMAIN}/eapi/{}", &uri[5..]),
                         form,
                         cookie,
-                        UA_API_IPHONE,
+                        UA_API_PC,
                         None,
                     )
                 }
@@ -265,7 +268,7 @@ impl Client {
                         format!("{API_DOMAIN}{uri}"),
                         form,
                         cookie,
-                        UA_API_IPHONE,
+                        UA_API_PC,
                         None,
                     )
                 }
